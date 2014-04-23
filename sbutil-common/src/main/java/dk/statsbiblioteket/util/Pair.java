@@ -9,8 +9,8 @@ package dk.statsbiblioteket.util;
  */
 public class Pair<L,R> {
 
-    L left;
-    R right;
+    final private L left;
+    final private R right;
 
     public Pair(L left, R right) {
         this.left = left;
@@ -20,8 +20,14 @@ public class Pair<L,R> {
     public L getLeft() {
         return left;
     }
+    public L getKey() {
+        return left;
+    }
 
     public R getRight() {
+        return right;
+    }
+    public R getValue() {
         return right;
     }
 
