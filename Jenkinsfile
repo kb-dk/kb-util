@@ -91,7 +91,7 @@ private static String encodeName(groovy.lang.GString jobName) {
             .replaceAll("_", "-")
             .replace("/", '-')
             .replaceAll("^openshift-", "")
-            .toLowerCase
+            .toLowerCase()
     return name
 }
 
