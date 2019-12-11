@@ -18,12 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -285,18 +282,18 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws IOException if the configuration could not be fetched.
      */
     public static YAML resolveConfig(String configName, String confRoot) throws IOException {
-        URL configURL = resolveConfigFile(configName);
+        URL configURL = Resolver.resolveConfigFile(configName);
 
         Object raw;
         try (InputStream configStream = configURL.openStream()) {
             raw = new Yaml().load(configStream);
             if(!(raw instanceof Map)) {
                 throw new IllegalArgumentException("The config resource '" + configURL
-                        + "' does not contain a valid DS Cumulus Export configuration.");
+                        + "' does not contain a valid YAML configuration.");
             }
         } catch (IOException e) {
             throw new IOException(
-                "Exception trying to load the DS Cumulus Export configuration from '" + configURL + "'");
+                "Exception trying to load the YAML configuration from '" + configURL + "'", e);
         }
 
         YAML rootMap = new YAML((Map<String, Object>) raw);
@@ -312,28 +309,4 @@ public class YAML extends LinkedHashMap<String, Object> {
         return rootMap.getSubMap(confRoot);
     }
 
-    /**
-     * Resolve the given resource to an URL.
-     * @param resourceName the name of the resource, typically a file name.
-     * @return an URL to the resource.
-     * @throws FileNotFoundException if the resource could not be located.
-     * @throws MalformedURLException if the resource location could not be converted to an URL.
-     */
-    public static URL resolveConfigFile(String resourceName) throws FileNotFoundException, MalformedURLException {
-        // TODO: This should be changed to use JNDI
-        log.debug("Looking for '{}' on the classpath", resourceName);
-        URL configURL = Thread.currentThread().getContextClassLoader().getResource(resourceName);
-        if (configURL ==  null) {
-            log.debug("Looking for '" + resourceName + "' on the user home path");
-            Path configPath = Path.of(System.getProperty("user.home"), resourceName);
-            if (!configPath.toFile().exists()) {
-                String message = "Unable to locate '" + resourceName + "' on the classpath or in user.home";
-                log.error(message);
-                throw new FileNotFoundException(message);
-            }
-            configURL = configPath.toUri().toURL();
-        }
-        log.debug("Resolved '{}' to '{}'", resourceName, configURL);
-        return configURL;
-    }
 }
