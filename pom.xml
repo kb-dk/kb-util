@@ -10,13 +10,13 @@
 
   <groupId>dk.kb.util</groupId>
   <artifactId>kb-util</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <scm>
     <url>https://github.com/Det-Kongelige-Bibliotek/kb-util</url>
     <connection>scm:git:git@github.com:Det-Kongelige-Bibliotek/kb-util.git</connection>
     <developerConnection>scm:git:git@github.com:Det-Kongelige-Bibliotek/kb-util.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>kb-util-1.0.0</tag>
   </scm>
 
   <repositories>
