@@ -94,10 +94,9 @@ public class Resolver {
     /**
      * Resolves the resource using {@link #resolveStream(String)}, assuming UTF-8, and returns its content as a String.
      * @param resourceName the name of the resource, typically a file name.
-     * @param charset the charset to use when converting the bytes for the resource to a String.
-     * @return
+     * @return the content of the UTF-8 resource as a String.
      */
-    public static String resolveUTF8String(String resourceName, Charset charset) throws IOException {
+    public static String resolveUTF8String(String resourceName) throws IOException {
         return resolveString(resourceName, StandardCharsets.UTF_8);
     }
 
@@ -105,7 +104,7 @@ public class Resolver {
      * Resolves the resource using {@link #resolveStream(String)} and returns its content as a String.
      * @param resourceName the name of the resource, typically a file name.
      * @param charset the charset to use when converting the bytes for the resource to a String.
-     * @return
+     * @return the content of the resource as a String.
      */
     public static String resolveString(String resourceName, Charset charset) throws IOException {
         InputStream in = resolveStream(resourceName);
