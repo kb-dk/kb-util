@@ -274,6 +274,21 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
+     * Parse the given configStream as YAML.
+     * @param yamlStream YAML.
+     * @return a YAML based on the given stream.
+     */
+    public static YAML parse(InputStream yamlStream) {
+        Object raw = new Yaml().load(yamlStream);
+        if (!(raw instanceof Map)) {
+            throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
+        }
+        YAML rootMap = new YAML((Map<String, Object>) raw);
+        log.trace("Parsed YAML config stream");
+        return rootMap;
+    }
+
+    /**
      * Resolve the given YAML configurations and present a merged YAML from that.
      * Note: This method merges the YAML configs as-is, which means that they cannot have identical keys at
      * the root level.
@@ -289,14 +304,8 @@ public class YAML extends LinkedHashMap<String, Object> {
             for (InputStream config : configs) {
                 yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
             }
-            Object raw = new Yaml().load(yamlStream);
-            if (!(raw instanceof Map)) {
-                throw new IllegalArgumentException("The config resources '" + Arrays.toString(configNames)
-                                                   + "' does not evaluate to a valid YAML configuration.");
-            }
-            YAML rootMap = new YAML((Map<String, Object>) raw);
             log.debug("Fetched merged YAML config '{}'", Arrays.toString(configNames));
-            return rootMap;
+            return parse(yamlStream);
         } finally {
             if (configs != null) {
                 for (InputStream config: configs) {
@@ -314,22 +323,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws IOException if the configuration could not be fetched.
      */
     public static YAML resolveConfig(String configName, String confRoot) throws IOException {
-        URL configURL = Resolver.resolveConfigFile(configName);
-
-        Object raw;
-        try (InputStream configStream = configURL.openStream()) {
-            raw = new Yaml().load(configStream);
-            if(!(raw instanceof Map)) {
-                throw new IllegalArgumentException("The config resource '" + configURL
-                        + "' does not contain a valid YAML configuration.");
-            }
-        } catch (IOException e) {
-            throw new IOException(
-                "Exception trying to load the YAML configuration from '" + configURL + "'", e);
-        }
-
-        YAML rootMap = new YAML((Map<String, Object>) raw);
-        log.debug("Fetched YAML config '{}'", configName);
+        YAML rootMap = resolveMultiConfig(configName);
 
         if (confRoot == null) {
             return rootMap;
