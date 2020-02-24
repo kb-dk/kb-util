@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -58,5 +60,19 @@ public class Resolver {
         }
         log.debug("Resolved '{}' to '{}'", resourceName, configURL);
         return configURL;
+    }
+
+    /**
+     * Wrapper for {@link #resolveConfigFile(String)} that opens an InputStream for the given resource.
+     * Note: This method has no checked exceptions: It wraps IOExceptions as runtime exceptions.
+     * @param resourceName the name of the resource, typically a file name.
+     * @return a stream with the given resource.
+     */
+    public static InputStream resolveStream(String resourceName) {
+        try {
+            return resolveConfigFile(resourceName).openStream();
+        } catch (Exception e) {
+            throw new RuntimeException("Exception fetching resource '" + resourceName + "'", e);
+        }
     }
 }

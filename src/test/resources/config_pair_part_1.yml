@@ -1,0 +1,4 @@
+environment:
+  someint: 87
+  serverSetup:
+  serviceServer: &theServer "FooServer"

@@ -1,6 +1,8 @@
 package dk.kb.util;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 
@@ -45,5 +47,21 @@ class YAMLTest {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
         assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
+    }
+
+    @Test
+    public void testAlias() throws IOException {
+        YAML yaml = YAML.resolveMultiConfig("alias.yml");
+        assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
+                     "The alias YAML should have the expected value for alias-using 'theServer'");
+    }
+
+    @Test
+    public void testMultiConfig() throws IOException {
+        YAML yaml = YAML.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
+        assertEquals("bar", yaml.getString("serviceSetup.someString"),
+                     "The merged YAML should have the expected value for plain key 'somestring'");
+        assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
+                     "The merged YAML should have the expected value for alias-using 'theServer'");
     }
 }
