@@ -77,7 +77,6 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path path for the list.
      * @return the list at the path or null if it could not be located.
      */
-    @SuppressWarnings("unchecked")
     public <T> List<T> getList(String path) {
         return getList(path, null);
     }
