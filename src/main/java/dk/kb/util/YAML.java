@@ -290,8 +290,8 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Resolve the given YAML configurations and present a merged YAML from that.
-     * Note: This method merges the YAML configs as-is, which means that they cannot have identical keys at
-     * the root level.
+     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair in the stated configurations.
      * @param configNames the names of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException if a configuration could not be fetched.

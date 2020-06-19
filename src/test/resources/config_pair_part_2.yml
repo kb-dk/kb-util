@@ -3,3 +3,5 @@ serviceSetup:
   theServer: *theServer
   # theServer will be used from &myserver
   someString: "bar"
+# The key collision is defined on the same level for both part 1 and part 2, but with different values
+collision: "number_2"

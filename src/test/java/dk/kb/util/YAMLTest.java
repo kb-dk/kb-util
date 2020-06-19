@@ -64,4 +64,11 @@ class YAMLTest {
         assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
                      "The merged YAML should have the expected value for alias-using 'theServer'");
     }
+
+    @Test
+    public void testMergeCollision() throws IOException {
+        YAML yaml = YAML.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
+        assertEquals("number_2", yaml.getString("collision"),
+                     "When merging, the latest definition should win");
+    }
 }
