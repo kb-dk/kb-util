@@ -227,7 +227,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the double.
-     * @return the double at the path or null if it could not be located.
+     * @return the Double at the path or null if it could not be located.
      */
     public Double getDouble(String path) {
         return getDouble(path, null);
@@ -239,7 +239,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the double.
      * @param defaultValue if the path cannot be resolved, return this value.
-     * @return the double at the path or defaultValue if it could not be located.
+     * @return the Double at the path or defaultValue if it could not be located.
      */
     public Double getDouble(String path, Double defaultValue) {
         Object o = get(path);
@@ -252,7 +252,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolves the Float at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the Float.
@@ -263,7 +263,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolves the Float at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the Float.
@@ -285,7 +285,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the boolean.
-     * @return the boolean at the path or null if it could not be located.
+     * @return the Boolean at the path or null if it could not be located.
      */
     public Boolean getBoolean(String path) {
         return getBoolean(path, null);
@@ -297,7 +297,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the boolean.
      * @param defaultValue if the path cannot be resolved, return this value.
-     * @return the boolean at the path or defaultValue if it could not be located.
+     * @return the Boolean at the path or defaultValue if it could not be located.
      */
     public Boolean getBoolean(String path, Boolean defaultValue) {
         Object o = get(path);
@@ -305,7 +305,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolves the String at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the string at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * Note: Object.toString is used to provide the String value, so this is safe to call for most YAML content.
