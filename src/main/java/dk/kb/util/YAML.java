@@ -237,22 +237,22 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
-        String[] elements = path.split("[.]");
+        String[] pathElements = path.split("[.]");
         YAML current = this;
-        for (int i = 0 ; i < elements.length ; i++) {
-            Object sub = current.getSuper(elements[i]);
+        for (int i = 0 ; i < pathElements.length ; i++) {
+            Object sub = current.getSuper(pathElements[i]);
             if (sub == null) {
-                log.trace("Unable to request sub element '{}' in path '{}'", elements[i], path);
+                log.trace("Unable to request sub element '{}' in path '{}'", pathElements[i], path);
                 return null;
             }
-            if (i == elements.length-1) {
+            if (i == pathElements.length-1) { //If this is the final pathElement, just return it
                 return sub;
-            }
+            } //Otherwise, we require that it is a map so we can continue to query
             if (!(sub instanceof Map)) {
-                log.trace("The sub element '{}' in path '{}' was not a Map", elements[i], path);
+                log.trace("The sub element '{}' in path '{}' was not a Map", pathElements[i], path);
                 return null;
             }
-            try {
+            try { //Update current as the sub we have found
                 current = new YAML((Map<String, Object>) sub);
             } catch (Exception e) {
                 log.trace("Expected a Map<String, Object> for path '{}' but got casting failed", path);
