@@ -54,7 +54,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the sub map.
-     * @return the map at the path or null if it could not be located.
+     * @return the map at the path or Empty if it could not be located.
      */
     @SuppressWarnings("unchecked")
     public Optional<YAML> getSubMap(String path) {
@@ -67,7 +67,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the sub map.
      * @param maintainKeys preserve the path prefix for the keys in the result
-     * @return the map at the path or null if it could not be located.
+     * @return the map at the path or Empty if it could not be located.
      */
     @SuppressWarnings("unchecked")
     public Optional<YAML> getSubMap(String path, boolean maintainKeys) {
@@ -102,7 +102,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the list.
-     * @return the list at the path or null if it could not be located.
+     * @return the list at the path or Empty if it could not be located.
      */
     @SuppressWarnings("unchecked")
     public <T> Optional<List<T>> getList(String path) {
@@ -128,13 +128,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the list.
-     * @return the list of sub YAMLs at the path or null if it could not be located.
+     * @return the list of sub YAMLs at the path or Empty if it could not be located.
      */
     @SuppressWarnings("unchecked")
     public Optional<List<YAML>> getYAMLList(String path) {
         Optional<Object> o = get(path);
         if (o.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
         Object found = o.get();
         if (!(found instanceof List)) {
@@ -156,7 +156,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the integer.
-     * @return the integer at the path or null if it could not be located.
+     * @return the integer at the path or Empty if it could not be located.
      */
     public Optional<Integer> getInteger(String path) {
         return Optional.ofNullable(getInteger(path, null));
@@ -185,7 +185,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the boolean.
-     * @return the boolean at the path or null if it could not be located.
+     * @return the boolean at the path or Empty if it could not be located.
      */
     public Optional<Boolean> getBoolean(String path) {
         return Optional.ofNullable(getBoolean(path, null));
@@ -210,7 +210,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: Keys in the YAML must not contain dots.
      * Note: Object.toString is used to provide the String value, so this is safe to call for most YAML content.
      * @param path path for the string.
-     * @return the String at the path or null if it could not be located.
+     * @return the String at the path or Empty if it could not be located.
      */
     public Optional<String> getString(String path) {
         return Optional.ofNullable(getString(path, null));
@@ -234,7 +234,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Used internally by {@link #get} to avoid endless recursion.
      * @param key the key to look up.
-     * @return the value for the key or null if the key is not present in the map.
+     * @return the value for the key or Empty if the key is not present in the map.
      */
     private Optional<Object> getSuper(Object key) {
         return Optional.ofNullable(super.get(key));
@@ -257,7 +257,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param pathO path for the Object.
-     * @return the Object or null if it could not be returned.
+     * @return the Object or Empty if it could not be returned.
      */
     @SuppressWarnings("unchecked")
     @Override
