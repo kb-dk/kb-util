@@ -18,12 +18,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +37,9 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML(String resourceName) throws IOException {
         this.putAll(YAML.resolveConfig(resourceName));
     }
-
+    
+    
+    
     /**
      * Creates a YAML wrapper around the given map.
      * Changes to the map will be reflected in the YAML instance and vice versa.
@@ -53,23 +57,46 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the map at the path or null if it could not be located.
      */
     @SuppressWarnings("unchecked")
-    public YAML getSubMap(String path) {
-        Object o = get(path);
-        if (o == null) {
-            return null;
+    public Optional<YAML> getSubMap(String path) {
+        return getSubMap(path, false);
+    }
+    
+    /**
+     * Resolves the YAML sub map at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the sub map.
+     * @param maintainKeys preserve the path prefix for the keys in the result
+     * @return the map at the path or null if it could not be located.
+     */
+    @SuppressWarnings("unchecked")
+    public Optional<YAML> getSubMap(String path, boolean maintainKeys) {
+        Optional<Object> o = get(path);
+        if (o.isEmpty()) {
+            return Optional.empty();
         }
-        if (!(o instanceof Map)) {
+        Object found = o.get();
+        if (!(found instanceof Map)) {
             log.trace("Expected a Map for path '{}' but got {}", path, o);
-            return null;
+            return Optional.empty();
         }
         try {
-            return new YAML((Map<String, Object>) o);
+            Map<String,Object> result;
+            if (maintainKeys){
+                result = ((Map<String, Object>) found).entrySet().stream().collect(Collectors.toMap(
+                        entry -> path+"."+entry.getKey(),
+                        Map.Entry::getValue
+                ));
+            } else {
+                result = (Map<String, Object>) found;
+            }
+            return Optional.of(new YAML(result));
         } catch (Exception e) {
             log.trace("Expected a Map for path '{}' but got {}", path, o.getClass().getName());
-            return null;
+            return Optional.empty();
         }
     }
-
+    
     /**
      * Resolves the list at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
@@ -78,20 +105,21 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the list at the path or null if it could not be located.
      */
     @SuppressWarnings("unchecked")
-    public <T> List<T> getList(String path) {
-        Object o = get(path);
-        if (o == null) {
-            return null;
+    public <T> Optional<List<T>> getList(String path) {
+        Optional<Object> o = get(path);
+        if (o.isEmpty()) {
+            return Optional.empty();
         }
-        if (!(o instanceof List)) {
+        Object found = o.get();
+        if (!(found instanceof List)) {
             log.trace("Expected a List for path '{}' but got {}", path, o.getClass().getName());
-            return null;
+            return Optional.empty();
         }
         try {
-            return (List<T>) o;
+            return Optional.of((List<T>) found);
         } catch (Exception e) {
             log.trace("Exception casting to typed List", e);
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -103,23 +131,24 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the list of sub YAMLs at the path or null if it could not be located.
      */
     @SuppressWarnings("unchecked")
-    public List<YAML> getYAMLList(String path) {
-        Object o = get(path);
-        if (o == null) {
+    public Optional<List<YAML>> getYAMLList(String path) {
+        Optional<Object> o = get(path);
+        if (o.isEmpty()) {
             return null;
         }
-        if (!(o instanceof List)) {
+        Object found = o.get();
+        if (!(found instanceof List)) {
             log.trace("Expected a List for path '{}' but got {}", path, o.getClass().getName());
-            return null;
+            return Optional.empty();
         }
         List<Map<String, Object>> hmList;
         try {
-            hmList = (List<Map<String, Object>>)o;
+            hmList = (List<Map<String, Object>>)found;
         } catch (Exception e) {
             log.trace("Exception casting to List<Map<String, Object>>", e);
-            return null;
+            return Optional.empty();
         }
-        return hmList.stream().map(YAML::new).collect(Collectors.toList());
+        return Optional.of(hmList.stream().map(YAML::new).collect(Collectors.toList()));
     }
 
     /**
@@ -129,8 +158,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path path for the integer.
      * @return the integer at the path or null if it could not be located.
      */
-    public Integer getInteger(String path) {
-        return getInteger(path, null);
+    public Optional<Integer> getInteger(String path) {
+        return Optional.ofNullable(getInteger(path, null));
     }
 
     /**
@@ -142,12 +171,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the integer at the path or defaultValue if it could not be located.
      */
     public Integer getInteger(String path, Integer defaultValue) {
-        Object o = get(path);
+        Optional<Object> o = get(path);
         try {
-            return o == null ? defaultValue : Integer.valueOf(o.toString());
+            return o.map(value -> Integer.valueOf(value.toString())).orElse(defaultValue);
         } catch (NumberFormatException e) {
             log.trace("Unable to parse '{}' to Integer", o);
-            return null;
+            return defaultValue;
         }
     }
 
@@ -158,8 +187,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path path for the boolean.
      * @return the boolean at the path or null if it could not be located.
      */
-    public Boolean getBoolean(String path) {
-        return getBoolean(path, null);
+    public Optional<Boolean> getBoolean(String path) {
+        return Optional.ofNullable(getBoolean(path, null));
     }
 
     /**
@@ -171,9 +200,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the boolean at the path or defaultValue if it could not be located.
      */
     public Boolean getBoolean(String path, Boolean defaultValue) {
-        Object o = get(path);
-        return o == null ? defaultValue : Boolean.valueOf(o.toString());
-    }
+        Optional<Object> o = get(path);
+        return o.map(value -> Boolean.valueOf(value.toString())).orElse(defaultValue);
+   }
 
     /**
      * Resolves the String at the given path in the YAML. Supports {@code .} for path separation,
@@ -183,8 +212,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path path for the string.
      * @return the String at the path or null if it could not be located.
      */
-    public String getString(String path) {
-        return getString(path, null);
+    public Optional<String> getString(String path) {
+        return Optional.ofNullable(getString(path, null));
     }
 
     /**
@@ -196,8 +225,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the String at the path or defaultValue if it could not be located.
      */
     public String getString(String path, String defaultValue) {
-        Object o = get(path);
-        return o == null ? defaultValue : o.toString();
+        Optional<Object> o = get(path);
+        return o.map(value -> value.toString()).orElse(defaultValue);
     }
 
     /* **************************** Path-supporting overrides ************************************ */
@@ -207,8 +236,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param key the key to look up.
      * @return the value for the key or null if the key is not present in the map.
      */
-    private Object getSuper(Object key) {
-        return super.get(key);
+    private Optional<Object> getSuper(Object key) {
+        return Optional.ofNullable(super.get(key));
     }
 
     /**
@@ -220,7 +249,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @Override
     public boolean containsKey(Object path) {
-        return get(path) != null;
+        return get(path).isPresent();
     }
 
     /**
@@ -232,7 +261,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Object get(Object pathO) {
+    public Optional<Object> get(Object pathO) {
         String path = pathO.toString();
         if (path.startsWith(".")) {
             path = path.substring(1);
@@ -240,26 +269,27 @@ public class YAML extends LinkedHashMap<String, Object> {
         String[] pathElements = path.split("[.]");
         YAML current = this;
         for (int i = 0 ; i < pathElements.length ; i++) {
-            Object sub = current.getSuper(pathElements[i]);
-            if (sub == null) {
+            Optional<Object> sub = current.getSuper(pathElements[i]);
+            if (sub.isEmpty()) {
                 log.trace("Unable to request sub element '{}' in path '{}'", pathElements[i], path);
-                return null;
+                return Optional.empty();
             }
+            Object found = sub.get();
             if (i == pathElements.length-1) { //If this is the final pathElement, just return it
                 return sub;
             } //Otherwise, we require that it is a map so we can continue to query
-            if (!(sub instanceof Map)) {
+            if (!(found instanceof Map)) {
                 log.trace("The sub element '{}' in path '{}' was not a Map", pathElements[i], path);
-                return null;
+                return Optional.empty();
             }
             try { //Update current as the sub we have found
-                current = new YAML((Map<String, Object>) sub);
+                current = new YAML((Map<String, Object>) found);
             } catch (Exception e) {
                 log.trace("Expected a Map<String, Object> for path '{}' but got casting failed", path);
-                return null;
+                return Optional.empty();
             }
         }
-        return current;
+        return Optional.of(current);
     }
 
     /* **************************** Fetching YAML ************************************ */
@@ -305,8 +335,9 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         if (!rootMap.containsKey(confRoot)) {
             throw new IllegalStateException("YAML configuration must contain the '" + confRoot + "' element");
+        } else {
+            return rootMap.getSubMap(confRoot).get();
         }
-        return rootMap.getSubMap(confRoot);
     }
 
 }
