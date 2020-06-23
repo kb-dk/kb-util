@@ -59,4 +59,31 @@ class YAMLTest {
                      "test.arrayofstrings.0, test.arrayofstrings.1, test.arrayofstrings.2",
                      joined);
     }
+
+    @Test
+    public void testNestedMaps() throws IOException {
+        YAML yaml = YAML.resolveConfig("nested_maps.yml", "test");
+        String flattenedValues = yaml.entrySetLeafs().stream().
+                map(Map.Entry::getValue).map(Object::toString).
+                collect(Collectors.joining(", "));
+        assertEquals("barA1, barA2, barB", flattenedValues);
+    }
+
+    @Test
+    public void testNestedLists() throws IOException {
+        YAML yaml = YAML.resolveConfig("nested_lists.yml", "test");
+        String flattenedValues = yaml.entrySetLeafs().stream().
+                map(Map.Entry::getValue).map(Object::toString).
+                collect(Collectors.joining(", "));
+        assertEquals("llItemA1, llItemA2, llItemB", flattenedValues);
+    }
+
+    @Test
+    public void testNestedMix() throws IOException {
+        YAML yaml = YAML.resolveConfig("nested_mix.yml", "test");
+        String flattenedValues = yaml.entrySetLeafs().stream().
+                map(Map.Entry::getValue).map(Object::toString).
+                collect(Collectors.joining(", "));
+        assertEquals("barM, 87", flattenedValues);
+    }
 }
