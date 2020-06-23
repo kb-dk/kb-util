@@ -66,7 +66,7 @@ public class YAMLUtils {
      * Converts the YAML object into list of leaf values
      *
      * @param collection the yaml
-     * @return the yaml as properties
+     * @return a list of all the values in the YAML
      */
     public static List<String> values(YAML collection) {
         return toFlatList(collection.entrySet().stream(), null)
