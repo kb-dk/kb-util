@@ -310,18 +310,20 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Visits all entries in the YAML, in order and depth-first, collecting all leafs.
+     * This is the recursive equivalent of {@link LinkedHashMap#entrySet()}.
      * @return an ordered set with all the leaf values in the YAML, as pairs of their path and value.
      */
-    public Set<Map.Entry<String, Object>> leafEntrySet() {
+    public Set<Map.Entry<String, Object>> entrySetLeafs() {
         Set<Map.Entry<String, Object>> set = new LinkedHashSet<>();
-        visitLeafs((path, value) -> set.add(new AbstractMap.SimpleEntry<>(path, value)));
+        forEachLeaf((path, value) -> set.add(new AbstractMap.SimpleEntry<>(path, value)));
         return set;
     }
 
     /**
      * Visits all entries in the YAML, in order and depth-first, calling action with their path and value.
+     * This is the recursive equivalent of {@link LinkedHashMap#forEach(BiConsumer)}.
      */
-    public void visitLeafs(BiConsumer<? super String, ? super Object> action) {
+    public void forEachLeaf(BiConsumer<? super String, ? super Object> action) {
         visitLeafs(this, "", action);
     }
 
