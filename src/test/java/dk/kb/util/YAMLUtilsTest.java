@@ -17,7 +17,7 @@ class YAMLUtilsTest {
     
         final Properties x = YAMLUtils.toProperties(yaml);
         assertEquals("Hello World", x.getProperty("test.somestring"));
-        assertEquals("{test.somestring=Hello World, test.test.arrayofstrings.2=c, test.someint=87, test.test.arrayofstrings.0=a, test.test.arrayofstrings.1=b, test.nested.sublevel2string=sub1}",
+        assertEquals("{test.arrayofstrings.2=c, test.arrayofstrings.0=a, test.arrayofstrings.1=b, test.somestring=Hello World, test.someint=87, test.nested.sublevel2string=sub1}",
                      x.toString());
     }
 
