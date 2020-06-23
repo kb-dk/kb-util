@@ -337,7 +337,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws NotFoundException    if the path cannot be found
      * @throws NullPointerException if the path0 is null
      */
-    //@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     @Override
     @NotNull
     public Object get(Object pathO) throws NotFoundException, InvalidTypeException, NullPointerException {

@@ -40,21 +40,23 @@ public class Resolver {
      * @throws MalformedURLException if the resource location could not be converted to an URL.
      */
     public static URL resolveConfigFile(String resourceName) throws FileNotFoundException, MalformedURLException {
+        URL configURL;
         Path verbatimPath = Path.of(resourceName);
         if (Files.exists(verbatimPath)) {
-            return verbatimPath.toUri().toURL();
-        }
-        log.debug("Looking for '{}' on the classpath", resourceName);
-        URL configURL = Thread.currentThread().getContextClassLoader().getResource(resourceName);
-        if (configURL ==  null) {
-            log.debug("Looking for '{}' on the user home path", resourceName );
-            Path configPath = Path.of(System.getProperty("user.home"), resourceName);
-            if (!Files.exists(configPath)) {
-                String message = "Unable to locate '" + resourceName + "' on the classpath or in user.home";
-                log.error(message);
-                throw new FileNotFoundException(message);
+            configURL =  verbatimPath.toUri().toURL();
+        } else {
+            log.debug("Looking for '{}' on the classpath", resourceName);
+            configURL = Thread.currentThread().getContextClassLoader().getResource(resourceName);
+            if (configURL == null) {
+                log.debug("'{}' not found on the classpath, so looking for in the user home path", resourceName);
+                Path configPath = Path.of(System.getProperty("user.home"), resourceName);
+                if (!Files.exists(configPath)) {
+                    String message = "Unable to locate '" + resourceName + "' on the classpath or in user.home";
+                    //log.error(message);
+                    throw new FileNotFoundException(message);
+                }
+                configURL = configPath.toUri().toURL();
             }
-            configURL = configPath.toUri().toURL();
         }
         log.debug("Resolved '{}' to '{}'", resourceName, configURL);
         return configURL;
