@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class YAMLUtilsTest {
     
     @Test
-    void toFlatList() throws IOException {
+    void yamlToPropertiesTest() throws IOException {
         YAML yaml = YAML.resolveConfig("test.yml");
     
         final Properties x = YAMLUtils.toProperties(yaml);
