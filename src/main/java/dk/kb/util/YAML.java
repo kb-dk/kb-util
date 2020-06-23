@@ -20,10 +20,9 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.net.URL;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -403,6 +402,48 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
+     * Parse the given configStream as YAML.
+     * @param yamlStream YAML.
+     * @return a YAML based on the given stream.
+     */
+    public static YAML parse(InputStream yamlStream) {
+        Object raw = new Yaml().load(yamlStream);
+        if (!(raw instanceof Map)) {
+            throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
+        }
+        YAML rootMap = new YAML((Map<String, Object>) raw);
+        log.trace("Parsed YAML config stream");
+        return rootMap;
+    }
+
+    /**
+     * Resolve the given YAML configurations and present a merged YAML from that.
+     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair in the stated configurations.
+     * @param configNames the names of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException if a configuration could not be fetched.
+     */
+    public static YAML resolveMultiConfig(String... configNames) throws IOException {
+        List<InputStream> configs = null;
+        try {
+            configs = Arrays.stream(configNames).map(Resolver::resolveStream).collect(Collectors.toList());
+            InputStream yamlStream = null;
+            for (InputStream config : configs) {
+                yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
+            }
+            log.debug("Fetched merged YAML config '{}'", Arrays.toString(configNames));
+            return parse(yamlStream);
+        } finally {
+            if (configs != null) {
+                for (InputStream config: configs) {
+                    config.close();
+                }
+            }
+        }
+    }
+
+    /**
      * Resolve the given YAML configuration.
      * @param configName the name of the configuration file.
      * @param confRoot the root element in the configuration or null if the full configuration is to be returned.
@@ -410,22 +451,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws IOException if the configuration could not be fetched.
      */
     public static YAML resolveConfig(String configName, String confRoot) throws IOException {
-        URL configURL = Resolver.resolveConfigFile(configName);
-
-        Object raw;
-        try (InputStream configStream = configURL.openStream()) {
-            raw = new Yaml().load(configStream);
-            if(!(raw instanceof Map)) {
-                throw new IllegalArgumentException("The config resource '" + configURL
-                        + "' does not contain a valid YAML configuration.");
-            }
-        } catch (IOException e) {
-            throw new IOException(
-                "Exception trying to load the YAML configuration from '" + configURL + "'", e);
-        }
-
-        YAML rootMap = new YAML((Map<String, Object>) raw);
-        log.debug("Fetched YAML config '{}'", configName);
+        YAML rootMap = resolveMultiConfig(configName);
 
         if (confRoot == null) {
             return rootMap;

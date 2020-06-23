@@ -1,17 +1,3 @@
-/*
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- */
 package dk.kb.util;
 
 import org.junit.jupiter.api.Test;
@@ -45,6 +31,29 @@ class YAMLTest {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
         assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
+    }
+
+    @Test
+    public void testAlias() throws IOException {
+        YAML yaml = YAML.resolveMultiConfig("alias.yml");
+        assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
+                     "The alias YAML should have the expected value for alias-using 'theServer'");
+    }
+
+    @Test
+    public void testMultiConfig() throws IOException {
+        YAML yaml = YAML.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
+        assertEquals("bar", yaml.getString("serviceSetup.someString"),
+                     "The merged YAML should have the expected value for plain key 'somestring'");
+        assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
+                     "The merged YAML should have the expected value for alias-using 'theServer'");
+    }
+
+    @Test
+    public void testMergeCollision() throws IOException {
+        YAML yaml = YAML.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
+        assertEquals("number_2", yaml.getString("collision"),
+                     "When merging, the latest definition should win");
     }
 
     @Test

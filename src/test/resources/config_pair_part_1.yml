@@ -1,0 +1,6 @@
+environment:
+  someint: 87
+  serverSetup:
+  serviceServer: &theServer "FooServer"
+# The key collision is defined on the same level for both part 1 and part 2, but with different values
+collision: "number_1"

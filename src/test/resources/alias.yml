@@ -1,0 +1,10 @@
+# Alias test
+environment:
+  someint: 87
+  serverSetup:
+  serviceServer: &theServer "FooServer"
+
+serviceSetup:
+  theServer: *theServer
+  # theServer will be used from &myserver
+  someString: "bar"
