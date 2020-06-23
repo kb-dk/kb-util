@@ -33,7 +33,7 @@ class YAMLUtilsTest {
     public void testNestedMapsProperites() throws IOException {
         YAML yaml = YAML.resolveConfig("nested_maps.yml", "test");
     
-        String flattenedValues = YAMLUtils.toProperties(yaml, true).toString();
+        String flattenedValues = YAMLUtils.toProperties(yaml).toString();
         assertEquals("{listofmaps.0.fooA2=barA2, listofmaps.0.fooA1=barA1, listofmaps.1.fooB=barB}",
                      flattenedValues);
     }
@@ -64,7 +64,7 @@ class YAMLUtilsTest {
     public void testNestedListsProperites() throws IOException {
         YAML yaml = YAML.resolveConfig("nested_lists.yml", "test");
         
-        String flattenedValues = YAMLUtils.toProperties(yaml, true).toString();
+        String flattenedValues = YAMLUtils.toProperties(yaml).toString();
         assertEquals("{listoflists.0.1=llItemA2, listoflists.1.0=llItemB, listoflists.0.0=llItemA1}",
                      flattenedValues);
     }
@@ -82,7 +82,7 @@ class YAMLUtilsTest {
     public void testNestedMixProperites() throws IOException {
         YAML yaml = YAML.resolveConfig("nested_mix.yml", "test");
         
-        String flattenedValues = YAMLUtils.toProperties(yaml, true).toString();
+        String flattenedValues = YAMLUtils.toProperties(yaml).toString();
         assertEquals("{mixedlist.0.fooM=barM, mixedlist.1=87}",
                      flattenedValues);
     }
