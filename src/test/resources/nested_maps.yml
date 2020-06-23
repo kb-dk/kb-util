@@ -1,0 +1,6 @@
+# Test YAML
+test:
+  listofmaps:
+    - fooA1: barA1
+      fooA2: barA2
+    - fooB: barB
