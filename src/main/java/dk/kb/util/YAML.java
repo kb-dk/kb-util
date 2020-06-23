@@ -77,11 +77,23 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path path for the list.
      * @return the list at the path or null if it could not be located.
      */
-    @SuppressWarnings("unchecked")
     public <T> List<T> getList(String path) {
+        return getList(path, null);
+    }
+
+    /**
+     * Resolves the list at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the list.
+     * @param defaultList if the path cannot be resolved, return this value.
+     * @return the list at the path or null if it could not be located.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> List<T> getList(String path, List<T> defaultList) {
         Object o = get(path);
         if (o == null) {
-            return null;
+            return defaultList;
         }
         if (!(o instanceof List)) {
             log.trace("Expected a List for path '{}' but got {}", path, o.getClass().getName());
@@ -123,6 +135,35 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
+     * Resolves the Short at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the Short.
+     * @return the Short at the path or null if it could not be located.
+     */
+    public Short getShort(String path) {
+        return getShort(path, null);
+    }
+
+    /**
+     * Resolves the Short at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the Short.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Short at the path or defaultValue if it could not be located.
+     */
+    public Short getShort(String path, Short defaultValue) {
+        Object o = get(path);
+        try {
+            return o == null ? defaultValue : Short.valueOf(o.toString());
+        } catch (NumberFormatException e) {
+            log.trace("Unable to parse '{}' to Short", o);
+            return null;
+        }
+    }
+
+    /**
      * Resolves the integer at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
@@ -152,11 +193,98 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
+     * Resolves the Long at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the Long.
+     * @return the Long at the path or null if it could not be located.
+     */
+    public Long getLong(String path) {
+        return getLong(path, null);
+    }
+
+    /**
+     * Resolves the Long at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the Long.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Long at the path or defaultValue if it could not be located.
+     */
+    public Long getLong(String path, Long defaultValue) {
+        Object o = get(path);
+        try {
+            return o == null ? defaultValue : Long.valueOf(o.toString());
+        } catch (NumberFormatException e) {
+            log.trace("Unable to parse '{}' to Long", o);
+            return null;
+        }
+    }
+
+    /**
+     * Resolves the double at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the double.
+     * @return the Double at the path or null if it could not be located.
+     */
+    public Double getDouble(String path) {
+        return getDouble(path, null);
+    }
+
+    /**
+     * Resolves the double at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the double.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Double at the path or defaultValue if it could not be located.
+     */
+    public Double getDouble(String path, Double defaultValue) {
+        Object o = get(path);
+        try {
+            return o == null ? defaultValue : Double.valueOf(o.toString());
+        } catch (NumberFormatException e) {
+            log.trace("Unable to parse '{}' to Double", o);
+            return null;
+        }
+    }
+
+    /**
+     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the Float.
+     * @return the Float at the path or null if it could not be located.
+     */
+    public Float getFloat(String path) {
+        return getFloat(path, null);
+    }
+
+    /**
+     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     * @param path path for the Float.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Float at the path or defaultValue if it could not be located.
+     */
+    public Float getFloat(String path, Float defaultValue) {
+        Object o = get(path);
+        try {
+            return o == null ? defaultValue : Float.valueOf(o.toString());
+        } catch (NumberFormatException e) {
+            log.trace("Unable to parse '{}' to Float", o);
+            return null;
+        }
+    }
+
+    /**
      * Resolves the boolean at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the boolean.
-     * @return the boolean at the path or null if it could not be located.
+     * @return the Boolean at the path or null if it could not be located.
      */
     public Boolean getBoolean(String path) {
         return getBoolean(path, null);
@@ -168,7 +296,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: Keys in the YAML must not contain dots.
      * @param path path for the boolean.
      * @param defaultValue if the path cannot be resolved, return this value.
-     * @return the boolean at the path or defaultValue if it could not be located.
+     * @return the Boolean at the path or defaultValue if it could not be located.
      */
     public Boolean getBoolean(String path, Boolean defaultValue) {
         Object o = get(path);
@@ -176,7 +304,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolves the String at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the string at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * Note: Object.toString is used to provide the String value, so this is safe to call for most YAML content.

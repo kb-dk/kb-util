@@ -1,11 +1,3 @@
-package dk.kb.util;
-
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 /*
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,6 +12,14 @@ import static org.junit.jupiter.api.Assertions.*;
  *  limitations under the License.
  *
  */
+package dk.kb.util;
+
+import org.junit.jupiter.api.Test;
+import java.io.IOException;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class YAMLTest {
     @Test
     public void testLoad() throws IOException {
@@ -45,5 +45,25 @@ class YAMLTest {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
         assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
+    }
+
+    @Test
+    public void testIntArray() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        List<Integer> ints = yaml.getList("arrayofints");
+        assertEquals("[1, 2]", ints.toString(),
+                     "Arrays of integers should be supported");
+    }
+    
+    @Test
+    public void testTypes() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        final double EXPECTED = 87.13;
+        double actual = yaml.getDouble("somedouble");
+
+        assertTrue(actual >= EXPECTED*0.99 && actual <= EXPECTED*1.01,
+                     "Double should be supported and as expected");
+        assertEquals(true, yaml.getBoolean("somebool"),
+                     "Boolean should be supported and as expected");
     }
 }
