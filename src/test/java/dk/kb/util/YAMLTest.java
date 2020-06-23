@@ -29,28 +29,28 @@ class YAMLTest {
     @Test
     public void testNested() throws IOException {
         YAML yaml = YAML.resolveConfig("test.yml");
-        assertEquals("Hello World", yaml.getString("test.somestring").get(),
+        assertEquals("Hello World", yaml.getString("test.somestring"),
                      "Nested request for string should be supported");
     }
 
     @Test
     public void testRoot() throws IOException {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
-        assertEquals("Hello World", yaml.getString("somestring").get(),
+        assertEquals("Hello World", yaml.getString("somestring"),
                      "Direct request for string from resolved root should be supported");
     }
     
     @Test
     public void testArray() throws IOException {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
-        assertEquals("[a, b, c]", yaml.getList("arrayofstrings").get().toString(),
+        assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
     }
     
     @Test
     public void testKeptPath() throws IOException {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
-        assertEquals("{nested.sublevel2string=sub1}", yaml.getSubMap("nested",true).get().toString(),
+        assertEquals("{nested.sublevel2string=sub1}", yaml.getSubMap("nested",true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs");
     }
 }
