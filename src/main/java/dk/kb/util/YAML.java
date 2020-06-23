@@ -324,36 +324,6 @@ public class YAML extends LinkedHashMap<String, Object> {
      * This is the recursive equivalent of {@link LinkedHashMap#forEach(BiConsumer)}.
      */
     public void forEachLeaf(BiConsumer<? super String, ? super Object> action) {
-        visitLeafs(this, "", action);
+        CollectionUtils.forEachLeaf(this, action);
     }
-
-    /**
-     * Recursive visitor of leafs, ordered and depth-first.
-     * @param map    the current point in the tree.
-     * @param path   the path for the part of the graph that is above in the tree.
-     * @param action the action to perform on each leaf with path and value as argument.
-     */
-    @SuppressWarnings({"unchecked"})
-    private static void visitLeafs(
-            Map<String, Object> map, String path, BiConsumer<? super String, ? super Object> action) {
-        map.forEach((key, value) -> {
-            String newPath = path.isEmpty() ? key : "." + key;
-            if (value instanceof Map) { // This is a node. Decent further down
-                visitLeafs((Map<String, Object>) value, newPath, action);
-            } else if (value instanceof List) { // Lists are iterated and each entry is processed
-                List<Object> list = (List<Object>)value;
-                for (int i = 0 ; i < list.size() ; i++) {
-                    String listPath = newPath + "." + i;
-                    if (list.get(i) instanceof Map) {
-                        visitLeafs((Map<String, Object>) list.get(i), listPath, action);
-                    } else {
-                        action.accept(listPath, value);
-                    }
-                }
-            } else { // Leaf encountered
-                action.accept(newPath, value);
-            }
-        });
-    }
-
 }

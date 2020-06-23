@@ -3,6 +3,9 @@ package dk.kb.util;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.security.cert.CollectionCertStoreParameters;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,5 +48,15 @@ class YAMLTest {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
         assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
+    }
+
+    @Test
+    public void testEntrySetLeafs() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", null);
+        String joined = yaml.entrySetLeafs().stream().map(Map.Entry::getKey).collect(Collectors.joining(", "));
+        assertEquals("test.somestring, test.someint, " +
+                     "test.nested.sublevel2string, " +
+                     "test.arrayofstrings.0, test.arrayofstrings.1, test.arrayofstrings.2",
+                     joined);
     }
 }
