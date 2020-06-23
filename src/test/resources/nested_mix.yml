@@ -1,0 +1,5 @@
+# Test YAML
+test:
+  mixedlist:
+    - fooM: barM
+    - 87
