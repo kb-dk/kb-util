@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 /**
@@ -38,8 +39,11 @@ public class Resolver {
      * @return an URL to the resource.
      * @throws FileNotFoundException if the resource could not be located.
      * @throws MalformedURLException if the resource location could not be converted to an URL.
+     * @throws NullPointerException if resourceName is null
+     * @throws java.nio.file.InvalidPathException if the resourceName is not a legal path-name
      */
-    public static URL resolveConfigFile(String resourceName) throws FileNotFoundException, MalformedURLException {
+    public static URL resolveConfigFile(String resourceName)
+            throws NullPointerException, FileNotFoundException, MalformedURLException, InvalidPathException {
         URL configURL;
         Path verbatimPath = Path.of(resourceName);
         if (Files.exists(verbatimPath)) {

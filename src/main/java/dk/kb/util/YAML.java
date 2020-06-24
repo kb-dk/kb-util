@@ -19,12 +19,12 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,13 +59,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param path path for the sub map.
      * @return the map at the path
-     * @throws NotFoundException if the path could not be found
+     * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List of YAMLs
      * @throws NullPointerException if the path is null
      */
     @SuppressWarnings("unchecked")
     @NotNull
-    public YAML getSubMap(String path) throws NotFoundException {
+    public YAML getSubMap(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         return getSubMap(path, false);
     }
     
@@ -77,13 +77,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path         path for the sub map.
      * @param maintainKeys preserve the path prefix for the keys in the result
      * @return the map at the path
-     * @throws NotFoundException if the path could not be found
+     * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a subMap
      * @throws NullPointerException if the path is null
      */
     @SuppressWarnings("unchecked")
     @NotNull
-    public YAML getSubMap(String path, boolean maintainKeys) throws NotFoundException, InvalidTypeException {
+    public YAML getSubMap(String path, boolean maintainKeys) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
@@ -91,13 +91,13 @@ public class YAML extends LinkedHashMap<String, Object> {
         
         if (!(found instanceof Map)) {
             throw new InvalidTypeException(
-                    "Expected a Map for path but got '" + found.getClass().getName() + "'",path);
+                    "Expected a Map for path but got '" + found.getClass().getName() + "'", path);
         }
         Map<String, Object> result;
         try {
             result = (Map<String, Object>) found;
         } catch (ClassCastException e) {
-            throw new InvalidTypeException("Exception casting '" + found + "' to Map<String, Object>",path,
+            throw new InvalidTypeException("Exception casting '" + found + "' to Map<String, Object>", path,
                                            e);
         }
         
@@ -118,13 +118,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param path path for the list.
      * @return the list at the path
-     * @throws NotFoundException if the path could not be found
+     * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List
      * @throws NullPointerException if the path is null
      */
     @SuppressWarnings("unchecked")
     @NotNull
-    public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException {
+    public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
@@ -148,13 +148,14 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param path path for the list.
      * @return the list of sub YAMLs at the path
-     * @throws NotFoundException if the path could not be found
+     * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List of YAMLs
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
      * @throws NullPointerException if the path is null
      */
     @SuppressWarnings("unchecked")
     @NotNull
-    public List<YAML> getYAMLList(String path) throws NotFoundException, InvalidTypeException {
+    public List<YAML> getYAMLList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
@@ -181,17 +182,18 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param path path for the integer.
      * @return the integer at the path
-     * @throws NotFoundException if the path could not be found
+     * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value is not a valid Integer
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
      * @throws NullPointerException if the path is null
      */
     @NotNull
-    public Integer getInteger(String path) throws NotFoundException {
+    public Integer getInteger(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object o = get(path);
         try {
             return Integer.valueOf(o.toString());
         } catch (ClassCastException e) {
-            throw new InvalidTypeException("Exception casting '" + o + "' to Integer", path,  e);
+            throw new InvalidTypeException("Exception casting '" + o + "' to Integer", path, e);
         }
     }
     
@@ -206,11 +208,11 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws NullPointerException if the path is null
      */
     @NotNull
-    public Integer getInteger(String path, Integer defaultValue) {
+    public Integer getInteger(String path, Integer defaultValue) throws NullPointerException {
         Object o;
         try {
             o = get(path);
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | InvalidTypeException e) {
             return defaultValue;
         }
         try {
@@ -228,11 +230,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param path path for the boolean.
      * @return the boolean at the path
-     * @throws NotFoundException if the path could not be found
+     * @throws NotFoundException    if the path could not be found
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
      * @throws NullPointerException if the path is null
      */
     @NotNull
-    public Boolean getBoolean(String path) throws NotFoundException{
+    public Boolean getBoolean(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object o = get(path);
         return Boolean.valueOf(o.toString());
     }
@@ -248,11 +251,11 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws NullPointerException if the path is null
      */
     @NotNull
-    public Boolean getBoolean(String path, Boolean defaultValue) {
+    public Boolean getBoolean(String path, Boolean defaultValue) throws NullPointerException {
         Object o;
         try {
             o = get(path);
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | InvalidTypeException e) {
             return defaultValue;
         }
         return Boolean.valueOf(o.toString());
@@ -267,11 +270,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param path path for the string.
      * @return the String at the path
-     * @throws NotFoundException if the path could not be found
+     * @throws NotFoundException    if the path could not be found
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
      * @throws NullPointerException if the path is null
      */
     @NotNull
-    public String getString(String path) throws NotFoundException {
+    public String getString(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         return get(path).toString();
     }
     
@@ -286,10 +290,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws NullPointerException if the path is null
      */
     @NotNull
-    public String getString(String path, String defaultValue) {
+    public String getString(String path, String defaultValue) throws NullPointerException {
         try {
             return get(path).toString();
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | InvalidTypeException e) {
             return defaultValue;
         }
     }
@@ -316,11 +320,11 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws NullPointerException if the path is null
      */
     @Override
-    public boolean containsKey(Object path) {
+    public boolean containsKey(Object path) throws NullPointerException {
         try {
             Object value = get(path);
             return value != null;
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | InvalidTypeException e) {
             return false;
         }
     }
@@ -335,7 +339,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param pathO path for the Object.
      * @return the Object. Will never return null, will rather throw exceptions
      * @throws NotFoundException    if the path cannot be found
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
      * @throws NullPointerException if the path0 is null
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -380,10 +386,19 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param configName the name of the configuration file.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if the configuration could not be fetched.
+     * @throws IOException                    if the configuration could not be fetched.
+     * @throws java.io.FileNotFoundException  if the config name does not refer to a file
+     * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
+     * @throws InvalidPathException           if the configName is not valid as a path
+     * @throws NullPointerException           if the configName is null
+     * @throws IllegalArgumentException       if the config cannot be parsed as YAML
      */
     @NotNull
-    public static YAML resolveConfig(String configName) throws IOException {
+    public static YAML resolveConfig(String configName) throws IOException,
+                                                                       FileNotFoundException,
+                                                                       MalformedURLException,
+                                                                       NullPointerException,
+                                                                       InvalidPathException {
         return resolveConfig(configName, null);
     }
     
@@ -396,11 +411,21 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws IOException                    if the configuration could not be fetched.
      * @throws java.io.FileNotFoundException  if the config name does not refer to a file
      * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
-     * @throws IllegalArgumentException if the config cannot be parsed as YAML
+     * @throws InvalidPathException           if the configName is not valid as a path
+     * @throws NullPointerException           if the configName is null
+     * @throws IllegalArgumentException       if the config cannot be parsed as YAML
+     * @throws NotFoundException              if the confRoot is not null and is not found in the YAML document
+     * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
      */
     @NotNull
-    public static YAML resolveConfig(String configName, String confRoot)
-            throws IOException, FileNotFoundException, MalformedURLException, NotFoundException {
+    public static YAML resolveConfig(@NotNull String configName, String confRoot) throws
+            IOException,
+                    FileNotFoundException,
+                    MalformedURLException,
+                    NotFoundException,
+                    InvalidTypeException,
+                    NullPointerException,
+                    InvalidPathException {
         URL configURL = Resolver.resolveConfigFile(configName);
         
         Map<String, Object> raw;
