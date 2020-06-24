@@ -53,4 +53,33 @@ class YAMLTest {
         assertEquals("{nested.sublevel2string=sub1}", yaml.getSubMap("nested",true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs");
     }
+
+    @Test
+    public void testMissingSubMap() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        try {
+            yaml.getSubMap("nonexisting");
+        } catch(NotFoundException e) {
+            return;
+        }
+        fail("Requesting a non-existing sub map should result in a NotFoundException");
+    }
+
+    @Test
+    public void testMissingString() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        try {
+            yaml.getString("nonexisting");
+        } catch(NotFoundException e) {
+            return;
+        }
+        fail("Requesting a non-existing String should result in a NotFoundException");
+    }
+
+    @Test
+    public void testDefault() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        assertEquals(87, yaml.getInteger("nonexisting", 87),
+                     "Requesting a non-existing integer with a default value should work");
+    }
 }
