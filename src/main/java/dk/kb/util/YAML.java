@@ -23,8 +23,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.SequenceInputStream;
 import java.nio.file.InvalidPathException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +84,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @SuppressWarnings("unchecked")
     @NotNull
-    public YAML getSubMap(String path, boolean maintainKeys) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public YAML getSubMap(String path, boolean maintainKeys)
+            throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
@@ -142,6 +144,24 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
+     * Resolves the list at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path        path for the list.
+     * @param defaultList if the path cannot be resolved, return this value.
+     * @return the list at the path or defaultList if it could not be located.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> List<T> getList(String path, List<T> defaultList) {
+        try {
+            return getList(path);
+        } catch (NotFoundException | InvalidPathException e) {
+            return defaultList;
+        }
+    }
+    
+    /**
      * Resolves the list of sub YAMLs at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
@@ -173,6 +193,45 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "Exception casting '" + found + "' to List<Map<String, Object>>", path, e);
         }
         return hmList.stream().map(YAML::new).collect(Collectors.toList());
+    }
+    
+    /**
+     * Resolves the Short at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path path for the Short.
+     * @return the Short at the path or null if it could not be located.
+     * @throws NotFoundException    if the path could not be found
+     * @throws InvalidTypeException if the value is not a valid Short
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
+     * @throws NullPointerException if the path is null
+     */
+    public Short getShort(String path) {
+        Object o = get(path);
+        try {
+            return Short.valueOf(o.toString());
+        } catch (NumberFormatException e) {
+            throw new InvalidTypeException("Exception casting '" + o + "' to Short", path, e);
+        }
+    }
+    
+    /**
+     * Resolves the Short at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path         path for the Short.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Short at the path or defaultValue if it could not be located.
+     * @throws NullPointerException if the path is null
+     */
+    public Short getShort(String path, Short defaultValue) {
+        try {
+            return getShort(path);
+        } catch (NotFoundException | InvalidTypeException e) {
+            return defaultValue;
+        }
     }
     
     /**
@@ -224,6 +283,122 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
+     * Resolves the Long at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path path for the Long.
+     * @return the Long at the path
+     * @throws NotFoundException    if the path could not be found
+     * @throws InvalidTypeException if the value is not a valid Long
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
+     * @throws NullPointerException if the path is null
+     */
+    public Long getLong(String path) {
+        Object o = get(path);
+        try {
+            return Long.valueOf(o.toString());
+        } catch (ClassCastException e) {
+            throw new InvalidTypeException("Exception casting '" + o + "' to Long", path, e);
+        }
+    }
+    
+    /**
+     * Resolves the Long at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path         path for the Long.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Long at the path or defaultValue if it could not be located.
+     * @throws NullPointerException if the path is null
+     */
+    public Long getLong(String path, Long defaultValue) {
+        try {
+            return getLong(path);
+        } catch (NotFoundException | InvalidTypeException e) {
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * Resolves the double at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path path for the double.
+     * @return the Double at the path
+     * @throws NotFoundException    if the path could not be found
+     * @throws InvalidTypeException if the value is not a valid Double
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
+     * @throws NullPointerException if the path is null
+     */
+    public Double getDouble(String path) {
+        Object o = get(path);
+        try {
+            return Double.valueOf(o.toString());
+        } catch (ClassCastException e) {
+            throw new InvalidTypeException("Exception casting '" + o + "' to Double", path, e);
+        }
+    }
+    
+    /**
+     * Resolves the double at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path         path for the double.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Double at the path or defaultValue if it could not be located.
+     * @throws NullPointerException if the path is null
+     */
+    public Double getDouble(String path, Double defaultValue) {
+        try {
+            return getDouble(path);
+        } catch (NotFoundException | InvalidTypeException e) {
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path path for the Float.
+     * @return the Float at the path or null if it could not be located.
+     * @throws NotFoundException    if the path could not be found
+     * @throws InvalidTypeException if the value is not a valid Float
+     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
+     * @throws NullPointerException if the path is null
+     */
+    public Float getFloat(String path) {
+        Object o = get(path);
+        try {
+            return Float.valueOf(o.toString());
+        } catch (ClassCastException e) {
+            throw new InvalidTypeException("Exception casting '" + o + "' to Float", path, e);
+        }
+    }
+    
+    /**
+     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: foo.bar
+     * Note: Keys in the YAML must not contain dots.
+     *
+     * @param path         path for the Float.
+     * @param defaultValue if the path cannot be resolved, return this value.
+     * @return the Float at the path or defaultValue if it could not be located.
+     */
+    public Float getFloat(String path, Float defaultValue) {
+        try {
+            return getFloat(path);
+        } catch (NotFoundException | InvalidTypeException e) {
+            return defaultValue;
+        }
+    }
+    
+    /**
      * Resolves the boolean at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
@@ -252,18 +427,15 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @NotNull
     public Boolean getBoolean(String path, Boolean defaultValue) throws NullPointerException {
-        Object o;
         try {
-            o = get(path);
+           return getBoolean(path);
         } catch (NotFoundException | InvalidTypeException e) {
             return defaultValue;
         }
-        return Boolean.valueOf(o.toString());
-        
     }
     
     /**
-     * Resolves the String at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the string at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: foo.bar
      * Note: Keys in the YAML must not contain dots.
      * Note: Object.toString is used to provide the String value, so this is safe to call for most YAML content.
@@ -292,7 +464,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     @NotNull
     public String getString(String path, String defaultValue) throws NullPointerException {
         try {
-            return get(path).toString();
+            return getString(path);
         } catch (NotFoundException | InvalidTypeException e) {
             return defaultValue;
         }
@@ -403,6 +575,50 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
+     * Parse the given configStream as YAML.
+     *
+     * @param yamlStream YAML.
+     * @return a YAML based on the given stream.
+     */
+    public static YAML parse(InputStream yamlStream) {
+        Object raw = new Yaml().load(yamlStream);
+        if (!(raw instanceof Map)) {
+            throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
+        }
+        YAML rootMap = new YAML((Map<String, Object>) raw);
+        log.trace("Parsed YAML config stream");
+        return rootMap;
+    }
+    
+    /**
+     * Resolve the given YAML configurations and present a merged YAML from that.
+     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair in the stated configurations.
+     *
+     * @param configNames the names of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException if a configuration could not be fetched.
+     */
+    public static YAML resolveMultiConfig(String... configNames) throws IOException {
+        List<InputStream> configs = null;
+        try {
+            configs = Arrays.stream(configNames).map(Resolver::resolveStream).collect(Collectors.toList());
+            InputStream yamlStream = null;
+            for (InputStream config : configs) {
+                yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
+            }
+            log.debug("Fetched merged YAML config '{}'", Arrays.toString(configNames));
+            return parse(yamlStream);
+        } finally {
+            if (configs != null) {
+                for (InputStream config : configs) {
+                    config.close();
+                }
+            }
+        }
+    }
+    
+    /**
      * Resolve the given YAML configuration.
      *
      * @param configName the name of the configuration file.
@@ -417,31 +633,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws NotFoundException              if the confRoot is not null and is not found in the YAML document
      * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
      */
-    @NotNull
-    public static YAML resolveConfig(@NotNull String configName, String confRoot) throws
-            IOException,
-                    FileNotFoundException,
-                    MalformedURLException,
-                    NotFoundException,
-                    InvalidTypeException,
-                    NullPointerException,
-                    InvalidPathException {
-        URL configURL = Resolver.resolveConfigFile(configName);
-        
-        Map<String, Object> raw;
-        try (InputStream configStream = configURL.openStream()) {
-            raw = new Yaml().load(configStream);
-            if (raw == null) {
-                throw new IllegalArgumentException("The config resource '" + configURL
-                                                   + "' does not contain a valid YAML configuration.");
-            }
-        } catch (IOException e) {
-            throw new IOException(
-                    "Exception trying to load the YAML configuration from '" + configURL + "'", e);
-        }
-        
-        YAML rootMap = new YAML(raw);
-        log.debug("Fetched YAML config '{}'", configName);
+    public static YAML resolveConfig(String configName, String confRoot) throws IOException {
+        YAML rootMap = resolveMultiConfig(configName);
         
         if (confRoot == null) {
             return rootMap;
