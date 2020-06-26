@@ -111,4 +111,37 @@ class YAMLTest {
         assertEquals(true, yaml.getBoolean("somebool"),
                      "Boolean should be supported and as expected");
     }
+
+    @Test
+    public void testListEntry() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        assertEquals("b", yaml.getString("arrayofstrings[1]"),
+                     "Index-specified entry in arrays should be gettable");
+        assertEquals("c", yaml.getString("arrayofstrings[last]"),
+                     "Last entry in arrays should be gettable");
+    }
+
+    @Test
+    public void testFailingListEntry() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        try {
+            yaml.getString("arrayofstrings[3]");
+            fail("Requesting an index in a collection greater than or equal to list length should fail");
+        } catch (Exception e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testListMapEntry() throws IOException {
+        YAML yaml = YAML.resolveConfig("nested_maps.yml", "test");
+        try {
+            yaml.getSubMap("listofmaps[1]");
+        } catch (NotFoundException e) {
+            fail("listofmaps[1] should return a map but failed", e);
+        }
+
+        assertEquals("barA2", yaml.getString("listofmaps[0].fooA2"),
+                     "Index-specified sub-map sub-entry should be gettable");
+    }
 }

@@ -25,10 +25,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.io.SequenceInputStream;
 import java.nio.file.InvalidPathException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -71,9 +69,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the YAML sub map at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the YAML sub map at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the sub map.
      * @param maintainKeys preserve the path prefix for the keys in the result
@@ -114,9 +111,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the list at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the list.
      * @return the list at the path
@@ -144,9 +140,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the list at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path        path for the list.
      * @param defaultList if the path cannot be resolved, return this value.
@@ -162,9 +157,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the list of sub YAMLs at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the list of sub YAMLs at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the list.
      * @return the list of sub YAMLs at the path
@@ -196,9 +190,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Short at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the Short at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the Short.
      * @return the Short at the path or null if it could not be located.
@@ -217,9 +210,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Short at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the Short at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the Short.
      * @param defaultValue if the path cannot be resolved, return this value.
@@ -235,9 +227,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the integer at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the integer at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the integer.
      * @return the integer at the path
@@ -257,9 +248,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Integer at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the Integer at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the integer.
      * @param defaultValue if the path cannot be resolved, return this value.
@@ -283,9 +273,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Long at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the Long at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the Long.
      * @return the Long at the path
@@ -304,9 +293,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Long at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the Long at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the Long.
      * @param defaultValue if the path cannot be resolved, return this value.
@@ -322,9 +310,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the double at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the double at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the double.
      * @return the Double at the path
@@ -343,9 +330,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the double at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the double at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the double.
      * @param defaultValue if the path cannot be resolved, return this value.
@@ -361,9 +347,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the float at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the Float.
      * @return the Float at the path or null if it could not be located.
@@ -382,9 +367,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the float at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the float at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the Float.
      * @param defaultValue if the path cannot be resolved, return this value.
@@ -399,9 +383,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the boolean at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the boolean at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the boolean.
      * @return the boolean at the path
@@ -416,9 +399,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the boolean at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the boolean at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the boolean.
      * @param defaultValue if the path cannot be resolved, return this value.
@@ -435,9 +417,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the string at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the string at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      * Note: Object.toString is used to provide the String value, so this is safe to call for most YAML content.
      *
      * @param path path for the string.
@@ -452,9 +433,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the string at the given path in the YAML. Supports {@code .} for path separation,
+     * Resolves the string at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path         path for the Object.
      * @param defaultValue if the path cannot be resolved, return this value.
@@ -483,9 +463,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Checks if a value is present at the given path in the YAML. Supports {@code .} for path separation,
+     * Checks if a value is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
      *
      * @param path path for the Object.
      * @return true is an Object exists for the given path.
@@ -502,8 +481,11 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Object at the given path in the YAML. Supports {@code .} for path separation,
-     * Sample path: foo.bar
+     * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either
+     * - YAML-key for direct traversal, e.g. "foo" or "foo.bar"
+     * - YAML-key[index] for a specific element in a list, e.g. "foo[2]" or "foo[2].bar"
+     * - YAML-key[last] for the last element in a list, e.g. "foo[last]" or "foo.bar[last]"
+     *
      * Note: Keys in the YAML must not contain dots.
      * <p>
      * Returns this object if the path is empty
@@ -529,17 +511,45 @@ public class YAML extends LinkedHashMap<String, Object> {
         String[] pathElements = path.split(Pattern.quote("."));
         YAML current = this;
         for (int i = 0; i < pathElements.length; i++) {
-            Object sub = current.getSuper(pathElements[i]);
+            String fullPathElement = pathElements[i];
+            Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
+            String pathKey = fullPathElement;
+            String arrayElementIndex = null;
+            if (matcher.matches()) { // foo.bar[2]
+                pathKey = matcher.group(1);
+                arrayElementIndex = matcher.group(2);
+            }
+
+            Object sub = current.getSuper(pathKey);
             if (sub == null) {
                 throw new NotFoundException(
-                        "Unable to request " + i + "'th sub-element: '" + pathElements[i] + "'", path);
+                        "Unable to request " + i + "'th sub-element: '" + pathKey + "'", path);
             }
+
+            if (arrayElementIndex != null) { // foo.bar[2]
+                if (!(sub instanceof Collection)) {
+                    throw new InvalidTypeException(String.format(
+                            Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
+                            fullPathElement, pathKey, sub.getClass().getSimpleName()), path);
+                }
+                Collection<Object> subCollection = (Collection<Object>)sub;
+                int index =  "last".equals(arrayElementIndex) ?
+                        subCollection.size()-1 :
+                        Integer.parseInt(arrayElementIndex);
+                if (index >= subCollection.size()) {
+                    throw new IndexOutOfBoundsException(String.format(
+                            Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
+                            index, subCollection.size(), fullPathElement, path));
+                }
+                sub = subCollection.stream().skip(index).findFirst().get();
+            }
+
             if (i == pathElements.length - 1) { //If this is the final pathElement, just return it
                 return sub;
             } //Otherwise, we require that it is a map so we can continue to query
             if (!(sub instanceof Map)) {
                 throw new InvalidTypeException(
-                        "The " + i + "'th sub-element ('" + pathElements[i] + "') was not a Map", path);
+                        "The " + i + "'th sub-element ('" + pathKey + "') was not a Map", path);
             }
             try { //Update current as the sub we have found
                 current = new YAML((Map<String, Object>) sub);
@@ -550,7 +560,8 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         return current;
     }
-    
+    private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]+)\\[([^]]*)]$");
+
     /* **************************** Fetching YAML ************************************ */
     
     /**
