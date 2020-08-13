@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 public class YAML extends LinkedHashMap<String, Object> {
     private static final Logger log = LoggerFactory.getLogger(YAML.class);
     
+    private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
+    
     public YAML(String resourceName) throws IOException {
         this.putAll(YAML.resolveConfig(resourceName));
     }
@@ -481,11 +483,9 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either
-     * - YAML-key for direct traversal, e.g. "foo" or "foo.bar"
-     * - YAML-key[index] for a specific element in a list, e.g. "foo[2]" or "foo[2].bar"
-     * - YAML-key[last] for the last element in a list, e.g. "foo[last]" or "foo.bar[last]"
-     *
+     * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either -
+     * YAML-key for direct traversal, e.g. "foo" or "foo.bar" - YAML-key[index] for a specific element in a list, e.g.
+     * "foo.[2]" or "foo.[2].bar" - YAML-key.[last] for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"
      * Note: Keys in the YAML must not contain dots.
      * <p>
      * Returns this object if the path is empty
@@ -513,40 +513,59 @@ public class YAML extends LinkedHashMap<String, Object> {
         for (int i = 0; i < pathElements.length; i++) {
             String fullPathElement = pathElements[i];
             Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
-            String pathKey = fullPathElement;
-            String arrayElementIndex = null;
+            final String pathKey;
+            final String arrayElementIndex;
             if (matcher.matches()) { // foo.bar[2]
                 pathKey = matcher.group(1);
                 arrayElementIndex = matcher.group(2);
+            } else {
+                pathKey = fullPathElement;
+                arrayElementIndex = null;
             }
-
-            Object sub = current.getSuper(pathKey);
+            Object sub;
+            if (pathKey.isEmpty()) {
+                sub = current;
+            } else {
+                sub = current.getSuper(pathKey);
+            }
             if (sub == null) {
                 throw new NotFoundException(
                         "Unable to request " + i + "'th sub-element: '" + pathKey + "'", path);
             }
-
-            if (arrayElementIndex != null) { // foo.bar[2]
-                if (!(sub instanceof Collection)) {
+            
+            if (arrayElementIndex != null) { // foo.bar.[2]
+                if (sub instanceof Map) {
+                    Collection<Object> subCollection = ((Map<String,Object>) sub).values();
+                    int index = "last".equals(arrayElementIndex) ?
+                                        subCollection.size() - 1 :
+                                        Integer.parseInt(arrayElementIndex);
+                    if (index >= subCollection.size()) {
+                        throw new IndexOutOfBoundsException(String.format(
+                                Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
+                                index, subCollection.size(), fullPathElement, path));
+                    }
+                    sub = subCollection.stream().skip(index).findFirst().orElseThrow(
+                            () -> new RuntimeException("This should not happen..."));
+                } else {
                     throw new InvalidTypeException(String.format(
                             Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
                             fullPathElement, pathKey, sub.getClass().getSimpleName()), path);
                 }
-                Collection<Object> subCollection = (Collection<Object>)sub;
-                int index =  "last".equals(arrayElementIndex) ?
-                        subCollection.size()-1 :
-                        Integer.parseInt(arrayElementIndex);
-                if (index >= subCollection.size()) {
-                    throw new IndexOutOfBoundsException(String.format(
-                            Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
-                            index, subCollection.size(), fullPathElement, path));
-                }
-                sub = subCollection.stream().skip(index).findFirst().get();
             }
-
+            
             if (i == pathElements.length - 1) { //If this is the final pathElement, just return it
                 return sub;
             } //Otherwise, we require that it is a map so we can continue to query
+            
+            //If sub is a list, make it a map with the indexes as keys
+            if (sub instanceof List) {
+                List<Object> list = (List<Object>) sub;
+                LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
+                for (int j = 0; j < list.size(); j++) {
+                    map.put(j + "", list.get(j));
+                }
+                sub = map;
+            }
             if (!(sub instanceof Map)) {
                 throw new InvalidTypeException(
                         "The " + i + "'th sub-element ('" + pathKey + "') was not a Map", path);
@@ -560,7 +579,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         return current;
     }
-    private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]+)\\[([^]]*)]$");
 
     /* **************************** Fetching YAML ************************************ */
     
