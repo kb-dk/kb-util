@@ -1,6 +1,8 @@
-package dk.kb.util;
+package dk.kb.util.yaml;
 
-public class InvalidTypeException extends YAMLException{
+import dk.kb.util.yaml.YAMLException;
+
+public class InvalidTypeException extends YAMLException {
     
     
     public InvalidTypeException(String message, String path) {

@@ -1,4 +1,4 @@
-package dk.kb.util;
+package dk.kb.util.yaml;
 
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
