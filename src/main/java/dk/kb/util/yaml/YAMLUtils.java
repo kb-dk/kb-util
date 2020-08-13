@@ -1,4 +1,4 @@
-package dk.kb.util;
+package dk.kb.util.yaml;
 
 import java.util.AbstractMap;
 import java.util.List;

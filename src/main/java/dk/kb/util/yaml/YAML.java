@@ -12,8 +12,9 @@
  *  limitations under the License.
  *
  */
-package dk.kb.util;
+package dk.kb.util.yaml;
 
+import dk.kb.util.Resolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;

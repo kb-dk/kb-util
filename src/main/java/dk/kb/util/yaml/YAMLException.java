@@ -1,4 +1,4 @@
-package dk.kb.util;
+package dk.kb.util.yaml;
 
 public class YAMLException extends RuntimeException {
     

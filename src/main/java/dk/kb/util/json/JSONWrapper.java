@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.kb.util;
+package dk.kb.util.json;
 
 import org.json.JSONObject;
 
