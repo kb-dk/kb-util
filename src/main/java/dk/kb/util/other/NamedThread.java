@@ -34,6 +34,7 @@ public class NamedThread implements AutoCloseable {
     
     /**
      * Name the thread from the line number is was created on
+     * This format is recognized by IntelliJ idea for quick access to the file
      */
     public NamedThread() {
         //[0] is right here
