@@ -534,23 +534,28 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
             
             if (arrayElementIndex != null) { // foo.bar.[2]
-                if (sub instanceof Map) {
-                    Collection<Object> subCollection = ((Map<String,Object>) sub).values();
-                    int index = "last".equals(arrayElementIndex) ?
-                                        subCollection.size() - 1 :
-                                        Integer.parseInt(arrayElementIndex);
-                    if (index >= subCollection.size()) {
-                        throw new IndexOutOfBoundsException(String.format(
-                                Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
-                                index, subCollection.size(), fullPathElement, path));
-                    }
-                    sub = subCollection.stream().skip(index).findFirst().orElseThrow(
-                            () -> new RuntimeException("This should not happen..."));
+                final Collection<Object> subCollection;
+                if (sub instanceof List) {
+                    subCollection = (List<Object>) sub;
+                } else if (sub instanceof Map) {
+                    subCollection = ((Map<String,Object>) sub).values();
                 } else {
                     throw new InvalidTypeException(String.format(
                             Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
                             fullPathElement, pathKey, sub.getClass().getSimpleName()), path);
+        
                 }
+    
+                int index = "last".equals(arrayElementIndex) ?
+                                    subCollection.size() - 1 :
+                                    Integer.parseInt(arrayElementIndex);
+                if (index >= subCollection.size()) {
+                    throw new IndexOutOfBoundsException(String.format(
+                            Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
+                            index, subCollection.size(), fullPathElement, path));
+                }
+                sub = subCollection.stream().skip(index).findFirst().orElseThrow(
+                        () -> new RuntimeException("This should not happen..."));
             }
             
             if (i == pathElements.length - 1) { //If this is the final pathElement, just return it
