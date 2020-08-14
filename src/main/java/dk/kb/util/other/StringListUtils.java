@@ -56,7 +56,7 @@ public class StringListUtils {
      * @param defaultValue the value if the list is empty
      * @return first value or default value if list is empty
      */
-    public static String firstOf(List<String> list, String defaultValue) {
+    public static String getFirst(List<String> list, String defaultValue) {
         if (list == null || list.isEmpty()) {
             return defaultValue;
         } else {
@@ -85,7 +85,9 @@ public class StringListUtils {
     }
     
     /**
-     * Remove empty elements from the list. if list is null, return an empty list.
+     * Remove empty elements from the list and distinct the list.
+     *
+     * if list is null, return an empty list.
      *
      * @param list the list to filter
      * @return a list without any empty elements
@@ -96,13 +98,15 @@ public class StringListUtils {
         }
         return list.stream()
                    .filter(Objects::nonNull)
-                   .filter(number -> !number.trim().isEmpty())
+                   .filter(element -> !element.trim().isEmpty())
                    .distinct()
                    .collect(Collectors.toList());
     }
     
     /**
-     * Remove empty elements from the list. if list is null, return an empty list.
+     * Remove empty elements from the list and distinct the list.
+     *
+     * if list is null, return an empty list.
      *
      * @param list the list to filter
      * @return a list without any empty elements
@@ -130,7 +134,7 @@ public class StringListUtils {
         try {
             coll.addAll(Collections.emptyList());
         } catch (java.lang.UnsupportedOperationException e){
-            coll = new ArrayList<String>(list);
+            coll = new ArrayList<>(list);
         }
         
         Iterator<String> firstIterator = coll.iterator();
@@ -150,17 +154,7 @@ public class StringListUtils {
         return (T) coll;
     }
     
-    /**
-     * Turn a bunch of objects into a set
-     *
-     * @param objects the objects
-     * @param <T>     the type of objects
-     * @return a set of the objects
-     */
-    @SafeVarargs
-    public static <T> Set<T> setOf(T... objects) {
-        return new HashSet<T>(Arrays.asList(objects));
-    }
+   
     
     /**
      * If value is null or blank, return defaultValue. Otherwise return value
@@ -196,7 +190,7 @@ public class StringListUtils {
      * @param <T>     the type of elements
      * @return the elements as a ArrayList
      */
-    public static <T> List<T> asList(T... strings) {
+    public static <T> List<T> toModifiableList(T... strings) {
         if (strings == null) {
             return new ArrayList<>();
         } else {
@@ -249,7 +243,7 @@ public class StringListUtils {
      * @param maxLength the max length of the output
      * @return a string with the middle part replaced with ...
      */
-    public static String cutMiddle(String string, int maxLength) {
+    public static String truncateMiddle(String string, int maxLength) {
         
         string = notNull(string);
         if (string.length() < maxLength) {
@@ -274,7 +268,7 @@ public class StringListUtils {
      * @param maxLength the max length
      * @return the string with the end replaced with ... if nessesary
      */
-    public static String cutEnd(String string, int maxLength) {
+    public static String truncateEnd(String string, int maxLength) {
         string = notNull(string);
         if (string.length() < maxLength) {
             return string;
