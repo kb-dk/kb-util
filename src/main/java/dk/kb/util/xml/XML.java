@@ -30,7 +30,13 @@ import java.util.List;
 
 public class XML {
     
-    public static String toXmlString(Node dom) throws TransformerException {
+    /**
+     * Serialiseses the given Document as a String
+     * @param dom the dom
+     * @return the doc in string form
+     * @throws TransformerException if the transformation failed
+     */
+    public static String domToString(Node dom) throws TransformerException {
         Transformer t = TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         
@@ -43,12 +49,18 @@ public class XML {
             t.transform(new DOMSource(dom), new StreamResult(sw));
             return sw.toString();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new TransformerException(e);
         }
     }
     
-    
-    public static <T> String toXmlString(T object) throws JAXBException {
+    /**
+     * Marshall the given object as xml
+     * @param object the object to convert to xml
+     * @param <T> the type of object
+     * @return the object serialised as xml (UTF-8)
+     * @throws JAXBException if something failed
+     */
+    public static <T> String marshall(T object) throws JAXBException {
         //TODO does this work?
         JAXBContext jc = JAXBContext.newInstance(object.getClass());
         
@@ -65,14 +77,22 @@ public class XML {
         
     }
     
+    /**
+     * Unmarshal the given xml back to a java object
+     * @param xml the xml string
+     * @param type the class of object to create
+     * @param <T> the type of object
+     * @return an instance of Type
+     * @throws RuntimeException if anything failed
+     */
     @SuppressWarnings("unchecked")
-    public static <T> T fromXml(String object, Class<T> type) {
+    public static <T> T unmarshall(String xml, Class<T> type) {
         try {
             JAXBContext jc = JAXBContext.newInstance(type.getPackageName(), type.getClassLoader());
             
             Unmarshaller unmarshaller = jc.createUnmarshaller();
             
-            try (ByteArrayInputStream in = new ByteArrayInputStream(object.getBytes(StandardCharsets.UTF_8))) {
+            try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
                 return (T) unmarshaller.unmarshal(in);
             }
         } catch (JAXBException | IOException e) {
@@ -80,13 +100,7 @@ public class XML {
         }
     }
     
-    public static List<Node> nodeList(NodeList list) {
-        List<Node> result = new ArrayList<>();
-        for (int i = 0; i < list.getLength(); i++) {
-            result.add(list.item(i));
-        }
-        return result;
-    }
+  
     
     /**
      * Parses an XML document from a String to a DOM.
@@ -94,30 +108,29 @@ public class XML {
      * @param xmlString      a String containing an XML document.
      * @param namespaceAware if {@code true} the parsed DOM will reflect any
      *                       XML namespaces declared in the document
-     * @return The document in a DOM or {@code null} on errors.
+     * @return The document in a DOM
      */
     public static Document fromXML(String xmlString,
                                    boolean namespaceAware)
             throws ParserConfigurationException, IOException, SAXException {
-        
-        InputSource in = new InputSource();
-        in.setCharacterStream(new StringReader(xmlString));
-        
+
         DocumentBuilderFactory dbFact = DocumentBuilderFactory.newInstance();
         dbFact.setNamespaceAware(namespaceAware);
-        
-        return dbFact.newDocumentBuilder().parse(in);
-        
+
+        InputSource in = new InputSource();
+        try (StringReader characterStream = new StringReader(xmlString);) {
+            in.setCharacterStream(characterStream);
+            return dbFact.newDocumentBuilder().parse(in);
+        }
     }
     
     /**
-     * Parses a XML document from a stream to a DOM or return
-     * {@code null} on error.
+     * Parses a XML document from a stream to a DOM. The Stream will NOT be closed.
      *
      * @param xmlStream      a stream containing an XML document.
      * @param namespaceAware if {@code true} the constructed DOM will reflect
      *                       the namespaces declared in the XML document
-     * @return The document in a DOM or {@code null} in case of errors
+     * @return The document in a DOM
      */
     public static Document fromXML(InputStream xmlStream,
                                    boolean namespaceAware)
@@ -128,5 +141,18 @@ public class XML {
         
         return dbFact.newDocumentBuilder().parse(xmlStream);
         
+    }
+    
+    /**
+     * Utility to convert a NodeList into a List<Node>
+     * @param list the NodeList
+     * @return the same list as a List<Node>
+     */
+    public static List<Node> nodeList(NodeList list) {
+        List<Node> result = new ArrayList<>();
+        for (int i = 0; i < list.getLength(); i++) {
+            result.add(list.item(i));
+        }
+        return result;
     }
 }
