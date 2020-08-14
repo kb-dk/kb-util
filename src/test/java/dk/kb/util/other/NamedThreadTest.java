@@ -107,13 +107,13 @@ class NamedThreadTest {
                                                                                     .startsWith("testName"),
                                                                 i -> "testName"))
                                 .count();
-        assertThat(renamed,is(10));
+        assertThat(renamed,is(10L));
         long notRenamed = IntStream.range(0, 10).mapToObj(i -> i + "")
                                    .parallel()
                                    .filter((String i) -> Thread.currentThread()
                                                                .getName()
                                                                .startsWith("testName"))
                                    .count();
-        assertThat(notRenamed,is(0));
+        assertThat(notRenamed,is(0L));
     }
 }
