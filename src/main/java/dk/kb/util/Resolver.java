@@ -165,14 +165,29 @@ public class Resolver {
         }
     }
     
-    public static Path getPathFromClasspath(String s) {
+    /**
+     * Get the absolute path to a file on classpath
+     * @param pathOnClasspath the path to the file on classpath
+     * @return the absolute path to the file, or null if the file could not be found
+     */
+    public static Path getPathFromClasspath(String pathOnClasspath) {
         try {
-            return new File(Thread.currentThread().getContextClassLoader().getResource(s).toURI()).toPath();
+            URL resource = Thread.currentThread().getContextClassLoader().getResource(pathOnClasspath);
+            if (resource == null){
+                return null;
+            }
+            return new File(resource.toURI()).toPath().toAbsolutePath();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
     
+    /**
+     * Read a file on classpath into a string. The file will be read with the UTF8 charset
+     * @param name the path to the file
+     * @return the file contents as a string, or null if the file could not be found
+     * @throws IOException if reading failed
+     */
     public static String readFileFromClasspath(String name) throws IOException {
         try (InputStream resourceAsStream = Thread.currentThread()
                                                   .getContextClassLoader()
@@ -181,7 +196,7 @@ public class Resolver {
                 log.warn("Failed to find file {}, returning null", name);
                 return null;
             } else {
-                return IOUtils.toString(resourceAsStream, Charset.defaultCharset());
+                return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
             }
         }
     }
