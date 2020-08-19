@@ -1,17 +1,14 @@
 package dk.kb.util.other;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
@@ -67,12 +64,12 @@ public class StringListUtils {
     /**
      * If param is not null return that. Otherwise return the value from props[propKey]
      *
-     * @param props   the properties to default to
      * @param param   the value to return if notNull
-     * @param propKey the key to props if param is null
+     * @param props   the properties to get default from
+     * @param propKey the key in props to get the default
      * @return param or props[propKey]
      */
-    public static String getParamOrProps(Properties props, String param, String propKey) {
+    public static String getParamOrProps(String param, Properties props, String propKey) {
         if (param == null || param.isBlank()) {
             
             if (!props.contains(propKey)) {
@@ -86,6 +83,8 @@ public class StringListUtils {
     
     /**
      * Remove empty elements from the list and distinct the list.
+     *
+     * The order of the list will be preserved, but elements will be removed.
      *
      * if list is null, return an empty list.
      *
@@ -105,6 +104,8 @@ public class StringListUtils {
     
     /**
      * Remove empty elements from the list and distinct the list.
+     *
+     * The order of the list will be preserved, but elements will be removed.
      *
      * if list is null, return an empty list.
      *
@@ -163,7 +164,7 @@ public class StringListUtils {
      * @return see above
      * This is a specialisation of #orDefault(Object, Object), where we check not just null but also blank
      */
-    public static String orDefault(String value, String defaultValue) {
+    public static String useDefaultIfNullOrEmpty(String value, String defaultValue) {
         if (value == null || value.isBlank()) {
             return defaultValue;
         } else {
@@ -178,7 +179,7 @@ public class StringListUtils {
      * @param <T> the type
      * @return see above
      */
-    public static <T> T orDefault(T value, T defaultValue) {
+    public static <T> T useDefaultIfNull(T value, T defaultValue) {
         return Optional.ofNullable(value).orElse(defaultValue);
     }
     
@@ -202,8 +203,10 @@ public class StringListUtils {
     /**
      * Substring that allows for negative indexes and indexes beyound string length
      * @param string the string
-     * @param startIndex the start index. If negative, count backwards from the end of the string
-     * @param endIndex the end index. If longer than string.length() it will wrap around the string
+     * @param startIndex the start index. If negative, count backwards from the end of the string.
+     *                   If longer than the string, cap at string length.
+     * @param endIndex the end index. If negative, count backwards from the end of the string.
+     *                 If longer than the string, cap at string length.
      * @return the substring
      */
     public static String substring(String string, int startIndex, int endIndex) {
@@ -211,29 +214,40 @@ public class StringListUtils {
         
         while (startIndex < 0) {
             if (string.length() > 0) {
+                //Negative index so subtract it from the length of the string
+                //This allows you to use a negative index to start a number of chars from the END of the string
                 startIndex = startIndex + string.length();
             } else {
-                startIndex = string.length();
+                //String is length 0 so break the loop
+                startIndex = 0;
             }
         }
         
         while (endIndex < 0) {
             if (string.length() > 0) {
+                //Negative index so subtract it from the length of the string
+                //This allows you to use a negative index to start a number of chars from the END of the string
                 endIndex = endIndex + string.length();
             } else {
-                endIndex = string.length();
+                //String is length 0 so break the loop
+                endIndex = 0;
             }
         }
-        
-        if (startIndex > string.length()) {
-            startIndex = string.length();
-        }
-        int endindex = Math.min(endIndex, string.length());
+    
+        //If index is beyound the string length, set it to the the string length
+        startIndex = Math.min(startIndex, string.length());
+        endIndex = Math.min(endIndex, string.length());
         
         if (startIndex > endIndex) {
-            return string.substring(startIndex) + string.substring(0, endIndex);
+            //If start is beyound end, substring as two strings
+            //First part is from the start to the end_of_string
+            String first = string.substring(startIndex);
+            //Second part is from the start_of_string to endIndex
+            String second = string.substring(0, endIndex);
+            return first + second;
         } else {
-            return string.substring(startIndex, endindex);
+            //StartIndex is no larger than endIndex so do a normal boring substring
+            return string.substring(startIndex, endIndex);
         }
     }
     
@@ -246,7 +260,7 @@ public class StringListUtils {
     public static String truncateMiddle(String string, int maxLength) {
         
         string = notNull(string);
-        if (string.length() < maxLength) {
+        if (string.length() <= maxLength) {
             return string;
         }
         String truncateString = "...";
@@ -270,7 +284,7 @@ public class StringListUtils {
      */
     public static String truncateEnd(String string, int maxLength) {
         string = notNull(string);
-        if (string.length() < maxLength) {
+        if (string.length() <= maxLength) {
             return string;
         }
         String truncateString = "...";

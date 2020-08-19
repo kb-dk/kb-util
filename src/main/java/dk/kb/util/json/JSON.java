@@ -6,111 +6,120 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 
 import javax.ws.rs.ext.ContextResolver;
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.util.Date;
 
 
 public class JSON implements ContextResolver<ObjectMapper> {
-  private ObjectMapper mapper;
-
-  public JSON() {
-    mapper = new ObjectMapper();
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-    mapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
-    mapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
-    mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
-    mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
-
-    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    mapper.disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS);
-
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-
-    mapper.setDateFormat(new RFC3339DateFormat());
-  }
-  
-  public static String toJson(Object object) {
-      return toJson(object, true);
-  }
-  
-  public static <T> String toJson(T object, boolean indent) {
-      
-      if (object == null) {
-          return "";
-      }
-      JSON json = new JSON();
-      ObjectMapper mapper = json.getContext(object.getClass());
-      
-      
-      if (indent) {
-          mapper.enable(SerializationFeature.INDENT_OUTPUT);
-      } else {
-          mapper.disable(SerializationFeature.INDENT_OUTPUT);
-      }
-      
-      
-      try {
-          return mapper.writeValueAsString(object);
-      } catch (JsonProcessingException e) {
-          throw new RuntimeException(e);
-      }
-  }
-  
-  public static <T> T fromJson(String object, Class<T> type) {
-      JSON json = new JSON();
-      ObjectMapper mapper = json.getContext(type);
-      
-      try {
-          return mapper.readValue(object, type);
-      } catch (IOException e) {
-          throw new RuntimeException(e);
-      }
-  }
+    private ObjectMapper mapper;
     
-    public static <T> T fromJson(File object, Class<T> type) {
+    /**
+     * Create a new JSON converter
+     */
+    public JSON() {
+        mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        
+        mapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
+        mapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
+        mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
+        mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
+        
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS);
+        
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+    
+        StdDateFormat fmt = new StdDateFormat();
+        fmt.withColonInTimeZone(true);
+        mapper.setDateFormat(fmt);
+    }
+    
+    /**
+     * Serialise the given java object as json. This is equivalent to calling #toJson(object,true)
+     * @param object the java object to serialise
+     * @return as json
+     * @see #toJson(Object, boolean)
+     */
+    public static String toJson(Object object) {
+        return toJson(object, true);
+    }
+    
+    /**
+     * Serialise the given java object as json.
+     * @param object the java object to serialise
+     * @param indent if true, the resulting string will include linebreaks and indents. If false, the resulting
+     *               string will be just one line, as suitable for jsonLines documents
+     * @param <T> the type of object
+     * @return the object serialised as a string
+     */
+    public static <T> String toJson(T object, boolean indent) {
+        
+        if (object == null) {
+            return "";
+        }
+        JSON json = new JSON();
+        ObjectMapper mapper = json.getContext(object.getClass());
+        
+        
+        if (indent) {
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        } else {
+            mapper.disable(SerializationFeature.INDENT_OUTPUT);
+        }
+        
+        
+        try {
+            return mapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    /**
+     * Create java object from json string
+     * @param jsonString the json string
+     * @param type the Class of java object to create
+     * @param <T> the type of java object to create
+     * @return a java object of type Type
+     */
+    public static <T> T fromJson(String jsonString, Class<T> type) {
         JSON json = new JSON();
         ObjectMapper mapper = json.getContext(type);
         
         try {
-            return mapper.readValue(object, type);
+            return mapper.readValue(jsonString, type);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-  
-  /**
-   * Set the date format for JSON (de)serialization with Date properties.
-   * @param dateFormat Date format
-   */
-  public void setDateFormat(DateFormat dateFormat) {
-    mapper.setDateFormat(dateFormat);
-  }
-
-  @Override
-  public ObjectMapper getContext(Class<?> type) {
-    return mapper;
-  }
-
-
-  static class RFC3339DateFormat extends com.fasterxml.jackson.databind.util.StdDateFormat {
-
-    private static final long serialVersionUID = -3215326930097719238L;
-
-    // Same as ISO8601DateFormat but serializing milliseconds.
-    @Override
-    public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
-      String value = ISO8601Utils.format(date, true);
-      toAppendTo.append(value);
-      return toAppendTo;
+    
+    /**
+     * Read json file and inflate it as a java object
+     * @param file the file to read
+     * @param type the class of the object
+     * @param <T> the class of the object
+     * @return the object
+     */
+    public static <T> T fromJson(File file, Class<T> type) {
+        JSON json = new JSON();
+        ObjectMapper mapper = json.getContext(type);
+        
+        try {
+            return mapper.readValue(file, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-  }
+   
+    @Override
+    public ObjectMapper getContext(Class<?> type) {
+        return mapper;
+    }
+    
+   
 }

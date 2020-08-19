@@ -53,6 +53,7 @@
 
 
         <!--Included utiltities-->
+        <!--Not all of these are used, but you would want to use them, so include them here-->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -101,17 +102,24 @@
         </dependency>
 
 
-        <!--Nessesary for xml with java 11-->
+        <!--Nessesary for jaxb-xml with java 11-->
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>2.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>2.3.3</version>
+            <scope>runtime</scope>
         </dependency>
 
 
         <!--For Json-->
         <!-- https://mvnrepository.com/artifact/org.json/json -->
         <dependency>
+            <!--Only for the incomplete JSONWrapper-->
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20190722</version>

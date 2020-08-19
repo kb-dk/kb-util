@@ -32,6 +32,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -56,140 +57,179 @@ public class XpathUtils {
             XPathFactory.newInstance().newXPath();
     
     
+    /**
+     * Create a new xpath selector configured with the given namespaces
+     *
+     * @param nsContextStrings map of namespace prefix to namespace uri
+     * @return a brand new xpath selector
+     */
+    public static XPathSelector createXPathSelector(Map<String, String> nsContextStrings) {
+        return new XPathSelectorImpl(nsContextStrings);
+    }
+    
+    
+    /**
+     * Create a new xpath selector configured with the given namespaces
+     *
+     * @param nsContextStrings list of strings. Every pair is a namespace-prefix and namespace uri
+     * @return a brand new xpath selector
+     */
     public static XPathSelector createXPathSelector(String... nsContextStrings) {
-        return new XPathSelector() {
-            
-            private NamespaceContext nsContext = new DefaultNamespaceContext(null, nsContextStrings);
-            
-            private LRUCache<String, XPathExpression> cache  = new LRUCache<String, XPathExpression>(50, true);
+        return new XPathSelectorImpl(nsContextStrings);
+        
+    }
     
-    
-    
-            
-            @Override
-            public Integer selectInteger(Node node, String xpath, Integer defaultValue) {
-                String strVal = selectString(node, xpath);
-                if (strVal == null || "".equals(strVal)) {
-                    return defaultValue;
-                }
-                return Integer.valueOf(strVal);
+    private static class XPathSelectorImpl implements XPathSelector {
+        
+        private final NamespaceContext nsContext;
+        
+        private LRUCache<String, XPathExpression> cache = new LRUCache<>(50);
+        
+        private XPathSelectorImpl(String... nsContextStrings) {
+            nsContext = new DefaultNamespaceContext(null, nsContextStrings);
+        }
+        
+        private XPathSelectorImpl(Map<String, String> nsContextStrings) {
+            nsContext = new DefaultNamespaceContext(null, nsContextStrings);
+        }
+        
+        @Override
+        public Integer selectInteger(Node node, String xpath, Integer defaultValue) {
+            String strVal = selectString(node, xpath);
+            if (strVal == null || "".equals(strVal)) {
+                return defaultValue;
             }
-            
-            @Override
-            public Integer selectInteger(Node node, String xpath) {
-                return selectInteger(node, xpath, null);
+            return Integer.valueOf(strVal);
+        }
+        
+        @Override
+        public Integer selectInteger(Node node, String xpath) {
+            return selectInteger(node, xpath, null);
+        }
+        
+        @Override
+        public Double selectDouble(Node node, String xpath, Double defaultValue) {
+            Double d = (Double) selectObject(node, xpath, XPathConstants.NUMBER);
+            if (d == null || d.equals(Double.NaN)) {
+                d = defaultValue;
             }
-            
-            @Override
-            public Double selectDouble(Node node, String xpath, Double defaultValue) {
-                Double d = (Double) selectObject(node, xpath, XPathConstants.NUMBER);
-                if (d == null || d.equals(Double.NaN)) {
-                    d = defaultValue;
-                }
-                return d;
+            return d;
+        }
+        
+        
+        @Override
+        public Double selectDouble(Node node, String xpath) {
+            return selectDouble(node, xpath, null);
+        }
+        
+        @Override
+        public Boolean selectBoolean(Node node, String xpath, Boolean defaultValue) {
+            String tmp = selectString(node, xpath, null);
+            if (tmp == null) {
+                return defaultValue;
             }
-            
-            
-            @Override
-            public Double selectDouble(Node node, String xpath) {
-                return selectDouble(node, xpath, null);
-            }
-            
-            @Override
-            public Boolean selectBoolean(Node node, String xpath, Boolean defaultValue) {
-                String tmp = selectString(node, xpath, null);
-                if (tmp == null) {
-                    return defaultValue;
-                }
-                return Boolean.parseBoolean(tmp);
-            }
-            
-            @Override
-            public Boolean selectBoolean(Node node, String xpath) {
-                return selectBoolean(node, xpath, null);
-            }
-            
-            @Override
-            public String selectString(Node node, String xpath, String defaultValue) {
-                if ("".equals(defaultValue)) {
-                    // By default the XPath engine will return an empty string
-                    // if it is unable to find the requested path
-                    return (String) selectObject(node, xpath, XPathConstants.STRING);
-                }
-                
-                Node n = selectNode(node, xpath);
-                if (n == null) {
-                    return defaultValue;
-                }
-                
-                // FIXME: Can we avoid running the xpath twice?
-                //        The local expression cache helps, but anyway...
+            return Boolean.parseBoolean(tmp);
+        }
+        
+        @Override
+        public Boolean selectBoolean(Node node, String xpath) {
+            return selectBoolean(node, xpath, null);
+        }
+        
+        @Override
+        public String selectString(Node node, String xpath, String defaultValue) {
+            if ("".equals(defaultValue)) {
+                // By default the XPath engine will return an empty string
+                // if it is unable to find the requested path
                 return (String) selectObject(node, xpath, XPathConstants.STRING);
             }
             
-            @Override
-            public String selectString(Node node, String xpath) {
-                return selectString(node, xpath, "");
+            Node n = selectNode(node, xpath);
+            if (n == null) {
+                return defaultValue;
             }
             
-            @Override
-            public List<Node> selectNodeList(Node dom, String xpath) {
-                return XML.nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET));
-            }
+            // FIXME: Can we avoid running the xpath twice?
+            //        The local expression cache helps, but anyway...
+            return (String) selectObject(node, xpath, XPathConstants.STRING);
+        }
+        
+        @Override
+        public String selectString(Node node, String xpath) {
+            return selectString(node, xpath, "");
+        }
+        
+        @Override
+        public List<Node> selectNodeList(Node dom, String xpath) {
+            return nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET));
+        }
+        
+        @Override
+        public List<String> selectStringList(Node dom, String xpath) {
+            return nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET))
+                      .stream()
+                      .map(node -> node.getNodeValue())
+                      .collect(Collectors.toList());
+        }
+        
+        
+        @Override
+        public Node selectNode(Node dom, String xpath) {
+            return (Node) selectObject(dom, xpath, XPathConstants.NODE);
+        }
+        
+        protected Object selectObject(Node dom, String xpath, QName returnType) {
+            Object retval = null;
             
-            @Override
-            public List<String> selectStringList(Node dom, String xpath) {
-                return XML.nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET))
-                                                  .stream()
-                                                  .map(node -> node.getNodeValue())
-                                                  .collect(Collectors.toList());
-            }
-            
-            
-            @Override
-            public Node selectNode(Node dom, String xpath) {
-                return (Node) selectObject(dom, xpath, XPathConstants.NODE);
-            }
-            
-            protected Object selectObject(Node dom, String xpath, QName returnType) {
-                Object retval = null;
+            try {
+                XPathExpression exp = getXPathExpression(xpath);
                 
-                try {
-                    XPathExpression exp = getXPathExpression(xpath);
-                    
-                    retval = exp.evaluate(dom, returnType);
-                } catch (NullPointerException e) {
-                    log.debug(String.format(Locale.ROOT,
-                            "NullPointerException when extracting XPath '%s' on " +
-                            "element type %s. Returning null",
-                                            xpath, returnType.getLocalPart()), e);
-                } catch (XPathExpressionException e) {
-                    log.warn(String.format(Locale.ROOT,
-                            "Error in XPath expression '%s' when selecting %s: %s",
-                            xpath, returnType.getLocalPart(), e.getMessage()), e);
-                }
-                
-                return retval;
+                retval = exp.evaluate(dom, returnType);
+            } catch (NullPointerException e) {
+                log.debug(String.format(Locale.ROOT,
+                                        "NullPointerException when extracting XPath '%s' on " +
+                                        "element type %s. Returning null",
+                                        xpath, returnType.getLocalPart()), e);
+            } catch (XPathExpressionException e) {
+                log.warn(String.format(Locale.ROOT,
+                                       "Error in XPath expression '%s' when selecting %s: %s",
+                                       xpath, returnType.getLocalPart(), e.getMessage()), e);
             }
             
+            return retval;
+        }
+        
+        
+        private XPathExpression getXPathExpression(String xpath) throws XPathExpressionException {
+            // Get the compiled xpath from the cache or compile and
+            // cache it if we don't have it
             
-            private XPathExpression getXPathExpression(String xpath) throws XPathExpressionException {
-                // Get the compiled xpath from the cache or compile and
-                // cache it if we don't have it
-                
-                XPathExpression exp = cache.get(xpath);
-                if (exp == null) {
-                    synchronized (xpathCompiler) {
-                        if (nsContext != null) {
-                            xpathCompiler.setNamespaceContext(nsContext);
-                        }
-                        exp = xpathCompiler.compile(xpath);
-                        cache.put(xpath, exp);
+            XPathExpression exp = cache.get(xpath);
+            if (exp == null) {
+                synchronized (xpathCompiler) {
+                    if (nsContext != null) {
+                        xpathCompiler.setNamespaceContext(nsContext);
                     }
+                    exp = xpathCompiler.compile(xpath);
+                    cache.put(xpath, exp);
                 }
-                return exp;
             }
-        };
+            return exp;
+        }
+        
+    }
+    
+    /**
+     * Utility to convert a NodeList into a List<Node>
+     * @param list the NodeList
+     * @return the same list as a List<Node>
+     */
+    public static List<Node> nodeList(NodeList list) {
+        List<Node> result = new ArrayList<>();
+        for (int i = 0; i < list.getLength(); i++) {
+            result.add(list.item(i));
+        }
+        return result;
     }
     
     private static class DefaultNamespaceContext implements NamespaceContext {
@@ -246,6 +286,15 @@ public class XpathUtils {
             
             for (int i = 0; i < nsContext.length; i += 2) {
                 setNameSpace(nsContext[i + 1], nsContext[i]);
+            }
+        }
+        
+        public DefaultNamespaceContext(String defaultNamespaceURI,
+                                       Map<String, String> nsContexts) {
+            this(defaultNamespaceURI);
+            
+            for (Map.Entry<String, String> nscontext : nsContexts.entrySet()) {
+                setNameSpace(nscontext.getValue(),nscontext.getKey());
             }
         }
         

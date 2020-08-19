@@ -11,9 +11,8 @@ import java.util.Map;
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     private int initialCapacity;
 
-    public LRUCache(int initialCapacity,
-                    boolean accessOrder) {
-        super(initialCapacity + 1, 0.75f, accessOrder);
+    public LRUCache(int initialCapacity) {
+        super(initialCapacity + 1, 0.75f, true);
         this.initialCapacity = initialCapacity;
     }
 

@@ -200,4 +200,15 @@ public class Resolver {
             }
         }
     }
+    
+    /**
+     * open an inputstream for a  on classpath
+     * @param name the path to the file
+     * @return the inputstream to the file
+     */
+    public static InputStream openFileFromClasspath(String name) {
+        return Thread.currentThread()
+                                                  .getContextClassLoader()
+                                                  .getResourceAsStream(name);
+    }
 }

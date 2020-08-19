@@ -7,10 +7,13 @@ import java.util.function.Function;
 
 /**
  * Class to automatically chain generated iterators Use it like {@code Iterator combined = new AutochainingIterator(i ->
- * getIterator(i)) } I.e. feed it a function (Integer -> Iterator<T>) to generate the next iterator in the set. The
- * Integer input to the function is the offset, i.e. the count of objects seen so far. Whenever the current iterator is
- * exhausted, it generates the next one and continues from there. This continues until the generating function returns
- * null or an iterator with no next element;
+ * getIterator(i)) } I.e. feed it a function (offset -> (newOffset,Iterator<T>) ) to generate the next iterator+offset in the set. The
+ * input to the function is the previous offset, or null for the very first iterator. Whenever the current iterator is
+ * exhausted, it generates the next one and continues from there. This continues until
+ *  1. the generating function returns
+ *      a. null
+ *      b. an iterator with no next element
+ *  2. The returned offset is identical to the input offset
  *
  * @param <T> the type of object iterated over
  */

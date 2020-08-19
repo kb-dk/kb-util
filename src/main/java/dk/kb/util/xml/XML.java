@@ -2,7 +2,6 @@ package dk.kb.util.xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -25,8 +24,6 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 public class XML {
     
@@ -88,7 +85,7 @@ public class XML {
     @SuppressWarnings("unchecked")
     public static <T> T unmarshall(String xml, Class<T> type) {
         try {
-            JAXBContext jc = JAXBContext.newInstance(type.getPackageName(), type.getClassLoader());
+            JAXBContext jc = JAXBContext.newInstance(type);
             
             Unmarshaller unmarshaller = jc.createUnmarshaller();
             
@@ -141,18 +138,5 @@ public class XML {
         
         return dbFact.newDocumentBuilder().parse(xmlStream);
         
-    }
-    
-    /**
-     * Utility to convert a NodeList into a List<Node>
-     * @param list the NodeList
-     * @return the same list as a List<Node>
-     */
-    public static List<Node> nodeList(NodeList list) {
-        List<Node> result = new ArrayList<>();
-        for (int i = 0; i < list.getLength(); i++) {
-            result.add(list.item(i));
-        }
-        return result;
     }
 }
