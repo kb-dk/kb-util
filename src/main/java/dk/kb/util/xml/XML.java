@@ -106,6 +106,9 @@ public class XML {
      * @param namespaceAware if {@code true} the parsed DOM will reflect any
      *                       XML namespaces declared in the document
      * @return The document in a DOM
+     * @throws ParserConfigurationException if creating an Xml parser failed (should not happen)
+     * @throws IOException If reading the xml string failed (should not happen)
+     * @throws SAXException if the xml parsing failed
      */
     public static Document fromXML(String xmlString,
                                    boolean namespaceAware)
@@ -128,6 +131,9 @@ public class XML {
      * @param namespaceAware if {@code true} the constructed DOM will reflect
      *                       the namespaces declared in the XML document
      * @return The document in a DOM
+     * @throws ParserConfigurationException if creating an Xml parser failed (should not happen)
+     * @throws IOException If reading the xml string failed (should not happen)
+     * @throws SAXException if the xml parsing failed
      */
     public static Document fromXML(InputStream xmlStream,
                                    boolean namespaceAware)

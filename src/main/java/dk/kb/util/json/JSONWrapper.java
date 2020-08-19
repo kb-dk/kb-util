@@ -25,13 +25,19 @@ public class JSONWrapper {
 
     /**
      * Resolves the Object at the given JSON path
-     * @param path
-     * @return
+     * @param path the path
+     * @param json  the json
+     * @return the object
      */
     public static Object getObject(JSONObject json, String path) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
-
+    
+    /**
+     *  something
+      * @param path the path
+     * @return the object
+     */
     public Object getObjects(String path) {
         throw new UnsupportedOperationException("Not implemented yet");
     }

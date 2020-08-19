@@ -127,7 +127,6 @@ public class StringListUtils {
      * Remove any entries in the list that are contained in any other entries in the list
      *
      * @param list the list to clean
-     * @param <T>  the type of list
      * @return a list without any elements that was a substring of any other element in the list
      */
     public static List<String> removeSubstrings(List<String> list) {

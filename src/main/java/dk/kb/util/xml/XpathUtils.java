@@ -220,9 +220,9 @@ public class XpathUtils {
     }
     
     /**
-     * Utility to convert a NodeList into a List<Node>
+     * Utility to convert a NodeList into a {@code List<Node>}
      * @param list the NodeList
-     * @return the same list as a List<Node>
+     * @return the same list as a {@code List<Node>}
      */
     public static List<Node> nodeList(NodeList list) {
         List<Node> result = new ArrayList<>();

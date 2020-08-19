@@ -71,7 +71,7 @@ public class NamedThread implements AutoCloseable {
     }
     
     /**
-     * Append the name to the thread name, separated by ->
+     * Append the name to the thread name, separated by {@code ->}
      * @param name the postfix to the threadname
      * @return a NamedThread
      */
@@ -100,10 +100,10 @@ public class NamedThread implements AutoCloseable {
      *
      * To be used like
      *
-     * <code>
+     * {@code
      *     .map(NamedThread.function(a -> doSomethingAdvanced(a),
      *                                 a -> a.toString()))
-     * </code>
+     * }
      *
      * Each invocation of doSomethingAdvanced will run with a thread named
      * from the input value a. This is especially relevant when working with parallel streams.

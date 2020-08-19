@@ -122,6 +122,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      *
      * @param path path for the list.
+     * @param <T> the type of elements in the list
      * @return the list at the path
      * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List
@@ -151,6 +152,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      *
      * @param path        path for the list.
+     * @param <T> the type of elements in the list
      * @param defaultList if the path cannot be resolved, return this value.
      * @return the list at the path or defaultList if it could not be located.
      */

@@ -9,7 +9,7 @@ import java.util.function.Function;
  * Class to automatically chain generated iterators.
  *
  * Use it like {@code Iterator combined = new AutochainingIterator(i ->
- * getIterator(i)) } I.e. feed it a function (offset -> (newOffset,Iterator<T>) ) to generate the next iterator+offset in the set. The
+ * getIterator(i)) } I.e. feed it a function ({@code offset -> (newOffset,Iterator<T>) }) to generate the next iterator+offset in the set. The
  * input to the function is the previous offset, or null for the very first iterator. Whenever the current iterator is
  * exhausted, it generates the next one and continues from there. This continues until
  *  1. the generating function returns
