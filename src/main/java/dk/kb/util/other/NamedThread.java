@@ -3,6 +3,7 @@ package dk.kb.util.other;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Autoclosable thread namer. To be used like
@@ -86,10 +87,6 @@ public class NamedThread implements AutoCloseable {
         currentThread.setName(oldName);
     }
     
-    public String postfixed(String newName) {
-        return name + "->" + newName;
-    }
-    
     public String getName() {
         return Thread.currentThread().getName();
     }
@@ -104,7 +101,7 @@ public class NamedThread implements AutoCloseable {
      * To be used like
      *
      * <code>
-     *     .map(NamedThread.namedThread(a -> doSomethingAdvanced(a),
+     *     .map(NamedThread.function(a -> doSomethingAdvanced(a),
      *                                 a -> a.toString()))
      * </code>
      *
@@ -117,9 +114,11 @@ public class NamedThread implements AutoCloseable {
      * @param <R> the return type of the function
      * @return a function that will name the thread before each invocation
      */
-    public static <T, R> Function<T, R> namedThread(Function<T, R> function, Function<T, String> namingFunction) {
+    public static <T, R> Function<T, R> function(Function<T, R> function, Function<T, String> namingFunction) {
+        //https://stackoverflow.com/a/29137665
         return t -> {
-            try (NamedThread namedThread = new NamedThread(namingFunction.apply(t))) {
+            try (NamedThread ignored = new NamedThread(namingFunction.apply(t))) {
+                assert ignored != null; //suppress the warning about ignored not being used
                 return function.apply(t);
             }
         };
@@ -127,15 +126,16 @@ public class NamedThread implements AutoCloseable {
     
     /**
      * Same as #namedThread(Function, Function) but for a Consumer
-     * @see #namedThread(Function, Function)
+     * @see #function(Function, Function)
      * @param consumer the consumer to wrap
      * @param namingFunction The function to compute a name for the invocation
      * @param <T> the input type of the consumer
      * @return a wrapped consumer
      */
-    public static <T> Consumer<T> namedThread(Consumer<T> consumer, Function<T, String> namingFunction) {
+    public static <T> Consumer<T> consumer(Consumer<T> consumer, Function<T, String> namingFunction) {
         return t -> {
-            try (NamedThread namedThread = new NamedThread(namingFunction.apply(t))) {
+            try (NamedThread ignored = new NamedThread(namingFunction.apply(t))) {
+                assert ignored != null; //suppress the warning about ignored not being used
                 consumer.accept(t);
             }
         };
@@ -144,16 +144,35 @@ public class NamedThread implements AutoCloseable {
     
     /**
      * Same as #namedThread(Function, Function) but for a Predicate
-     * @see #namedThread(Function, Function)
+     * @see #function(Function, Function)
      * @param predicate the predicate to wrap
      * @param namingFunction The function to compute a name for the invocation
      * @param <T> the input type of the predicate
      * @return a wrapped predicate
      */
-    public static <T> Predicate<T> namedThread(Predicate<T> predicate, Function<T, String> namingFunction) {
+    public static <T> Predicate<T> predicate(Predicate<T> predicate, Function<T, String> namingFunction) {
         return t -> {
-            try (NamedThread namedThread = new NamedThread(namingFunction.apply(t))) {
+            try (NamedThread ignored = new NamedThread(namingFunction.apply(t))) {
+                assert ignored != null; //suppress the warning about ignored not being used
                 return predicate.test(t);
+            }
+        };
+        
+    }
+    
+    /**
+     * Same as #namedThread(Function, Function) but for a Supplier
+     * @see #function(Function, Function)
+     * @param predicate the predicate to wrap
+     * @param namingFunction The function to compute a name for the invocation
+     * @param <T> the input type of the predicate
+     * @return a wrapped predicate
+     */
+    public static <T> Supplier<T> supplier(Supplier<T> predicate, Supplier<String> namingFunction) {
+        return () -> {
+            try (NamedThread ignored = new NamedThread(namingFunction.get())) {
+                assert ignored != null; //suppress the warning about ignored not being used
+                return predicate.get();
             }
         };
         

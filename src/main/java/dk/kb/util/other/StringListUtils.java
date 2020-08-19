@@ -130,8 +130,8 @@ public class StringListUtils {
      * @param <T>  the type of list
      * @return a list without any elements that was a substring of any other element in the list
      */
-    public static <T extends Collection<String>> T removeSubstrings(T list) {
-        Collection<String> coll = list;
+    public static List<String> removeSubstrings(List<String> list) {
+        List<String> coll = list;
         try {
             coll.addAll(Collections.emptyList());
         } catch (java.lang.UnsupportedOperationException e){
@@ -152,7 +152,7 @@ public class StringListUtils {
             }
         }
         
-        return (T) coll;
+        return coll;
     }
     
    
@@ -187,15 +187,17 @@ public class StringListUtils {
     /**
      * Return the elements as a MODIFIABLE list
      *
-     * @param strings the elements
+     * @param elements the elements
      * @param <T>     the type of elements
      * @return the elements as a ArrayList
      */
-    public static <T> List<T> toModifiableList(T... strings) {
-        if (strings == null) {
+    @SafeVarargs
+    @SuppressWarnings("varargs")
+    public static <T> List<T> toModifiableList(T... elements) {
+        if (elements == null) {
             return new ArrayList<>();
         } else {
-            return new ArrayList<>(Arrays.asList(strings));
+            return new ArrayList<T>(Arrays.asList(elements));
         }
     }
     

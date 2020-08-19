@@ -29,7 +29,6 @@ public class JSON implements ContextResolver<ObjectMapper> {
         mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
         
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mapper.disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS);
         
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);

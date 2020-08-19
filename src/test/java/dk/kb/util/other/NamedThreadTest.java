@@ -1,17 +1,13 @@
 package dk.kb.util.other;
 
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class NamedThreadTest {
     
@@ -20,9 +16,10 @@ class NamedThreadTest {
         String oldName = Thread.currentThread().getName();
         assertThat(oldName, is(not("testName")));
         
-        try (NamedThread named = new NamedThread()) {
+        try (NamedThread ignored = new NamedThread()) {
+            assert ignored != null; //suppress the warning about ignored not being used
             //We test that the thread was named for this line, so do not change the line number or the test will fail
-            assertThat(Thread.currentThread().getName(), is(("dk.kb.util.other.NamedThreadTest(NamedThreadTest.java:23) ")));
+            assertThat(Thread.currentThread().getName(), is(("dk.kb.util.other.NamedThreadTest(NamedThreadTest.java:19) ")));
         }
         assertThat(Thread.currentThread().getName(), is(oldName));
         
@@ -34,7 +31,8 @@ class NamedThreadTest {
         String oldName = Thread.currentThread().getName();
         assertThat(oldName, is(not("testName")));
         
-        try (NamedThread named = NamedThread.as("testName")) {
+        try (NamedThread ignored = NamedThread.as("testName")) {
+            assert ignored != null; //suppress the warning about ignored not being used
             assertThat(Thread.currentThread().getName(), is(("testName")));
         }
         assertThat(Thread.currentThread().getName(), is(oldName));
@@ -46,7 +44,8 @@ class NamedThreadTest {
         String oldName = Thread.currentThread().getName();
         assertThat(oldName, is(not("testName")));
         
-        try (NamedThread named = NamedThread.postfix("testName")) {
+        try (NamedThread ignored = NamedThread.postfix("testName")) {
+            assert ignored != null; //suppress the warning about ignored not being used
             assertThat(Thread.currentThread().getName(), is((oldName + "->testName")));
         }
         assertThat(Thread.currentThread().getName(), is(oldName));
@@ -61,7 +60,7 @@ class NamedThreadTest {
         
         IntStream.range(0, 10).mapToObj(i -> i + "")
                  .parallel()
-                 .map(NamedThread.namedThread((String i) -> Thread.currentThread().getName() + i,
+                 .map(NamedThread.function((String i) -> Thread.currentThread().getName() + i,
                                               i -> "testName"))
                  .forEach(element -> assertThat(element, startsWith("testName")));
         
@@ -79,7 +78,7 @@ class NamedThreadTest {
         
         IntStream.range(0, 10).mapToObj(i -> i + "")
                  .parallel()
-                 .forEach(NamedThread.namedThread((String i) -> {
+                 .forEach(NamedThread.consumer((String i) -> {
                                                       String threadname = Thread.currentThread().getName();
                                                       assertThat(threadname, startsWith("testName"));
                                                   },
@@ -102,9 +101,9 @@ class NamedThreadTest {
         
         long renamed = IntStream.range(0, 10).mapToObj(i -> i + "")
                                 .parallel()
-                                .filter(NamedThread.namedThread((String i) -> Thread.currentThread()
-                                                                                    .getName()
-                                                                                    .startsWith("testName"),
+                                .filter(NamedThread.predicate((String i) -> Thread.currentThread()
+                                                                                  .getName()
+                                                                                  .startsWith("testName"),
                                                                 i -> "testName"))
                                 .count();
         assertThat(renamed,is(10L));

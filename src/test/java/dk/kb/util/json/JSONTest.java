@@ -29,14 +29,17 @@ class JSONTest {
     
     @Test
     void fromJsonString() {
-        ArrayList result = JSON.fromJson("[ \"foo\", \"bar\" ]", ArrayList.class);
+        ArrayList<?> result = JSON.fromJson("[ \"foo\", \"bar\" ]", ArrayList.class);
         assertThat(result, is(List.of("foo", "bar")));
     }
     
     @Test
     void FromJsonFile() {
         Path path = Resolver.getPathFromClasspath("json/test.json");
-        ArrayList result = JSON.fromJson(path.toFile(), ArrayList.class);
+        if (path == null){
+            fail("Path json/test.json not found on classpath");
+        }
+        ArrayList<?> result = JSON.fromJson(path.toFile(), ArrayList.class);
         assertThat(result, is(List.of("foo", "bar")));
     }
 }

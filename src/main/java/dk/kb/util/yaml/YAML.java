@@ -35,7 +35,11 @@ import java.util.stream.Collectors;
  * Wrapper for SnakeYAML output for easier access to the YAML elements.
  */
 public class YAML extends LinkedHashMap<String, Object> {
+
     private static final Logger log = LoggerFactory.getLogger(YAML.class);
+
+    private static final long serialVersionUID = -5211961549015821194L;
+
     
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
     
@@ -617,12 +621,20 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     public static YAML parse(InputStream yamlStream) {
         Object raw = new Yaml().load(yamlStream);
-        if (!(raw instanceof Map)) {
+        if (raw instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String,Object> map = (Map<String,Object>) raw;
+            //Get a classcast exception here, and not someplace later https://stackoverflow.com/a/509288
+            for (String s : map.keySet());
+            for (Object o : map.values());
+            
+            YAML rootMap = new YAML(map);
+            log.trace("Parsed YAML config stream");
+            return rootMap;
+        } else {
             throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
         }
-        YAML rootMap = new YAML((Map<String, Object>) raw);
-        log.trace("Parsed YAML config stream");
-        return rootMap;
+        
     }
     
     /**

@@ -33,8 +33,8 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * same xpath.
  */
 public class XpathUtils {
-    private static Logger log = LoggerFactory.getLogger(XpathUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(XpathUtils.class);
     
     /**
      * Importatnt: All access to the xpathCompiler should be synchronized on it since it is not thread safe!
@@ -83,7 +83,7 @@ public class XpathUtils {
         
         private final NamespaceContext nsContext;
         
-        private LRUCache<String, XPathExpression> cache = new LRUCache<>(50);
+        private final LRUCache<String, XPathExpression> cache = new LRUCache<>(50);
         
         private XPathSelectorImpl(String... nsContextStrings) {
             nsContext = new DefaultNamespaceContext(null, nsContextStrings);
@@ -235,12 +235,12 @@ public class XpathUtils {
     private static class DefaultNamespaceContext implements NamespaceContext {
         
         /* URI -> prefixes map */
-        private Map<String, Collection<String>> namespace;
+        private final Map<String, Collection<String>> namespace;
         
         /* prefix -> URI map */
-        private Map<String, String> prefixes;
+        private final Map<String, String> prefixes;
         
-        private String defaultNamespaceURI;
+        private final String defaultNamespaceURI;
         
         
         /**
@@ -258,18 +258,18 @@ public class XpathUtils {
          * @param defaultNamespaceURI , the default namespace for this context.
          */
         public DefaultNamespaceContext(String defaultNamespaceURI) {
-            namespace = new HashMap<String, Collection<String>>();
-            prefixes = new HashMap<String, String>();
+            namespace = new HashMap<>();
+            prefixes = new HashMap<>();
             this.defaultNamespaceURI = defaultNamespaceURI;
             
             namespace.put(XMLConstants.XMLNS_ATTRIBUTE_NS_URI,
-                          Arrays.asList(XMLConstants.XMLNS_ATTRIBUTE));
+                          Collections.singletonList(XMLConstants.XMLNS_ATTRIBUTE));
             
             prefixes.put(XMLConstants.XMLNS_ATTRIBUTE,
                          XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
             
             namespace.put(XMLConstants.XML_NS_URI,
-                          Arrays.asList(XMLConstants.XML_NS_PREFIX));
+                          Collections.singletonList(XMLConstants.XML_NS_PREFIX));
             
             prefixes.put(XMLConstants.XML_NS_PREFIX,
                          XMLConstants.XML_NS_URI);
@@ -360,30 +360,30 @@ public class XpathUtils {
         }
         
         @Override
-        public Iterator getPrefixes(String namespaceURI) {
+        public Iterator<String> getPrefixes(String namespaceURI) {
             
             if (namespaceURI == null) {
                 throw new IllegalArgumentException();
             }
             
             if (namespaceURI.equals(XMLConstants.XML_NS_URI)) {
-                return new NonModifiableIterator(
-                        Arrays.asList(XMLConstants.XML_NS_PREFIX).iterator());
+                return new NonModifiableIterator<>(
+                        Collections.singletonList(XMLConstants.XML_NS_PREFIX).iterator());
             }
             if (namespaceURI.equals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI)) {
-                return new NonModifiableIterator(
-                        Arrays.asList(XMLConstants.XMLNS_ATTRIBUTE).iterator());
+                return new NonModifiableIterator<>(
+                        Collections.singletonList(XMLConstants.XMLNS_ATTRIBUTE).iterator());
             }
             if (namespaceURI.equals(defaultNamespaceURI)) {
-                return new NonModifiableIterator(
-                        Arrays.asList(XMLConstants.DEFAULT_NS_PREFIX).iterator());
+                return new NonModifiableIterator<>(
+                        Collections.singletonList(XMLConstants.DEFAULT_NS_PREFIX).iterator());
             }
             
             Collection<String> s = namespace.get(namespaceURI);
             if (s != null && !namespace.isEmpty()) {
-                return new NonModifiableIterator(s.iterator());
+                return new NonModifiableIterator<>(s.iterator());
             } else {
-                return new NonModifiableIterator(new HashSet().iterator());
+                return new NonModifiableIterator<>(Collections.emptyIterator());
             }
         }
         
@@ -394,11 +394,11 @@ public class XpathUtils {
          * @version $Id: DefaultNamespaceContext.java,v 1.5 2007/10/04 13:28:21 te Exp $
          * @see NamespaceContext#getPrefixes(String)
          */
-        static class NonModifiableIterator implements Iterator {
+        static class NonModifiableIterator<T> implements Iterator<T> {
             
-            Iterator wrapped;
+            Iterator<T> wrapped;
             
-            NonModifiableIterator(Iterator iter) {
+            NonModifiableIterator(Iterator<T> iter) {
                 wrapped = iter;
             }
             
@@ -419,7 +419,7 @@ public class XpathUtils {
              * @return the next element in the iteration.
              * @throws java.util.NoSuchElementException iteration has no more elements.
              */
-            public Object next() {
+            public T next() {
                 return wrapped.next();
             }
             

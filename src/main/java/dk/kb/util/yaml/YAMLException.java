@@ -2,6 +2,7 @@ package dk.kb.util.yaml;
 
 public class YAMLException extends RuntimeException {
     
+    private static final long serialVersionUID = 1559704030944080679L;
     private final String path;
   
     public YAMLException(String message, String path) {

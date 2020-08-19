@@ -8,6 +8,8 @@ import dk.kb.util.yaml.YAMLException;
 public class NotFoundException extends YAMLException {
     
     
+    private static final long serialVersionUID = 8017942512809154887L;
+    
     public NotFoundException(String message, String path) {
         super(message, path);
     }

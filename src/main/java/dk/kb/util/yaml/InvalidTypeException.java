@@ -1,9 +1,10 @@
 package dk.kb.util.yaml;
 
-import dk.kb.util.yaml.YAMLException;
 
 public class InvalidTypeException extends YAMLException {
     
+    
+    private static final long serialVersionUID = -9187713485292697301L;
     
     public InvalidTypeException(String message, String path) {
         super(message, path);
