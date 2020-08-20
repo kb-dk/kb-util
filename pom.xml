@@ -6,6 +6,7 @@
         <groupId>org.sbforge</groupId>
         <artifactId>sbforge-parent</artifactId>
         <version>22</version>
+        <relativePath></relativePath><!-- override default parentpath of ../pom.xml-->
     </parent>
 
     <groupId>dk.kb.util</groupId>
@@ -40,6 +41,7 @@
              <api.check.phase>none</api.check.phase>
              to disable forbidden APIs check -->
         <api.check.phase>process-test-classes</api.check.phase>
+        <test.groups>all</test.groups>
     </properties>
 
     <dependencies>
