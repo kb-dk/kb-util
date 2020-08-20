@@ -15,7 +15,7 @@ class ResolverTest {
     void getPathFromClasspath() {
         Path path = Resolver.getPathFromClasspath("resolver/testfile.txt");
         assertThat(Files.exists(path),is(true));
-        assertThat(path.toString(),startsWith(System.getProperty("user.home")));
+        assertThat(path.toString(), startsWith(System.getProperty("user.dir")));
     
     }
     
