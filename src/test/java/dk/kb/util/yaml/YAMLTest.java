@@ -1,6 +1,8 @@
 package dk.kb.util.yaml;
 
 import org.junit.jupiter.api.Test;
+
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
 
@@ -10,6 +12,13 @@ class YAMLTest {
     @Test
     public void testLoad() throws IOException {
         YAML.resolveConfig("test.yml");
+    }
+    
+    @Test
+    public void testEmptyList() throws IOException {
+        YAML yaml = YAML.resolveConfig("test.yml");
+        List<YAML> result = yaml.getYAMLList("test.emptyList");
+        assertEquals(0,result.size());
     }
 
     @Test

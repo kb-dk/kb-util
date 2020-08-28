@@ -13,3 +13,4 @@ test:
   arrayofints:
     - 1
     - 2
+  emptyList: []
