@@ -41,7 +41,6 @@
              <api.check.phase>none</api.check.phase>
              to disable forbidden APIs check -->
         <api.check.phase>process-test-classes</api.check.phase>
-        <test.groups>all</test.groups>
     </properties>
 
     <dependencies>
@@ -157,15 +156,5 @@
 
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
-                <configuration>
-                    <groups>${test.groups}</groups>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+
 </project>
