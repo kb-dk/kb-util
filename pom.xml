@@ -6,7 +6,6 @@
         <groupId>org.sbforge</groupId>
         <artifactId>sbforge-parent</artifactId>
         <version>22</version>
-        <relativePath></relativePath><!-- override default parentpath of ../pom.xml-->
     </parent>
 
     <groupId>dk.kb.util</groupId>
