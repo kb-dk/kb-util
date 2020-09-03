@@ -22,7 +22,11 @@ import java.util.Map;
  *
  * @deprecated Use the implementation at dk.kb.util.yaml.YAML.
  */
+@Deprecated
 public class YAML extends dk.kb.util.yaml.YAML {
+    
+    private static final long serialVersionUID = -8109147742768411693L;
+    
     public YAML(String resourceName) throws IOException {
         super(resourceName);
     }
