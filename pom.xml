@@ -87,12 +87,15 @@
         <!--Utilities end-->
 
 
+        <!--YAML-->
         <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>1.23</version>
         </dependency>
+        <!--YAML end-->
+
 
         <!--Logging-->
         <dependency>
@@ -102,20 +105,23 @@
         </dependency>
 
 
+        <!--XML-->
         <!--Nessesary for jaxb-xml with java 11-->
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>2.3.3</version>
         </dependency>
+
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
             <version>2.3.3</version>
             <scope>runtime</scope>
         </dependency>
+        <!--XML end-->
 
-        <!--For Json-->
+        <!--JSON-->
         <!-- https://mvnrepository.com/artifact/org.json/json -->
         <dependency>
             <!--Only for the incomplete JSONWrapper-->
@@ -135,7 +141,8 @@
             <artifactId>jakarta.ws.rs-api</artifactId>
             <version>2.1.5</version>
         </dependency>
-        <!--Json end-->
+        <!--JSON end-->
+
 
         <!--Testing-->
         <dependency>
