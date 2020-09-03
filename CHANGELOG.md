@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Shadow-class `dk.kb.util.YAML` introduced to compensate for breaking backwards
+compatibility in 1.2.0.
+
 ## [1.2.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.2.0)
 
 ### Added

@@ -32,6 +32,9 @@ review your changes.
 The content of `kb-util` is expected to be used across multiple projects and it is
 expected to be a light weight dependency: Please don't add an utility for OCRing of
 subtitles from video streams, requiring gigabytes of third party libraries.
+
+**Important:** Refactoring or other changes that breaks backwards compatibility
+should be explicitly discussed with the reviewer.
  
 ## Release procedure
 
