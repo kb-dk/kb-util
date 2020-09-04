@@ -48,7 +48,8 @@ The practical steps are
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html): The typical release
 will bump the `MINOR` version and set `PATCH` to 0. Keep the `-SNAPSHOT`-part as
 the Maven release plugin handles that detail.   
-1. Ensure that [CHANGELOG.md](CHANGELOG.md) is up to date. `git log` is your friend.
+1. Ensure that [CHANGELOG.md](CHANGELOG.md) is up to date. `git log` is your friend. 
+Ensure that the about to be release version is noted in the changelog entry
 1. Ensure all local changes are committed and pushed.
 1. Ensure that your local `.m2/settings.xml` has a current `sbforge-nexus`-setup
 (contact Kim Christensen kb@ or another Maven-wrangler for help)
