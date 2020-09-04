@@ -6,8 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.3.0)
+
+### Added
+
 - Shadow-class `dk.kb.util.YAML` introduced to compensate for breaking backwards
 compatibility in 1.2.0.
+
+- Dependency for jaxb runtime (org.glassfish.jaxb:jaxb-runtime) to make xml classes 
+not throw runtime exceptions due to missing implementation
+
+### Updated
+
+- Dependencies updated:
+    - snakeyaml: 1.23 -> 1.26
+    - slf4j-api: 1.7.25 -> 1.7.30
+    - jackson-databind: 2.9.10 -> 2.11.2
+    - jakarta.ws.rs-api: 2.1.5 -> 2.1.6
 
 ## [1.2.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.2.0)
 
