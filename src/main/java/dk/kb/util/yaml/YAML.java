@@ -15,17 +15,21 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.io.SequenceInputStream;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -637,6 +641,30 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
         }
         
+    }
+    
+    /**
+     * Parse the given Path as YAML.
+     *
+     * @param yamlPath path to YAML File.
+     * @return a YAML based on the given stream.
+     */
+    public static YAML parse(Path yamlPath) throws IOException {
+        try (InputStream in = IOUtils.buffer(new FileInputStream(yamlPath.toFile()))) {
+            return parse(in);
+        }
+    }
+    
+    /**
+     * Parse the given File as YAML.
+     *
+     * @param yamlFile path to YAML File.
+     * @return a YAML based on the given stream.
+     */
+    public static YAML parse(File yamlFile) throws IOException {
+        try (InputStream in = IOUtils.buffer(new FileInputStream(yamlFile))) {
+            return parse(in);
+        }
     }
     
     /**
