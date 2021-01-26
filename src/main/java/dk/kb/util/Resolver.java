@@ -29,7 +29,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -38,6 +37,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -118,6 +118,7 @@ public class Resolver {
             return paths;
         }
 
+        // Resolve the different places to look (if the glob is not absolute)
         List<String> prefixes = new ArrayList<>();
         if (Paths.get(glob).isAbsolute()) {
             prefixes.add(""); // Empty String is prefix for absolute paths
@@ -127,6 +128,8 @@ public class Resolver {
         }
 
         for (String prefix: prefixes) {
+            // Overall principle is recursive descend, but only visiting the folders that are viable candidates.
+            // This is done by splitting the glob in segments
             String absoluteGlob = prefix + glob;
             List<PathMatcher> matchers = Arrays.stream(absoluteGlob.split(Pattern.quote(File.separator))).
                     filter(segment -> !segment.isEmpty()).
@@ -143,12 +146,14 @@ public class Resolver {
     private static void walkMatches(
             Path current, List<PathMatcher> matchers, int matchersIndex, Consumer<Path> consumer) {
         if (!Files.isDirectory(current)) {
-            if (matchersIndex == matchers.size()) {
+            if (matchersIndex == matchers.size()) { // Reached the bottom and all matches pass
                 consumer.accept(current);
             }
             return;
         }
         try {
+            // List the content of the current folder, recursively descending to the ones matching the relevant
+            // segment from the overall glob
             Files.list(current).
                     filter(path -> matchers.get(matchersIndex).matches(path.getFileName())).
                     forEach(path -> walkMatches(path, matchers, matchersIndex+1, consumer));
