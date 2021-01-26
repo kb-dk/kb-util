@@ -29,9 +29,19 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Resolves resources using best effort (verbatim given string, looking in user home, on the path etc).
@@ -94,7 +104,59 @@ public class Resolver {
         log.debug("Resolved '{}' to '{}'", resourceName, configURL);
         return configURL;
     }
-    
+
+    /**
+     * Resolve 0 or more files from a given glob. If no absolute path is given, the current path and users home is used.
+     * Examples: {@code myconfig*.yaml}, {@code setup/myconfig.yaml}, {@code /home/someapp/conf/prod-*-conf/*.yaml}.
+     * @param glob a Unix-style glob, using the syntax from {@link java.nio.file.FileSystem#getPathMatcher(String)}
+     *             with the exception of {@code **}.
+     * @return a list of Paths matching the given glob or the empty list if there were no matches.
+     */
+    public static List<Path> resolveGlob(String glob) {
+        List<Path> paths = new ArrayList<>();
+        if (glob == null || glob.isEmpty()) {
+            return paths;
+        }
+
+        List<String> prefixes = new ArrayList<>();
+        if (Paths.get(glob).isAbsolute()) {
+            prefixes.add(""); // Empty String is prefix for absolute paths
+        } else { // user home & current
+            prefixes.add(System.getProperty("user.home") + File.separator);
+            prefixes.add(FileSystems.getDefault().getPath("").toAbsolutePath().toString() + File.separator);
+        }
+
+        for (String prefix: prefixes) {
+            String absoluteGlob = prefix + glob;
+            List<PathMatcher> matchers = Arrays.stream(absoluteGlob.split(Pattern.quote(File.separator))).
+                    filter(segment -> !segment.isEmpty()).
+                    map(segment -> FileSystems.getDefault().getPathMatcher("glob:" + segment)).
+                    collect(Collectors.toList());
+            for (File root: File.listRoots()) {
+                walkMatches(root.toPath(), matchers, 0, paths::add);
+            }
+        }
+        log.debug("Resolved glob '" + glob + "' to " + paths.size() + " files");
+        return paths;
+    }
+    // Recursive descend through folders matching the segments
+    private static void walkMatches(
+            Path current, List<PathMatcher> matchers, int matchersIndex, Consumer<Path> consumer) {
+        if (!Files.isDirectory(current)) {
+            if (matchersIndex == matchers.size()) {
+                consumer.accept(current);
+            }
+            return;
+        }
+        try {
+            Files.list(current).
+                    filter(path -> matchers.get(matchersIndex).matches(path.getFileName())).
+                    forEach(path -> walkMatches(path, matchers, matchersIndex+1, consumer));
+        } catch (IOException e) {
+            throw new RuntimeException("IOException while walking " + current, e);
+        }
+    }
+
     /**
      * Wrapper for {@link #resolveConfigFile(String)} that opens an InputStream for the given resource.
      * Note: This method has no checked exceptions: It wraps IOExceptions as runtime exceptions.
