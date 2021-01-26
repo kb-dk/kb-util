@@ -140,6 +140,7 @@ public class Resolver {
             }
         }
         log.debug("Resolved glob '" + glob + "' to " + paths.size() + " files");
+        Collections.sort(paths);
         return paths;
     }
     // Recursive descend through folders matching the segments
