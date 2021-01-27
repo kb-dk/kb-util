@@ -601,7 +601,11 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolve the given YAML configuration.
      *
-     * @param configName the name of the configuration file.
+     * Note: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files are iterated in alphanumerical order
+     * so that subsequent YAML definitions overwrites previous ones. See also {@link #resolveMultiConfig(String...)}.
+     *
+     * @param configName the name, path or glob for the configuration file.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException                    if the configuration could not be fetched.
      * @throws java.io.FileNotFoundException  if the config name does not refer to a file
@@ -621,7 +625,6 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Parse the given configStream as YAML.
-     *
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
@@ -672,16 +675,23 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair in the stated configurations.
      *
-     * @param configNames the names of the configuration files.
+     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files are returned in alphanumerical order.
+     *
+     * @param configNames the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException if a configuration could not be fetched.
      */
     public static YAML resolveMultiConfig(String... configNames) throws IOException {
         List<InputStream> configs = null;
         try {
-            configs = Arrays.stream(configNames).map(Resolver::resolveStream).collect(Collectors.toList());
+            configs = Arrays.stream(configNames).
+                    map(Resolver::resolveGlob).flatMap(Collection::stream).
+                    map(YAML::openStream).
+                    collect(Collectors.toList());
             InputStream yamlStream = null;
             for (InputStream config : configs) {
+                System.out.println("Streamo");
                 yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
             }
             log.debug("Fetched merged YAML config '{}'", Arrays.toString(configNames));
@@ -694,11 +704,23 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
         }
     }
+    private static InputStream openStream(Path path) {
+        try {
+            System.out.println("Opening " + path);
+            return path.toUri().toURL().openStream();
+        } catch (IOException e) {
+            throw new RuntimeException("IOException opening stream for '" + path + "'", e);
+        }
+    }
     
     /**
      * Resolve the given YAML configuration.
      *
-     * @param configName the name of the configuration file.
+     * Note: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files are iterated in alphanumerical order
+     * so that subsequent YAML definitions overwrites previous ones. See also {@link #resolveMultiConfig(String...)}.
+     *
+     * @param configName the path, name or glob of the configuration file.
      * @param confRoot   the root element in the configuration or null if the full configuration is to be returned.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException                    if the configuration could not be fetched.
