@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Resolves resources using best effort (verbatim given string, looking in user home, on the path etc).
@@ -107,6 +108,7 @@ public class Resolver {
 
     /**
      * Resolve 0 or more files from a given glob. If no absolute path is given, the current path and users home is used.
+     * The files are returned in alphanumerical order.
      * Examples: {@code myconfig*.yaml}, {@code setup/myconfig.yaml}, {@code /home/someapp/conf/prod-*-conf/*.yaml}.
      * @param glob a Unix-style glob, using the syntax from {@link java.nio.file.FileSystem#getPathMatcher(String)}
      *             with the exception of {@code **}.
@@ -118,7 +120,7 @@ public class Resolver {
             return paths;
         }
 
-        // Resolve the different places to look (if the glob is not absolute)
+        // Resolve the different places to start looking (if the glob is not absolute)
         List<String> prefixes = new ArrayList<>();
         if (Paths.get(glob).isAbsolute()) {
             prefixes.add(""); // Empty String is prefix for absolute paths
@@ -129,18 +131,21 @@ public class Resolver {
 
         for (String prefix: prefixes) {
             // Overall principle is recursive descend, but only visiting the folders that are viable candidates.
-            // This is done by splitting the glob in segments
+            // This is done by splitting the glob in segments, one segment per folder, then walking down the hierarchy
+            // while ensuring that each step in the hierarchy matches the right segment of the glob.
             String absoluteGlob = prefix + glob;
-            List<PathMatcher> matchers = Arrays.stream(absoluteGlob.split(Pattern.quote(File.separator))).
-                    filter(segment -> !segment.isEmpty()).
+            Stream<String> segments = Arrays.stream(absoluteGlob.split(Pattern.quote(File.separator)));
+            List<PathMatcher> matchers = segments.
+                    filter(segment -> !segment.isEmpty()). // The first segment is always empty due to the splitting
                     map(segment -> FileSystems.getDefault().getPathMatcher("glob:" + segment)).
                     collect(Collectors.toList());
+            // This simply resolves to {@code /} on unix systems, but there can be multiple roots on Windows
             for (File root: File.listRoots()) {
                 walkMatches(root.toPath(), matchers, 0, paths::add);
             }
         }
-        log.debug("Resolved glob '" + glob + "' to " + paths.size() + " files");
         Collections.sort(paths);
+        log.debug("Resolved glob '" + glob + "' to " + paths.size() + " files");
         return paths;
     }
     // Recursive descend through folders matching the segments
