@@ -56,4 +56,10 @@ class ResolverTest {
                    Resolver.resolveGlob(parent2 + "/ya[klm]l/over*-[1-2].yam?").size() == 2);
     }
 
+    @Test
+    void resolveGlobRelative() {
+        assertThat("Globbing relative to the class path should work",
+                   Resolver.resolveGlob("yaml/overwrite*.yaml").size() == 2);
+    }
+
 }

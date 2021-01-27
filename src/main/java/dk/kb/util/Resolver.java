@@ -107,7 +107,8 @@ public class Resolver {
     }
 
     /**
-     * Resolve 0 or more files from a given glob. If no absolute path is given, the current path and users home is used.
+     * Resolve 0 or more files from a given glob. If no absolute path is given, the current path, users home and
+     * the JVM classpath are used.
      * The files are returned in alphanumerical order.
      * Examples: {@code myconfig*.yaml}, {@code setup/myconfig.yaml}, {@code /home/someapp/conf/prod-*-conf/*.yaml}.
      * @param glob a Unix-style glob, using the syntax from {@link java.nio.file.FileSystem#getPathMatcher(String)}
@@ -124,9 +125,15 @@ public class Resolver {
         List<String> prefixes = new ArrayList<>();
         if (Paths.get(glob).isAbsolute()) {
             prefixes.add(""); // Empty String is prefix for absolute paths
-        } else { // user home & current
+        } else { // user home & current folder & class paths
             prefixes.add(System.getProperty("user.home") + File.separator);
             prefixes.add(FileSystems.getDefault().getPath("").toAbsolutePath().toString() + File.separator);
+            String cp = System.getProperty("java.class.path");
+            if (cp != null && ! cp.isEmpty()) {
+                Arrays.stream(cp.split(File.pathSeparator)).
+                        map(path -> FileSystems.getDefault().getPath(path).toAbsolutePath().toString() + File.separator).
+                        forEach(prefixes::add);
+            }
         }
 
         for (String prefix: prefixes) {

@@ -95,6 +95,15 @@ class YAMLTest {
     }
 
     @Test
+    public void testMultiGlob() throws IOException {
+        YAML yaml = YAML.resolveMultiConfig("config_pair_part_[1-2].yml");
+        assertEquals("bar", yaml.getString("serviceSetup.someString"),
+                     "The merged YAML should have the expected value for plain key 'somestring'");
+        assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
+                     "The merged YAML should have the expected value for alias-using 'theServer'");
+    }
+
+    @Test
     public void testMergeCollision() throws IOException {
         YAML yaml = YAML.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
         assertEquals("number_2", yaml.getString("collision"),
