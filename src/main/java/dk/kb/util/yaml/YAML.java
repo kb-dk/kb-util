@@ -691,7 +691,6 @@ public class YAML extends LinkedHashMap<String, Object> {
                     collect(Collectors.toList());
             InputStream yamlStream = null;
             for (InputStream config : configs) {
-                System.out.println("Streamo");
                 yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
             }
             log.debug("Fetched merged YAML config '{}'", Arrays.toString(configNames));
