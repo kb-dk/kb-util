@@ -706,7 +706,6 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     private static InputStream openStream(Path path) {
         try {
-            System.out.println("Opening " + path);
             return path.toUri().toURL().openStream();
         } catch (IOException e) {
             throw new RuntimeException("IOException opening stream for '" + path + "'", e);
@@ -717,7 +716,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Resolve the given YAML configuration.
      *
      * Note: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
-     * in the {@code myapp} folder. When globbing is used, the matching files are iterated in alphanumerical order
+     * in the {@code myapp-conf} folder. When globbing is used, the matching files are iterated in alphanumerical order
      * so that subsequent YAML definitions overwrites previous ones. See also {@link #resolveMultiConfig(String...)}.
      *
      * @param configName the path, name or glob of the configuration file.
