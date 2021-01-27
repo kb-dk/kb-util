@@ -1,0 +1,10 @@
+upperA:
+  subElement: foo
+  subYAML:
+    sub2Element: bar
+  subList:
+    - one
+    - two
+upperB:
+  subBElement: 87
+
