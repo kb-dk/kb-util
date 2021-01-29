@@ -78,8 +78,21 @@ class ResolverTest {
 
         assertThat("The file '" + known + "' should be resolved with both /./ and /../ in the path",
                    is(Resolver.resolveGlob("yaml/subfolder/./../subfolder/somefile.yaml").size()).matches(1));
+    }
+
+    @Test
+    void extractSegments() {
+        assertThat("Glob segments that dots higher than root at the start should not be seen as viable",
+                   is(Resolver.extractSegments("/../foo/bar.txt").size()).matches(0));
+
+        assertThat("Sanity check of dotting up to the edge should pass",
+                   is(Resolver.extractSegments("/foo/../foo/bar.txt").size()).matches(2));  // ["foo", "bar.txt"]
+
+        assertThat("Glob segments that dots higher than root at some point not be seen as viable",
+                   is(Resolver.extractSegments("/foo/../../boom/bar.txt").size()).matches(0));
 
     }
+
 
     @Test
     void resolveGlobRelative() {

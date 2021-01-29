@@ -142,8 +142,12 @@ public class Resolver {
             // Overall principle is recursive descend, but only visiting the folders that are viable candidates.
             // This is done by splitting the glob in segments, one segment per folder, then walking down the hierarchy
             // while ensuring that each step in the hierarchy matches the right segment of the glob.
+            List<String> segments = extractSegments(prefix + glob);
+            if (segments.isEmpty()) { // Not a viable glob
+                continue;
+            }
             List<PathMatcher> matchers =
-                    extractSegments(prefix + glob).stream().
+                    segments.stream().
                     map(segment -> FileSystems.getDefault().getPathMatcher("glob:" + segment)).
                     collect(Collectors.toList());
             // This simply resolves to {@code /} on unix systems, but there can be multiple roots on Windows
