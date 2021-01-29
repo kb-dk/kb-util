@@ -56,6 +56,8 @@ Ensure that the about-to-be-released version is noted in the changelog entry
 1. Follow the instructions on
 [Guide to using the release plugin](https://maven.apache.org/guides/mini/guide-releasing.html)
 which boils down to
-   * Run `mvn release:prepare`
-   * Check that everything went well, then run `mvn release:perform`
+   * Run `mvn clean release:prepare`
+   * Check that everything went well, then run `mvn clean release:perform`
    * Run `git push`   
+   If anything goes wrong during release, rollback and delete tags using something like
+   `mvn release:rollback ; git tag -d kb-util-1.4.2 ; git push --delete origin kb-util-1.4.2`
