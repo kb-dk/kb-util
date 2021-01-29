@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-## [1.4.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.3.0)
+- Bugfix/improvement: Globbing now supports . and .. (foo/bar/../bar/./boom.txt)
 
+## [1.4.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.3.0)
 
 ### Added
 - `YAML.parse` methods that takes a Path or File as input, rather than a classpath Name or InputStream. Just for more flexibility in how to read your YAML file.
