@@ -5,20 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Added
 
-- Bugfix/improvement: Globbing now supports . and .. (foo/bar/../bar/./boom.txt)
 
-## [1.4.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.3.0)
+## [1.4.1](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.1)
+### Bugfix
 
+- Globbing now supports . and .. (foo/bar/../bar/./boom.txt)
+
+## [1.4.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.0)
 ### Added
 - `YAML.parse` methods that takes a Path or File as input, rather than a classpath Name or InputStream. Just for more flexibility in how to read your YAML file.
 - Globbing (resolving of files with wildcards) to the Resolver
 - Default globbing when resolving YAML configs
 
 ## [1.3.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.3.0)
-
 ### Added
 
 - Shadow-class `dk.kb.util.YAML` introduced to compensate for breaking backwards
