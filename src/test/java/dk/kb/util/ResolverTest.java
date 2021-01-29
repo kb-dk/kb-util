@@ -72,7 +72,7 @@ class ResolverTest {
 
         String glob = "../" + parent + "/yaml/subfolder/somefile.yaml";
         assertThat("The file '" + known + "' should be resolved with ../ at the start of the path for glob '" +
-                   glob + "' derived from absolute path 'known'",
+                   glob + "' derived from absolute path 'known' but returned matches " + Resolver.resolveGlob(glob),
                    is(Resolver.resolveGlob(glob).size()).matches(1));
 
         assertThat("The file '" + known + "' should be resolved with /../../ in the path",
