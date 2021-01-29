@@ -57,6 +57,31 @@ class ResolverTest {
     }
 
     @Test
+    void resolveDottedGlob() throws IOException {
+        URL url1 = Resolver.resolveURL("yaml/subfolder/somefile.yaml");
+        assertThat("The test file should be available", notNullValue().matches(url1));
+
+        Path known = Path.of(url1.getPath()); // /$HOME/$USER/UNKNOWN/kb-util/target/test-classes/yaml/subfolder/somefile.yaml
+        String parent = known.getParent().getParent().getParent().getFileName().toString(); // test-classes
+
+        assertThat("The file '" + known + "' should be resolved with /./ in the path",
+                   is(Resolver.resolveGlob("yaml/subfolder/./somefile.yaml").size()).matches(1));
+
+        assertThat("The file '" + known + "' should be resolved with /../ in the path",
+                   is(Resolver.resolveGlob("yaml/subfolder/../subfolder/somefile.yaml").size()).matches(1));
+
+        assertThat("The file '" + known + "' should be resolved with ../ at the start of the path",
+                   is(Resolver.resolveGlob("../" + parent + "/yaml/subfolder/somefile.yaml").size()).matches(1));
+
+        assertThat("The file '" + known + "' should be resolved with /../../ in the path",
+                   is(Resolver.resolveGlob("yaml/subfolder/../../yaml/subfolder/somefile.yaml").size()).matches(1));
+
+        assertThat("The file '" + known + "' should be resolved with both /./ and /../ in the path",
+                   is(Resolver.resolveGlob("yaml/subfolder/./../subfolder/somefile.yaml").size()).matches(1));
+
+    }
+
+    @Test
     void resolveGlobRelative() {
         assertThat("Globbing relative to the class path should work",
                    Resolver.resolveGlob("yaml/overwrite*.yaml").size() == 2);
