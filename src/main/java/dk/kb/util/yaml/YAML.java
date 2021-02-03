@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.io.SequenceInputStream;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.*;
@@ -651,11 +652,11 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param yamlPath path to YAML File.
      * @return a YAML based on the given stream.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if the given yamlFile could not be located.
      */
     public static YAML parse(Path yamlPath) throws IOException {
-        try (InputStream in = IOUtils.buffer(new FileInputStream(yamlPath.toFile()))) {
-            return parse(in);
-        }
+        return parse(yamlPath.toFile());
     }
     
     /**
@@ -663,8 +664,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param yamlFile path to YAML File.
      * @return a YAML based on the given stream.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if the given yamlFile could not be located.
      */
     public static YAML parse(File yamlFile) throws IOException {
+        if (!yamlFile.exists()) {
+            throw new FileNotFoundException("The file '" + yamlFile + "' could not be found");
+        }
         try (InputStream in = IOUtils.buffer(new FileInputStream(yamlFile))) {
             return parse(in);
         }
@@ -678,22 +684,26 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files are returned in alphanumerical order.
      *
-     * @param configNames the names, paths or globs of the configuration files.
+     * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if none of the given configResources could be resolved.
      */
-    public static YAML resolveMultiConfig(String... configNames) throws IOException {
+    public static YAML resolveMultiConfig(String... configResources) throws IOException {
         List<InputStream> configs = null;
         try {
-            configs = Arrays.stream(configNames).
+            configs = Arrays.stream(configResources).
                     map(Resolver::resolveGlob).flatMap(Collection::stream).
                     map(YAML::openStream).
                     collect(Collectors.toList());
+            if (configs.isEmpty()) {
+                throw new FileNotFoundException("Unable to resolve any files for " + Arrays.toString(configResources));
+            }
             InputStream yamlStream = null;
             for (InputStream config : configs) {
                 yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
             }
-            log.debug("Fetched merged YAML config '{}'", Arrays.toString(configNames));
+            log.debug("Fetched merged YAML config '{}'", Arrays.toString(configResources));
             return parse(yamlStream);
         } finally {
             if (configs != null) {

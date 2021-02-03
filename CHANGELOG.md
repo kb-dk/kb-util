@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
+- Better exceptions when creating a YAML from non-existing resources
 
 ## [1.4.1](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.1)
 ### Bugfix

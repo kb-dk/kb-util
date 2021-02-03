@@ -3,6 +3,8 @@ package dk.kb.util.yaml;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -92,6 +94,33 @@ class YAMLTest {
                      "The merged YAML should have the expected value for plain key 'somestring'");
         assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
                      "The merged YAML should have the expected value for alias-using 'theServer'");
+    }
+
+    @Test
+    public void testFailingMultiConfig() throws IOException {
+        try {
+            YAML.resolveMultiConfig("Not_there.yml", "Not_there_2.yml");
+            fail("Resolving non-existing multi-config should not work");
+        } catch (FileNotFoundException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testFailingParse() throws IOException {
+        try {
+            YAML.parse(new File("Non-existing"));
+            fail("Parsing missing file should not work");
+        } catch (FileNotFoundException e) {
+            // Expected
+        }
+
+        try {
+            YAML.parse(new File("Non-existing").toPath());
+            fail("Parsing missing path should not work");
+        } catch (FileNotFoundException e) {
+            // Expected
+        }
     }
 
     @Test
