@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.io.SequenceInputStream;
-import java.nio.file.Files;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.*;
@@ -654,6 +654,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return a YAML based on the given stream.
      * @throws IOException if a configuration could not be fetched.
      * @throws FileNotFoundException if the given yamlFile could not be located.
+     * @throws AccessDeniedException if the resource at the given yamlPath could not be read.
      */
     public static YAML parse(Path yamlPath) throws IOException {
         return parse(yamlPath.toFile());
@@ -666,10 +667,14 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return a YAML based on the given stream.
      * @throws IOException if a configuration could not be fetched.
      * @throws FileNotFoundException if the given yamlFile could not be located.
+     * @throws AccessDeniedException if the resource at the given yamlFile could not be read.
      */
     public static YAML parse(File yamlFile) throws IOException {
         if (!yamlFile.exists()) {
             throw new FileNotFoundException("The file '" + yamlFile + "' could not be found");
+        }
+        if (!yamlFile.canRead()) {
+            throw new AccessDeniedException("The file '" + yamlFile + "' could not be read (check permissions)");
         }
         try (InputStream in = IOUtils.buffer(new FileInputStream(yamlFile))) {
             return parse(in);
@@ -688,14 +693,23 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
+     * @throws AccessDeniedException if any of the resolved config files could not be read.
      */
     public static YAML resolveMultiConfig(String... configResources) throws IOException {
         List<InputStream> configs = null;
         try {
-            configs = Arrays.stream(configResources).
-                    map(Resolver::resolveGlob).flatMap(Collection::stream).
-                    map(YAML::openStream).
-                    collect(Collectors.toList());
+            List<Path> configPaths = Arrays.stream(configResources)
+                    .map(Resolver::resolveGlob).flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+            for (Path configPath: configPaths) {
+                if (!configPath.toFile().canRead()) {
+                    throw new AccessDeniedException(
+                            "Unable to read config resource '" + configPath + "' (check permissions)");
+                }
+            }
+            configs = configPaths.stream()
+                    .map(YAML::openStream)
+                    .collect(Collectors.toList());
             if (configs.isEmpty()) {
                 throw new FileNotFoundException("Unable to resolve any files for " + Arrays.toString(configResources));
             }
