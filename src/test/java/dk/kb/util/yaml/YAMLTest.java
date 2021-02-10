@@ -1,11 +1,21 @@
 package dk.kb.util.yaml;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
+import java.util.Set;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class YAMLTest {
@@ -95,6 +105,53 @@ class YAMLTest {
     }
 
     @Test
+    public void testFailingMultiConfig() throws IOException {
+        Assertions.assertThrows(FileNotFoundException.class,
+                                () -> YAML.resolveMultiConfig("Not_there.yml", "Not_there_2.yml"),
+                                "Attempting to resolve non-existing multi-config should throw an Exception");
+    }
+
+    @Test
+    public void testFailingParse() throws IOException {
+        File nonExisting = new File("Non-existing");
+        Assertions.assertThrows(FileNotFoundException.class,
+                                () -> YAML.parse(nonExisting),
+                                "Attempting to resolve non-existing config File should throw an Exception");
+
+        Assertions.assertThrows(FileNotFoundException.class,
+                                () -> YAML.parse(nonExisting.toPath()),
+                                "Attempting to resolve non-existing config Path should throw an Exception");
+    }
+
+    @Test
+    void nonReadableException() throws IOException {
+        Set<PosixFilePermission> ownerWritable = PosixFilePermissions.fromString("-w-------"); // Only writable
+        FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerWritable);
+        Path nonRead = Files.createTempFile("kbutil_", "tmp", permissions);
+        Files.writeString(nonRead, "Hello World");
+
+        // Check that the temp file was created correctly
+        assertThat("Test file '" + nonRead + "' exists", Files.exists(nonRead));
+        Assertions.assertThrows(AccessDeniedException.class, () -> Files.readString(nonRead),
+                                "Reading test file '" + nonRead + "' should throw an Exception");
+        
+
+
+        // Test that YAML throws appropriate exceptions when the resource cannot be read
+        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.parse(nonRead),
+                                "Parsing  test file '" + nonRead + "' directly should throw an Exception");
+
+        Assertions.assertThrows(AccessDeniedException.class, () -> new YAML(nonRead.toString()),
+                                "Parsing  test file '" + nonRead + "' using constructor should throw an Exception");
+
+        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.resolveConfig(nonRead.toString()),
+                                "Parsing  test file '" + nonRead + "' using resolve should throw an Exception");
+
+        Files.delete(nonRead);
+    }
+
+
+    @Test
     public void testMultiGlob() throws IOException {
         YAML yaml = YAML.resolveMultiConfig("config_pair_part_[1-2].yml");
         assertEquals("bar", yaml.getString("serviceSetup.someString"),
@@ -142,12 +199,9 @@ class YAMLTest {
     @Test
     public void testFailingListEntry() throws IOException {
         YAML yaml = YAML.resolveConfig("test.yml", "test");
-        try {
-            yaml.getString("arrayofstrings[3]");
-            fail("Requesting an index in a collection greater than or equal to list length should fail");
-        } catch (Exception e) {
-            // Expected
-        }
+        Assertions.assertThrows(Exception.class,
+                                () -> yaml.getString("arrayofstrings[3]"),
+                                "Requesting an index in a collection greater than or equal to list length should fail");
     }
 
     @Test
