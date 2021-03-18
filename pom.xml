@@ -85,6 +85,7 @@
                             </licensesErrorsFile>
                             <includeTransitiveDependencies>true</includeTransitiveDependencies>
                             <organizeLicensesByDependencies>true</organizeLicensesByDependencies>
+                            <cleanLicensesOutputDirectory>true</cleanLicensesOutputDirectory>
                         </configuration>
                     </execution>
                 </executions>
