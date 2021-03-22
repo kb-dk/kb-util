@@ -105,6 +105,21 @@ class YAMLTest {
     }
 
     @Test
+    public void testMerge() throws IOException {
+        final String FIRST_ONLY = "upperA.subYAML.sub2Element";
+        assertTrue(YAML.resolveMultiConfig("yaml/overwrite-1.yaml").containsKey(FIRST_ONLY),
+                   "Non-merged first file should contain element '" + FIRST_ONLY + "'");
+
+        YAML yaml = YAML.resolveMultiConfig("yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
+        assertEquals("baz", yaml.getString("upperA.subElement"),
+                     "Merged YAML should contain overwritten element 'upperA.subElement'");
+        assertEquals("bar", yaml.getString(FIRST_ONLY),
+                     "Merged YAML should contain element '" + FIRST_ONLY + "' from file #1");
+        assertEquals(12, yaml.getInteger("upperC.subCElement"),
+                     "Merged YAML should contain element 'upperC.subClement' from file #2");
+    }
+
+    @Test
     public void testFailingMultiConfig() throws IOException {
         Assertions.assertThrows(FileNotFoundException.class,
                                 () -> YAML.resolveMultiConfig("Not_there.yml", "Not_there_2.yml"),
