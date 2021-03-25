@@ -105,9 +105,9 @@ class YAMLTest {
     }
 
     @Test
-    public void testMerge() throws IOException {
+    public void testLayeredConfigs() throws IOException {
         final String FIRST_ONLY = "upperA.subYAML.sub2Element";
-        assertTrue(YAML.resolveMultiConfig("yaml/overwrite-1.yaml").containsKey(FIRST_ONLY),
+        assertTrue(YAML.resolveLayeredConfigs("yaml/overwrite-1.yaml").containsKey(FIRST_ONLY),
                    "Non-merged first file should contain element '" + FIRST_ONLY + "'");
 
         YAML yaml = YAML.resolveMultiConfig("yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");

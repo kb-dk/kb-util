@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.io.SequenceInputStream;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.*;
@@ -47,12 +48,25 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
-    
+
+    /**
+     * Creates an empty YAML.
+     */
+    public YAML() {
+        super();
+    }
+
+    /**
+     * Resolves one or more resources using globbing and returns YAML based on the concatenated resources.
+     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
+     * @param resourceName glob for YAML files.
+     * @throws IOException if the files could not be loaded or parsed.
+     */
     public YAML(String resourceName) throws IOException {
         this.putAll(YAML.resolveConfig(resourceName));
     }
-    
-    
+
     /**
      * Creates a YAML wrapper around the given map.
      * Changes to the map will be reflected in the YAML instance and vice versa.
@@ -616,11 +630,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws IllegalArgumentException       if the config cannot be parsed as YAML
      */
     @NotNull
-    public static YAML resolveConfig(String configName) throws IOException,
-                                                                       FileNotFoundException,
-                                                                       MalformedURLException,
-                                                                       NullPointerException,
-                                                                       InvalidPathException {
+    public static YAML resolveConfig(String configName) throws
+            IOException, FileNotFoundException, MalformedURLException, NullPointerException, InvalidPathException {
         return resolveConfig(configName, null);
     }
     
@@ -637,87 +648,66 @@ public class YAML extends LinkedHashMap<String, Object> {
             //Get a classcast exception here, and not someplace later https://stackoverflow.com/a/509288
             for (String s : map.keySet());
             for (Object o : map.values());
-            
+
             YAML rootMap = new YAML(map);
             log.trace("Parsed YAML config stream");
             return rootMap;
         } else {
             throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
         }
-        
+    }
+
+    /**
+     * Parse the given Paths as a single YAML, effectively concatenating all paths.
+     * It is possible to cross-reference between the individual paths.
+     * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
+     *
+     * @param yamlPaths paths to YAML Files.
+     * @return a YAML based on the given paths.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if a yamlFile could not be located.
+     * @throws AccessDeniedException if a resource at a yamlPath could not be read.
+     */
+    public static YAML parse(Path... yamlPaths) throws IOException {
+        return parse(Arrays.stream(yamlPaths).map(Path::toFile).toArray(File[]::new));
     }
     
     /**
-     * Parse the given Path as YAML.
+     * Parse the given Files as a single YAML, effectively concatenating all files.
+     * It is possible to use cross references between the individual files.
+     * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
      *
-     * @param yamlPath path to YAML File.
+     * @param yamlFiles path to YAML Files.
      * @return a YAML based on the given stream.
      * @throws IOException if a configuration could not be fetched.
-     * @throws FileNotFoundException if the given yamlFile could not be located.
-     * @throws AccessDeniedException if the resource at the given yamlPath could not be read.
+     * @throws FileNotFoundException if a yamlFile could not be located.
+     * @throws AccessDeniedException if a resource at a yamlFile could not be read.
      */
-    public static YAML parse(Path yamlPath) throws IOException {
-        return parse(yamlPath.toFile());
-    }
-    
-    /**
-     * Parse the given File as YAML.
-     *
-     * @param yamlFile path to YAML File.
-     * @return a YAML based on the given stream.
-     * @throws IOException if a configuration could not be fetched.
-     * @throws FileNotFoundException if the given yamlFile could not be located.
-     * @throws AccessDeniedException if the resource at the given yamlFile could not be read.
-     */
-    public static YAML parse(File yamlFile) throws IOException {
-        if (!yamlFile.exists()) {
-            throw new FileNotFoundException("The file '" + yamlFile + "' could not be found");
+    public static YAML parse(File... yamlFiles) throws IOException {
+        // Check is files can be read
+        for (File yamlFile: yamlFiles) {
+            if (!yamlFile.exists()) {
+                throw new FileNotFoundException("The file '" + yamlFile + "' could not be found");
+            }
+            if (!yamlFile.canRead()) {
+                throw new AccessDeniedException("The file '" + yamlFile + "' could not be read (check permissions)");
+            }
         }
-        if (!yamlFile.canRead()) {
-            throw new AccessDeniedException("The file '" + yamlFile + "' could not be read (check permissions)");
-        }
-        try (InputStream in = IOUtils.buffer(new FileInputStream(yamlFile))) {
-            return parse(in);
-        }
-    }
-    
-    /**
-     * Resolve the given YAML configurations and present a merged YAML from that.
-     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
-     * key-value pair in the stated configurations.
-     *
-     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
-     * in the {@code myapp} folder. When globbing is used, the matching files are returned in alphanumerical order.
-     *
-     * @param configResources the names, paths or globs of the configuration files.
-     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if a configuration could not be fetched.
-     * @throws FileNotFoundException if none of the given configResources could be resolved.
-     * @throws AccessDeniedException if any of the resolved config files could not be read.
-     */
-    public static YAML resolveMultiConfig(String... configResources) throws IOException {
+
         List<InputStream> configs = null;
         try {
-            List<Path> configPaths = Arrays.stream(configResources)
-                    .map(Resolver::resolveGlob).flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            for (Path configPath: configPaths) {
-                if (!configPath.toFile().canRead()) {
-                    throw new AccessDeniedException(
-                            "Unable to read config resource '" + configPath + "' (check permissions)");
-                }
-            }
-            configs = configPaths.stream()
+            // Convert to InputStreams
+            configs = Arrays.stream(yamlFiles)
                     .map(YAML::openStream)
                     .collect(Collectors.toList());
-            if (configs.isEmpty()) {
-                throw new FileNotFoundException("Unable to resolve any files for " + Arrays.toString(configResources));
-            }
+
+            // Concatenate all InputStreams
             InputStream yamlStream = null;
             for (InputStream config : configs) {
                 yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
             }
-            log.debug("Fetched merged YAML config '{}'", Arrays.toString(configResources));
+
+            // Perform a single parse of the content
             return parse(yamlStream);
         } finally {
             if (configs != null) {
@@ -727,6 +717,95 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
         }
     }
+    
+    /**
+     * Resolve the given YAML configurations and present a merged YAML from that.
+     *
+     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
+     * This means that references across configResources is possible.
+     *
+     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
+     * order for that glob. The overall order is the given array of configResources
+     *
+     * @param configResources the names, paths or globs of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if none of the given configResources could be resolved.
+     * @throws AccessDeniedException if any of the resolved config files could not be read.
+     * @see #resolveLayeredConfigs for alternative.
+     */
+    public static YAML resolveMultiConfig(String... configResources) throws IOException {
+        Path[] configPaths = Arrays.stream(configResources)
+                .map(Resolver::resolveGlob).flatMap(Collection::stream)
+                .toArray(Path[]::new);
+        if (configPaths.length == 0) {
+            throw new FileNotFoundException("No paths resolved from " + Arrays.toString(configResources));
+        }
+        return parse(configPaths);
+    }
+
+    /**
+     * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
+     * This is typically used to support easy overwriting of specific parts of a major configuration file.
+     * This is shorthand for {@code resolveLayeredConfig(MERGE_ACTION.union, MERGE_ACTION.union, configResources}.
+     *
+     * Note: As opposed to {@link #resolveMultiConfig(String...)} this approach does not allow for references
+     * across configResources.
+     *
+     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
+     * order for that glob. The overall order is the given array of configResources
+     *
+     * @param configResources the names, paths or globs of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if none of the given configResources could be resolved.
+     * @throws AccessDeniedException if any of the resolved config files could not be read.
+     * @see #resolveMultiConfig for alternative.
+     */
+    public static YAML resolveLayeredConfigs(String... configResources) throws IOException {
+        return resolveLayeredConfigs(MERGE_ACTION.union, MERGE_ACTION.union, configResources);
+    }
+
+    /**
+     * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
+     * This is typically used to support easy overwriting of specific parts of a major configuration file.
+     *
+     * Note: As opposed to {@link #resolveMultiConfig(String...)} this approach does not allow for references
+     * across configResources.
+     *
+     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
+     * order for that glob. The overall order is the given array of configResources
+     *
+     * @param configResources the names, paths or globs of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs).
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @param listMA    the action to take when a key collision for a list is encountered.
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if none of the given configResources could be resolved.
+     * @throws AccessDeniedException if any of the resolved config files could not be read.
+     * @see #resolveMultiConfig for alternative.
+     */
+    public static YAML resolveLayeredConfigs(MERGE_ACTION defaultMA, MERGE_ACTION listMA, String... configResources)
+            throws IOException {
+        List<Path> configPaths = Arrays.stream(configResources)
+                .map(Resolver::resolveGlob).flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        if (configPaths.isEmpty()) {
+            throw new FileNotFoundException("No paths resolved from " + Arrays.toString(configResources));
+        }
+        YAML compound = new YAML();
+        for (Path configPath: configPaths) {
+            compound = compound.merge(YAML.parse(configPath), defaultMA, listMA);
+        }
+        return compound;
+    }
+
     private static InputStream openStream(Path path) {
         try {
             return path.toUri().toURL().openStream();
@@ -734,6 +813,132 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new RuntimeException("IOException opening stream for '" + path + "'", e);
         }
     }
+    private static InputStream openStream(File file) {
+        try {
+            return file.toPath().toUri().toURL().openStream();
+        } catch (IOException e) {
+            throw new RuntimeException("IOException opening stream for '" + file + "'", e);
+        }
+    }
+
+    /**
+     * Merges the extra YAML into this YAML.
+     * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     * The merge uses union/extra-wins: The values for duplicate keys in YAMLs are merged, lists are concatenated
+     * and atomic values are overwritten with the values from extra.
+     * @param extra the YAML that will be added to this.
+     * @return this YAML, udpated with the values from extra.
+     */
+    public YAML merge(YAML extra) {
+        return merge(this, extra, MERGE_ACTION.union, MERGE_ACTION.union);
+    }
+
+    /**
+     * Merges the extra YAML into this YAML. In case of key collisions, the stated merge actions are taken.
+     * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     * @param extra the YAML that will be added to this.
+     * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @param listMA    the action to take when a key collision for a list is encountered.
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @return this YAML, udpated with the values from extra.
+     */
+    public YAML merge(YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
+        return merge(this, extra, defaultMA, listMA);
+    }
+
+    /**
+     * Merges the extra YAML into the base YAML. In case of key collisions, the stated merge actions are taken.
+     * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     * The merge uses union/extra-wins: The values for duplicate keys in YAMLs are merged, lists are concatenated
+     * and atomic values are overwritten with the values from extra.
+     * @param base the YAML that will be updated with the content from extra.
+     * @param extra the YAML that will be added to base.
+     * @return the updated base YAML.
+     */
+    public static YAML merge(YAML base, YAML extra) {
+        return merge(base, extra, MERGE_ACTION.union, MERGE_ACTION.union);
+    }
+
+    /**
+     * Merges the extra YAML into the base YAML. In case of key collisions, the stated merge actions are taken.
+     * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     * @param base the YAML that will be updated with the content from extra.
+     * @param extra the YAML that will be added to base.
+     * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @param listMA    the action to take when a key collision for a list is encountered.
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @return the updated base YAML.
+     */
+    public static YAML merge(YAML base, YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
+        return (YAML)mergeEntry("", base, extra, defaultMA, listMA);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object mergeEntry(
+            String path, Object base, Object extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
+        final String pre = "Configuration incompatibility at " + path;
+
+        if (extra instanceof YAML) {
+            if (!(base instanceof YAML)) {
+                throw new IllegalArgumentException(
+                        pre + ": Attempting to merge value type " + YAML.class + " to type " + base.getClass());
+            }
+            YAML bYAML = (YAML)base;
+            ((YAML)extra).forEach((key, value) -> {
+                if (!bYAML.containsKey(key)) {
+                    bYAML.put(key, value);
+                } else {
+                    switch (defaultMA) {
+                        case fail: throw new IllegalArgumentException(
+                                pre + "." + key + ": Duplicate keys with mergeAction=" + MERGE_ACTION.fail);
+                        case keep_base:
+                            break;
+                        case keep_extra:
+                            bYAML.put(key, value);
+                            break;
+                        case union:
+                            bYAML.put(key, mergeEntry(base + "." + key, bYAML.get(key), value, defaultMA, listMA));
+                            break;
+                        default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
+                    }
+                }
+            });
+            return base;
+        }
+
+        if (extra instanceof List) {
+            if (!(base instanceof List)) {
+                throw new IllegalArgumentException(
+                        pre + ": Attempting to merge value type " + List.class + " to type " + base.getClass());
+            }
+            switch (listMA) {
+                case fail: throw new IllegalArgumentException(
+                        pre + ": Duplicate keys with list merge action " + MERGE_ACTION.fail);
+                case keep_base: return base;
+                case keep_extra: return extra;
+                case union:
+                    ((List<Object>)base).addAll((List<Object>)extra);
+                    break;
+                default: throw new UnsupportedOperationException("Unknown merge action for list '" + defaultMA + "'");
+            }
+            return base;
+        }
+
+        // When it's not a map or a list we don't care about type
+        switch (defaultMA) {
+            case fail: throw new IllegalArgumentException(
+                    pre + ": Duplicate keys with merge action " + MERGE_ACTION.fail);
+            case keep_base: return base;
+            case keep_extra: return extra;
+            case union: return base; // TODO: Should we do somtheing else here? Make a type-aware merger? Fail?
+            default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
+        }
+    }
+
+
+    public enum MERGE_ACTION {union, keep_base, keep_extra, fail};
     
     /**
      * Resolve the given YAML configuration.
