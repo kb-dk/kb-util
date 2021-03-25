@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Better exceptions when creating a YAML from non-existing resources
+- XML.unmarshall handles types that are not XmlRootElements
 
 ## [1.4.2](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.2)
 ### Testing
