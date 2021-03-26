@@ -6,11 +6,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -87,22 +85,12 @@ public class XML {
     @SuppressWarnings("unchecked")
     public static <T> T unmarshall(String xml, Class<T> type) {
         try {
-            if (type.isAnnotationPresent(XmlRootElement.class)){
-                JAXBContext jc = JAXBContext.newInstance(type);
-    
-                Unmarshaller unmarshaller = jc.createUnmarshaller();
-    
-                try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
-                    return (T) unmarshaller.unmarshal(in);
-                }
-            } else {
-                JAXBContext jc = JAXBContext.newInstance(type.getPackage().getName());
-    
-                Unmarshaller unmarshaller = jc.createUnmarshaller();
-    
-                try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
-                    return ((JAXBElement<T>) unmarshaller.unmarshal(in)).getValue();
-                }
+            JAXBContext jc = JAXBContext.newInstance(type);
+            
+            Unmarshaller unmarshaller = jc.createUnmarshaller();
+            
+            try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+                return (T) unmarshaller.unmarshal(in);
             }
         } catch (JAXBException | IOException e) {
             throw new RuntimeException(e);
