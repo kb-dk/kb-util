@@ -54,10 +54,13 @@ class XMLTest {
         Weird object = marshallTestObject.value;
         
         //Create the xml for the non-root element
+        //Very complex way of creating the xml blob "<value><string>bar</string></value>"
         String intermediate = XML.domToString(XpathUtils
                                                       .createXPathSelector()
                                                       .selectNode(XML.fromXML(XML.marshall(marshallTestObject), true),
                                                                   "/marshallTestObject/value"));
+        
+        assertThat(intermediate.replaceAll("\\s", ""), is("<value><string>bar</string></value>"));
         
         Weird result = XML.unmarshall(intermediate, Weird.class);
         assertThat(result, is(object));
@@ -73,7 +76,7 @@ class XMLTest {
         }
         
         public MarshallTestObject(String key, Weird value) {
-            this.key = key;
+            this.key   = key;
             this.value = value;
         }
         
@@ -102,8 +105,7 @@ class XMLTest {
                 return false;
             }
             MarshallTestObject that = (MarshallTestObject) o;
-            return Objects.equals(key, that.key) &&
-                   Objects.equals(value, that.value);
+            return Objects.equals(key, that.key) && Objects.equals(value, that.value);
         }
         
         @Override
@@ -164,5 +166,5 @@ class XMLTest {
         }
     }
     
-   
+    
 }
