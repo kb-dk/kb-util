@@ -11,14 +11,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class XMLTest {
     
@@ -48,6 +44,22 @@ class XMLTest {
         MarshallTestObject object = new MarshallTestObject("foo", new Weird("bar"));
         String intermediate = XML.marshall(object);
         MarshallTestObject result = XML.unmarshall(intermediate, MarshallTestObject.class);
+        assertThat(result, is(object));
+    }
+    
+    @Test
+    void unmarshallNonRootElement()
+            throws JAXBException, IOException, SAXException, ParserConfigurationException, TransformerException {
+        MarshallTestObject marshallTestObject = new MarshallTestObject("foo", new Weird("bar"));
+        Weird object = marshallTestObject.value;
+        
+        //Create the xml for the non-root element
+        String intermediate = XML.domToString(XpathUtils
+                                                      .createXPathSelector()
+                                                      .selectNode(XML.fromXML(XML.marshall(marshallTestObject), true),
+                                                                  "/marshallTestObject/value"));
+        
+        Weird result = XML.unmarshall(intermediate, Weird.class);
         assertThat(result, is(object));
     }
     
