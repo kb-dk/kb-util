@@ -6,7 +6,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
@@ -19,6 +18,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -87,21 +87,13 @@ public class XML {
     @SuppressWarnings("unchecked")
     public static <T> T unmarshall(String xml, Class<T> type) {
         try {
-            if (type.isAnnotationPresent(XmlRootElement.class)){
-                JAXBContext jc = JAXBContext.newInstance(type);
-    
-                Unmarshaller unmarshaller = jc.createUnmarshaller();
-    
-                try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+            JAXBContext jc = JAXBContext.newInstance(type);
+            Unmarshaller unmarshaller = jc.createUnmarshaller();
+            try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+                if (type.isAnnotationPresent(XmlRootElement.class)) {
                     return (T) unmarshaller.unmarshal(in);
-                }
-            } else {
-                JAXBContext jc = JAXBContext.newInstance(type.getPackage().getName());
-    
-                Unmarshaller unmarshaller = jc.createUnmarshaller();
-    
-                try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
-                    return ((JAXBElement<T>) unmarshaller.unmarshal(in)).getValue();
+                } else {
+                    return unmarshaller.unmarshal(new StreamSource(in), type).getValue();
                 }
             }
         } catch (JAXBException | IOException e) {
@@ -109,7 +101,7 @@ public class XML {
         }
     }
     
-  
+    
     
     /**
      * Parses an XML document from a String to a DOM.
