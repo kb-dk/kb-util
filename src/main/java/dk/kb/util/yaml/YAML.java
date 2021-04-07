@@ -15,21 +15,18 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.io.SequenceInputStream;
 import java.nio.file.AccessDeniedException;
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.*;
@@ -58,10 +55,14 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Resolves one or more resources using globbing and returns YAML based on the concatenated resources.
+     * <p>
      * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
+     * Use {@link #resolveLayeredConfigs} for treating YAML files as overlays when loading.
      * @param resourceName glob for YAML files.
      * @throws IOException if the files could not be loaded or parsed.
+     * @see #resolveLayeredConfigs(String...)
+     * @see #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, String...)
      */
     public YAML(String resourceName) throws IOException {
         this.putAll(YAML.resolveConfig(resourceName));
@@ -615,7 +616,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Resolve the given YAML configuration.
-     *
+     * <p>
      * Note: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files are iterated in alphanumerical order
      * so that subsequent YAML definitions overwrites previous ones. See also {@link #resolveMultiConfig(String...)}.
@@ -636,7 +637,10 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Parse the given configStream as YAML.
+     * Parse the given configStream as a single YAML.
+     * <p>
+     * Note: This method merges the YAML config as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair. Sub-entries are not merged on key collisions.
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
@@ -661,6 +665,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Parse the given Paths as a single YAML, effectively concatenating all paths.
      * It is possible to cross-reference between the individual paths.
      * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
+     * <p>
+     * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
      *
      * @param yamlPaths paths to YAML Files.
      * @return a YAML based on the given paths.
@@ -676,6 +682,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Parse the given Files as a single YAML, effectively concatenating all files.
      * It is possible to use cross references between the individual files.
      * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
+     * <p>
+     * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
      *
      * @param yamlFiles path to YAML Files.
      * @return a YAML based on the given stream.
@@ -720,11 +728,12 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Resolve the given YAML configurations and present a merged YAML from that.
-     *
+     * <p>
      * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
      * This means that references across configResources is possible.
-     *
+     * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
+     * <p>
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
@@ -750,10 +759,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
      * This is typically used to support easy overwriting of specific parts of a major configuration file.
      * This is shorthand for {@code resolveLayeredConfig(MERGE_ACTION.union, MERGE_ACTION.union, configResources}.
-     *
+     * <p>
      * Note: As opposed to {@link #resolveMultiConfig(String...)} this approach does not allow for references
      * across configResources.
-     *
+     * <p>
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
@@ -772,10 +781,10 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
      * This is typically used to support easy overwriting of specific parts of a major configuration file.
-     *
+     * <p>
      * Note: As opposed to {@link #resolveMultiConfig(String...)} this approach does not allow for references
      * across configResources.
-     *
+     * <p>
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
@@ -823,11 +832,13 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Merges the extra YAML into this YAML.
+     * <p>
+     * The merge uses {@link MERGE_ACTION#union} aka extra-wins: The values for duplicate keys in YAMLs are merged,
+     * lists are concatenated and atomic values are overwritten with the values from extra.
+     * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
-     * The merge uses union/extra-wins: The values for duplicate keys in YAMLs are merged, lists are concatenated
-     * and atomic values are overwritten with the values from extra.
      * @param extra the YAML that will be added to this.
-     * @return this YAML, udpated with the values from extra.
+     * @return this YAML, updated with the values from extra.
      */
     public YAML merge(YAML extra) {
         return merge(this, extra, MERGE_ACTION.union, MERGE_ACTION.union);
@@ -835,6 +846,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Merges the extra YAML into this YAML. In case of key collisions, the stated merge actions are taken.
+     * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
      * @param extra the YAML that will be added to this.
      * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
@@ -848,10 +860,11 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Merges the extra YAML into the base YAML. In case of key collisions, the stated merge actions are taken.
-     * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     * Merges the extra YAML into the base YAML.
      * The merge uses union/extra-wins: The values for duplicate keys in YAMLs are merged, lists are concatenated
      * and atomic values are overwritten with the values from extra.
+     * <p>
+     * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
      * @param base the YAML that will be updated with the content from extra.
      * @param extra the YAML that will be added to base.
      * @return the updated base YAML.
@@ -862,6 +875,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Merges the extra YAML into the base YAML. In case of key collisions, the stated merge actions are taken.
+     * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
      * @param base the YAML that will be updated with the content from extra.
      * @param extra the YAML that will be added to base.
@@ -880,13 +894,13 @@ public class YAML extends LinkedHashMap<String, Object> {
             String path, Object base, Object extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
         final String pre = "Configuration incompatibility at " + path;
 
-        if (extra instanceof YAML) {
-            if (!(base instanceof YAML)) {
+        if (extra instanceof LinkedHashMap) { // YAML is a LinkedHashMap
+            if (!(base instanceof LinkedHashMap)) {
                 throw new IllegalArgumentException(
-                        pre + ": Attempting to merge value type " + YAML.class + " to type " + base.getClass());
+                        pre + ": Attempting to merge value type " + extra.getClass() + " to type " + base.getClass());
             }
-            YAML bYAML = (YAML)base;
-            ((YAML)extra).forEach((key, value) -> {
+            LinkedHashMap<Object, Object> bYAML = (LinkedHashMap<Object, Object>) base;
+            ((LinkedHashMap<Object, Object>)extra).forEach((key, value) -> {
                 if (!bYAML.containsKey(key)) {
                     bYAML.put(key, value);
                 } else {
@@ -932,17 +946,33 @@ public class YAML extends LinkedHashMap<String, Object> {
                     pre + ": Duplicate keys with merge action " + MERGE_ACTION.fail);
             case keep_base: return base;
             case keep_extra: return extra;
-            case union: return base; // TODO: Should we do somtheing else here? Make a type-aware merger? Fail?
+            case union: return extra; // TODO: Should we do somthing else here? Make a type-aware merger? Fail?
             default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
         }
     }
 
 
-    public enum MERGE_ACTION {union, keep_base, keep_extra, fail};
+    public enum MERGE_ACTION {
+        /**
+         * Duplicate maps are merged, lists are concatenated, atomins are overwritten by last entry
+         */
+        union,
+        /**
+         * Duplicate maps, lists and atomics are ignored.
+         */
+        keep_base,
+        /**
+         * Duplicate maps, lists and atomics are overwrittes, so that the last encounterd key-value pair wins.
+         */
+        keep_extra,
+        /**
+         * Duplicate maps, lists and atomics throws an exception.
+         */
+        fail};
     
     /**
      * Resolve the given YAML configuration.
-     *
+     * <p>
      * Note: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp-conf} folder. When globbing is used, the matching files are iterated in alphanumerical order
      * so that subsequent YAML definitions overwrites previous ones. See also {@link #resolveMultiConfig(String...)}.
