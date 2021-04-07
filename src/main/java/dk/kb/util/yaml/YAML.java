@@ -36,6 +36,22 @@ import java.util.stream.Collectors;
 
 /**
  * Wrapper for SnakeYAML output for easier access to the YAML elements.
+ * <p>
+ * Primary use case is for configuration files, using either of
+ * <ul>
+ *     <li>{@link #resolveLayeredConfigs(String...)} which treats multiple files as separate YAMLs, where the content
+ *     of the YAMLs is merged and atomic values are overwritten with the latest file</li>
+ *     <li>{@link #resolveMultiConfig(String...)} which treats multiple files as a single YAML allowing for
+ *     cross referencing inside of the YAML parts</li>
+ * </ul>
+ * <p>
+ * For standard use, the {@link #resolveLayeredConfigs(String...)} is recommended as it makes it simple to layer the
+ * configurations:
+ * <ol>
+ *     <li>myapp_behaviour.yaml (base behaviour settings, goes into the main repo)</li>
+ *     <li>myapp_environment.yaml (servers, usernames, passwords..., is controlled by Operations)</li>
+ *     <li>myapp_local_overrides.yaml (local overrides, used for developing and testing)</li>
+ * </ol>
  */
 public class YAML extends LinkedHashMap<String, Object> {
 
