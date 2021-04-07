@@ -81,7 +81,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @see #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, String...)
      */
     public YAML(String resourceName) throws IOException {
-        this.putAll(YAML.resolveConfig(resourceName));
+        this.putAll(YAML.resolveMultiConfig(resourceName));
     }
 
     /**
@@ -645,6 +645,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws InvalidPathException           if the configName is not valid as a path
      * @throws NullPointerException           if the configName is null
      * @throws IllegalArgumentException       if the config cannot be parsed as YAML
+     * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
     @NotNull
     public static YAML resolveConfig(String configName) throws
@@ -652,6 +653,40 @@ public class YAML extends LinkedHashMap<String, Object> {
         return resolveConfig(configName, null);
     }
     
+    /**
+     * Resolve the given YAML configuration.
+     * <p>
+     * Note: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp-conf} folder. When globbing is used, the matching files are iterated in alphanumerical order
+     * so that subsequent YAML definitions overwrites previous ones. See also {@link #resolveMultiConfig(String...)}.
+     *
+     * @param configName the path, name or glob of the configuration file.
+     * @param confRoot   the root element in the configuration or null if the full configuration is to be returned.
+     * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException                    if the configuration could not be fetched.
+     * @throws java.io.FileNotFoundException  if the config name does not refer to a file
+     * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
+     * @throws InvalidPathException           if the configName is not valid as a path
+     * @throws NullPointerException           if the configName is null
+     * @throws IllegalArgumentException       if the config cannot be parsed as YAML
+     * @throws NotFoundException              if the confRoot is not null and is not found in the YAML document
+     * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
+     * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
+     */
+    public static YAML resolveConfig(String configName, String confRoot) throws IOException {
+        YAML rootMap = resolveMultiConfig(configName);
+
+        if (confRoot == null) {
+            return rootMap;
+        }
+
+        if (!rootMap.containsKey(confRoot)) {
+            throw new NotFoundException("YAML configuration must contain the '" + confRoot + "' element", confRoot);
+        } else {
+            return rootMap.getSubMap(confRoot);
+        }
+    }
+
     /**
      * Parse the given configStream as a single YAML.
      * <p>
@@ -985,38 +1020,5 @@ public class YAML extends LinkedHashMap<String, Object> {
          * Duplicate maps, lists and atomics throws an exception.
          */
         fail};
-    
-    /**
-     * Resolve the given YAML configuration.
-     * <p>
-     * Note: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
-     * in the {@code myapp-conf} folder. When globbing is used, the matching files are iterated in alphanumerical order
-     * so that subsequent YAML definitions overwrites previous ones. See also {@link #resolveMultiConfig(String...)}.
-     *
-     * @param configName the path, name or glob of the configuration file.
-     * @param confRoot   the root element in the configuration or null if the full configuration is to be returned.
-     * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException                    if the configuration could not be fetched.
-     * @throws java.io.FileNotFoundException  if the config name does not refer to a file
-     * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
-     * @throws InvalidPathException           if the configName is not valid as a path
-     * @throws NullPointerException           if the configName is null
-     * @throws IllegalArgumentException       if the config cannot be parsed as YAML
-     * @throws NotFoundException              if the confRoot is not null and is not found in the YAML document
-     * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
-     */
-    public static YAML resolveConfig(String configName, String confRoot) throws IOException {
-        YAML rootMap = resolveMultiConfig(configName);
-        
-        if (confRoot == null) {
-            return rootMap;
-        }
-        
-        if (!rootMap.containsKey(confRoot)) {
-            throw new NotFoundException("YAML configuration must contain the '" + confRoot + "' element", confRoot);
-        } else {
-            return rootMap.getSubMap(confRoot);
-        }
-    }
     
 }
