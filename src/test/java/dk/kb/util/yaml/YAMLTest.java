@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -102,6 +103,51 @@ class YAMLTest {
                      "The merged YAML should have the expected value for plain key 'somestring'");
         assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
                      "The merged YAML should have the expected value for alias-using 'theServer'");
+    }
+
+    @Test
+    public void testLayeredConfigsDefault() throws IOException {
+        YAML first = YAML.resolveLayeredConfigs("yaml/overwrite-1.yaml");
+        YAML multi = YAML.resolveLayeredConfigs("yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
+
+        final String FIRST_ONLY = "upperA.subYAML.sub2Element";
+        assertTrue(first.containsKey(FIRST_ONLY),
+                   "Non-merged first file should contain element '" + FIRST_ONLY + "'");
+        assertEquals("bar", multi.getString(FIRST_ONLY),
+                     "Merged YAML should contain element '" + FIRST_ONLY + "' from file #1");
+
+        assertEquals("baz", multi.getString("upperA.subElement"),
+                     "Merged YAML should contain overwritten element 'upperA.subElement'");
+
+        assertEquals(12, multi.getInteger("upperC.subCElement"),
+                     "Merged YAML should contain element 'upperC.subClement' from file #2");
+
+        List<String> aList = multi.getList("upperA.subList");
+        List<String> eList = Arrays.asList("three", "four");
+        assertEquals(eList, aList,
+                     "Merged YAML should contain the last list");
+    }
+
+    @Test
+    public void testLayeredConfigsFail() throws IOException {
+        try {
+            YAML.resolveLayeredConfigs(YAML.MERGE_ACTION.fail, YAML.MERGE_ACTION.fail,
+                                       "yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
+            fail("Merging with duplicate keys and MERGE_ACTION.fail should throw an Exception");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testLayeredConfigsListOverwrite() throws IOException {
+        YAML multi = YAML.resolveLayeredConfigs(YAML.MERGE_ACTION.union, YAML.MERGE_ACTION.keep_extra,
+                                                "yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
+
+        List<String> aList = multi.getList("upperA.subList");
+        List<String> eList = Arrays.asList("three", "four");
+        assertEquals(eList, aList,
+                     "Merged YAML should a list of only the elements from file #2");
     }
 
     @Test
