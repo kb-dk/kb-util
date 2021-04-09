@@ -123,9 +123,9 @@ class YAMLTest {
                      "Merged YAML should contain element 'upperC.subClement' from file #2");
 
         List<String> aList = multi.getList("upperA.subList");
-        List<String> eList = Arrays.asList("one", "two", "three", "four");
+        List<String> eList = Arrays.asList("three", "four");
         assertEquals(eList, aList,
-                     "Merged YAML should a list of concatenated elements");
+                     "Merged YAML should contain the last list");
     }
 
     @Test

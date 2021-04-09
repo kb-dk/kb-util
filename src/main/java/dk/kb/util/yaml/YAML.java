@@ -692,7 +692,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Note: This method merges the YAML config as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair. Sub-entries are not merged on key collisions, meaning that key-collisions at the root level
-     * overrides replaces the full tree under the key. References are supported with this method.
+     * replaces the full tree under the key. References are supported with this method.
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
@@ -810,7 +810,9 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
      * This is typically used to support easy overwriting of specific parts of a major configuration file.
-     * This is shorthand for {@code resolveLayeredConfig(MERGE_ACTION.union, MERGE_ACTION.union, configResources}.
+     * This is shorthand for {@code resolveLayeredConfig(MERGE_ACTION.union, MERGE_ACTION.kee_extra, configResources}:
+     * The values for duplicate keys in YAMLs are merged, lists and atomic values are overwritten with the values
+     * from extra.
      * <p>
      * Note: As opposed to {@link #resolveMultiConfig(String...)} this approach does not allow for references
      * across configResources.
@@ -827,7 +829,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @see #resolveMultiConfig for alternative.
      */
     public static YAML resolveLayeredConfigs(String... configResources) throws IOException {
-        return resolveLayeredConfigs(MERGE_ACTION.union, MERGE_ACTION.union, configResources);
+        return resolveLayeredConfigs(MERGE_ACTION.union, MERGE_ACTION.keep_extra, configResources);
     }
 
     /**
@@ -886,14 +888,14 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Merges the extra YAML into this YAML.
      * <p>
      * The merge uses {@link MERGE_ACTION#union} aka extra-wins: The values for duplicate keys in YAMLs are merged,
-     * lists are concatenated and atomic values are overwritten with the values from extra.
+     * lists and atomic values are overwritten with the values from extra.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
      * @param extra the YAML that will be added to this.
      * @return this YAML, updated with the values from extra.
      */
     public YAML merge(YAML extra) {
-        return merge(this, extra, MERGE_ACTION.union, MERGE_ACTION.union);
+        return merge(this, extra, MERGE_ACTION.union, MERGE_ACTION.keep_extra);
     }
 
     /**
@@ -913,8 +915,8 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Merges the extra YAML into the base YAML.
-     * The merge uses union/extra-wins: The values for duplicate keys in YAMLs are merged, lists are concatenated
-     * and atomic values are overwritten with the values from extra.
+     * The merge uses union/extra-wins: The values for duplicate keys in YAMLs are merged, lists and atomic values are
+     * overwritten with the values from extra.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
      * @param base the YAML that will be updated with the content from extra.
@@ -922,7 +924,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the updated base YAML.
      */
     public static YAML merge(YAML base, YAML extra) {
-        return merge(base, extra, MERGE_ACTION.union, MERGE_ACTION.union);
+        return merge(base, extra, MERGE_ACTION.union, MERGE_ACTION.keep_extra);
     }
 
     /**
@@ -1003,7 +1005,6 @@ public class YAML extends LinkedHashMap<String, Object> {
             return;
         }
         base.put(key, mergeEntry(path + "." + key, base.get(key), value, defaultMA, listMA));
-
     }
 
 
