@@ -929,6 +929,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Merges the extra YAML into the base YAML. In case of key collisions, the stated merge actions are taken.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     * <p>
+     * The available MERGE_ACTIONs are<br>
+     * union: Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry.<br>
+     * keep_base: Duplicate maps, lists and atomics are ignored.<br>
+     * keep_extra: Duplicate maps, lists and atomics are overwrittes, so that the last encounterd key-value pair wins.<br>
+     * fail: Duplicate maps, lists and atomics throws an exception.<br>
+     *
      * @param base the YAML that will be updated with the content from extra.
      * @param extra the YAML that will be added to base.
      * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
@@ -984,7 +991,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                     pre + ": Duplicate keys with merge action " + MERGE_ACTION.fail);
             case keep_base: return base;
             case keep_extra: return extra;
-            case union: return extra; // TODO: Should we do somthing else here? Make a type-aware merger? Fail?
+            case union: return extra; // TODO: Should we do something else here? Make a type-aware merger? Fail?
             default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
         }
     }
@@ -1002,7 +1009,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     public enum MERGE_ACTION {
         /**
-         * Duplicate maps are merged, lists are concatenated, atomins are overwritten by last entry
+         * Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry
          */
         union,
         /**
