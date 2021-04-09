@@ -691,7 +691,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Parse the given configStream as a single YAML.
      * <p>
      * Note: This method merges the YAML config as-is: Any key-collisions are handled implicitly by keeping the latest
-     * key-value pair. Sub-entries are not merged on key collisions.
+     * key-value pair. Sub-entries are not merged on key collisions, meaning that key-collisions at the root level
+     * overrides replaces the full tree under the key. References are supported with this method.
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
@@ -950,25 +951,11 @@ public class YAML extends LinkedHashMap<String, Object> {
                 throw new IllegalArgumentException(
                         pre + ": Attempting to merge value type " + extra.getClass() + " to type " + base.getClass());
             }
+            
             LinkedHashMap<Object, Object> bYAML = (LinkedHashMap<Object, Object>) base;
-            ((LinkedHashMap<Object, Object>)extra).forEach((key, value) -> {
-                if (!bYAML.containsKey(key)) {
-                    bYAML.put(key, value);
-                } else {
-                    switch (defaultMA) {
-                        case fail: throw new IllegalArgumentException(
-                                pre + "." + key + ": Duplicate keys with mergeAction=" + MERGE_ACTION.fail);
-                        case keep_base:
-                            break;
-                        case keep_extra:
-                            bYAML.put(key, value);
-                            break;
-                        case union:
-                            bYAML.put(key, mergeEntry(base + "." + key, bYAML.get(key), value, defaultMA, listMA));
-                            break;
-                        default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
-                    }
-                }
+            LinkedHashMap<Object, Object> eYAML = (LinkedHashMap<Object, Object>) extra;
+            eYAML.forEach((key, value) -> {
+                mergeValueToYAML(path, bYAML, key, value, defaultMA, listMA);
             });
             return base;
         }
@@ -1000,6 +987,16 @@ public class YAML extends LinkedHashMap<String, Object> {
             case union: return extra; // TODO: Should we do somthing else here? Make a type-aware merger? Fail?
             default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
         }
+    }
+
+    private static void mergeValueToYAML(String path, LinkedHashMap<Object, Object> base, Object key, Object value,
+                                         MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
+        if (!base.containsKey(key)) {
+            base.put(key, value);
+            return;
+        }
+        base.put(key, mergeEntry(path + "." + key, base.get(key), value, defaultMA, listMA));
+
     }
 
 
