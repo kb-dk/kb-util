@@ -11,14 +11,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class XMLTest {
     
@@ -51,6 +47,25 @@ class XMLTest {
         assertThat(result, is(object));
     }
     
+    @Test
+    void unmarshallNonRootElement()
+            throws JAXBException, IOException, SAXException, ParserConfigurationException, TransformerException {
+        MarshallTestObject marshallTestObject = new MarshallTestObject("foo", new Weird("bar"));
+        Weird object = marshallTestObject.value;
+        
+        //Create the xml for the non-root element
+        //Very complex way of creating the xml blob "<value><string>bar</string></value>"
+        String intermediate = XML.domToString(XpathUtils
+                                                      .createXPathSelector()
+                                                      .selectNode(XML.fromXML(XML.marshall(marshallTestObject), true),
+                                                                  "/marshallTestObject/value"));
+        
+        assertThat(intermediate.replaceAll("\\s", ""), is("<value><string>bar</string></value>"));
+        
+        Weird result = XML.unmarshall(intermediate, Weird.class);
+        assertThat(result, is(object));
+    }
+    
     @XmlRootElement
     public static class MarshallTestObject {
         private String key;
@@ -61,7 +76,7 @@ class XMLTest {
         }
         
         public MarshallTestObject(String key, Weird value) {
-            this.key = key;
+            this.key   = key;
             this.value = value;
         }
         
@@ -90,8 +105,7 @@ class XMLTest {
                 return false;
             }
             MarshallTestObject that = (MarshallTestObject) o;
-            return Objects.equals(key, that.key) &&
-                   Objects.equals(value, that.value);
+            return Objects.equals(key, that.key) && Objects.equals(value, that.value);
         }
         
         @Override
@@ -152,5 +166,5 @@ class XMLTest {
         }
     }
     
-   
+    
 }
