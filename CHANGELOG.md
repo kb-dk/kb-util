@@ -7,12 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
-- Better exceptions when creating a YAML from non-existing resources
+## [1.4.3](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.3)
+### Added
+
+- XML.unmarshall checks the presense of `@XmlRootElement` annotation on the supplied type and selects the appropriate strategy from 
+    * [Unmarshal Global Root Element](https://jakarta.ee/specifications/xml-binding/2.3/apidocs/javax/xml/bind/unmarshaller#unmarshalGlobal)
+    * [Unmarshal by Declared Type](https://jakarta.ee/specifications/xml-binding/2.3/apidocs/javax/xml/bind/unmarshaller#unmarshalByDeclaredType)  
 
 ## [1.4.2](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.2)
-### Testing
+### Added
 
-- "Debugging release procedure"-release
+- Better exceptions when creating a YAML from non-existing resources
+- Choice between loading multiple YAML-files as a single reference-supporting stream or as multiple overwriting streams 
 
 ## [1.4.1](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.1)
 ### Bugfix

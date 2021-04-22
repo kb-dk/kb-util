@@ -9,6 +9,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -17,6 +18,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -86,18 +88,20 @@ public class XML {
     public static <T> T unmarshall(String xml, Class<T> type) {
         try {
             JAXBContext jc = JAXBContext.newInstance(type);
-            
             Unmarshaller unmarshaller = jc.createUnmarshaller();
-            
             try (ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
-                return (T) unmarshaller.unmarshal(in);
+                if (type.isAnnotationPresent(XmlRootElement.class)) {
+                    return (T) unmarshaller.unmarshal(in);
+                } else {
+                    return unmarshaller.unmarshal(new StreamSource(in), type).getValue();
+                }
             }
         } catch (JAXBException | IOException e) {
             throw new RuntimeException(e);
         }
     }
     
-  
+    
     
     /**
      * Parses an XML document from a String to a DOM.
