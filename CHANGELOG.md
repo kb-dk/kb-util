@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
+Changed jaxb to use 
+```xml
+<!--Nessesary for jaxb-xml with java 11-->
+<!-- https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api -->
+<dependency>
+    <groupId>jakarta.xml.bind</groupId>
+    <artifactId>jakarta.xml.bind-api</artifactId>
+    <version>2.3.2</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/jakarta.activation/jakarta.activation-api -->
+<dependency>
+    <groupId>jakarta.activation</groupId>
+    <artifactId>jakarta.activation-api</artifactId>
+    <version>1.2.1</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->
+<dependency>
+    <groupId>org.glassfish.jaxb</groupId>
+    <artifactId>jaxb-runtime</artifactId>
+    <version>2.3.2</version>
+    <scope>runtime</scope>
+</dependency>
+<!--XML end-->
+```
+as this prevents the nasty 
+```
+java.lang.module.FindException: Two versions of module jakarta.activation found in /home/abr/Projects/java-xcorrsound/java-xcorrsound-cli/target/java-xcorrsound-cli-0.1-SNAPSHOT/bin/../lib (jakarta.activation-api-1.2.2.jar and jakarta.activation-1.2.2.jar)
+```
+when used in a module-based projekt
+
 ## [1.4.3](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.3)
 ### Added
 
