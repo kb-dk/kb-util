@@ -119,7 +119,7 @@ public class Resolver {
      */
     public static List<Path> resolveGlob(String glob) {
         if (glob == null || glob.isEmpty()) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
         Set<Path> paths = new HashSet<>();
 
@@ -182,7 +182,7 @@ public class Resolver {
         int pos = 0;
         while (pos < segments.size()-1) {
             if (pos == 0 && "..".equals(segments.get(0))) { // Going further up than the root does not make sense
-                return Collections.emptyList();
+                return new ArrayList<>();
             }
             if ("..".equals(segments.get(pos+1))) { // The subsequent segment goes one level up
                 segments.remove(pos+1);

@@ -1,8 +1,8 @@
 package dk.kb.util.other;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -93,7 +93,7 @@ public class StringListUtils {
      */
     public static List<String> removeEmpties(List<String> list) {
         if (list == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
         return list.stream()
                    .filter(Objects::nonNull)
@@ -130,12 +130,7 @@ public class StringListUtils {
      * @return a list without any elements that was a substring of any other element in the list
      */
     public static List<String> removeSubstrings(List<String> list) {
-        List<String> coll = list;
-        try {
-            coll.addAll(Collections.emptyList());
-        } catch (java.lang.UnsupportedOperationException e){
-            coll = new ArrayList<>(list);
-        }
+        List<String> coll = toModifiableList(list);
         
         Iterator<String> firstIterator = coll.iterator();
         while (firstIterator.hasNext()) {
@@ -200,6 +195,44 @@ public class StringListUtils {
         }
     }
     
+    /**
+     * Return a modifiable list with the same content, or the same list if it is already modifiable
+     *
+     * This method is NOT threadsafe, but the returned list should be (as threadsafe as the input). So
+     * ensure no other thread is accessing/modifying the list while we make it modifiable.
+     *
+     * @param list the list to get as modifiable
+     * @param <E>  the type
+     * @return the same list, if it is modifiable or a new Arraylist with the same content
+     */
+    public static <E> List<E> toModifiableList(@NotNull final List<E> list) {
+        try {
+            //First we check
+            list.addAll(Collections.emptyList());
+            //Not all immutable lists trigger on this... Collections.emptyList() is one that accepts this
+            
+            //So to catch such fraggers, we try to add an element
+            int size = list.size();
+            if (!list.isEmpty()) {
+                //If the list is not empty, try to add the first element as a new last element
+                list.add(list.get(0));
+            } else {
+                //Otherwise just add null
+                list.add(null);
+            } //We cannot just add whatever because we do not know the type of the list
+            
+            //Remove the newly added element
+            list.remove(size);
+            
+            //There is a risk that the add will complete, but the remove will fail.
+            //That would basically be a append-only list...
+            //If so, the list will end up with an additional null
+            
+            return list;
+        } catch (java.lang.UnsupportedOperationException e) {
+            return new ArrayList<>(list);
+        }
+    }
     
     /**
      * Substring that allows for negative indexes and indexes beyound string length
