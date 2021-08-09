@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+###
+Added `StringListUtils.toModifiableList(list)` utility to check, and, if nessesary, wrap your list as a modifiable list
+
+
 
 ## [1.4.4](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.4)
 
