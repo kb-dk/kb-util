@@ -1,13 +1,18 @@
 package dk.kb.util.other;
 
+import org.apache.commons.collections4.list.UnmodifiableList;
 import org.hamcrest.CoreMatchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -148,5 +153,123 @@ class StringListUtilsTest {
                                     .stream().sorted().collect(Collectors.toList());
         assertThat(actual, is(expected));
     }
-
+    
+    
+    @Test
+    public void testCollectionsEmptyListImmutable() {
+        List<String> immutable = Collections.emptyList();
+        try {
+            immutable.add("test");
+            Assertions.fail("empty list is not immutable, what magic is this?");
+        } catch (UnsupportedOperationException e){
+            //expected
+        }
+        List<String> list = StringListUtils.toModifiableList(immutable);
+        Assertions.assertEquals(0,list.size());
+        list.add("Test");
+        Assertions.assertEquals(list.get(0),("Test"));
+    }
+    
+    @Test
+    public void testListsOfImmutable() {
+        List<String> immutable = List.of();
+        try {
+            immutable.add("test");
+            Assertions.fail("empty list is not immutable, what magic is this?");
+        } catch (UnsupportedOperationException e){
+            //expected
+        }
+        List<String> list = StringListUtils.toModifiableList(immutable);
+        Assertions.assertEquals(0,list.size());
+        list.add("Test");
+        Assertions.assertEquals(list.get(0),("Test"));
+    }
+    
+    @Test
+    public void testArraysAsListImmutable() {
+        List<String> immutable = Arrays.asList();
+        try {
+            immutable.add("test");
+            Assertions.fail("empty list is not immutable, what magic is this?");
+        } catch (UnsupportedOperationException e){
+            //expected
+        }
+        List<String> list = StringListUtils.toModifiableList(immutable);
+        Assertions.assertEquals(0,list.size());
+        list.add("Test");
+        Assertions.assertEquals(list.get(0),("Test"));
+    }
+    
+    
+    @Test
+    public void testApacheCollections() {
+        List<String> immutable = new UnmodifiableList<>(new ArrayList<>());
+        try {
+            immutable.add("test");
+            Assertions.fail("empty list is not immutable, what magic is this?");
+        } catch (UnsupportedOperationException e){
+            //expected
+        }
+        List<String> list = StringListUtils.toModifiableList(immutable);
+        Assertions.assertEquals(0,list.size());
+        list.add("Test");
+        Assertions.assertEquals(list.get(0),("Test"));
+    }
+    
+    @Test
+    public void testSameList() {
+        List<String> testList = new LinkedList<>();
+        List<String> modifiableTestList = StringListUtils.toModifiableList(testList);
+        //Same object, not same contents in new wrapping
+        Assertions.assertEquals(testList, modifiableTestList);
+        Assertions.assertEquals(0,testList.size());
+    }
+    
+    
+    @Test
+    public void testAppendOnlyList() {
+        List<String> evergrowing = new ArrayList<String>(List.of("Test")) {
+            @Override
+            public String remove(int index) {
+                throw new UnsupportedOperationException("Remove is not allowed");
+            }
+    
+            @Override
+            public boolean remove(Object o) {
+                throw new UnsupportedOperationException("Remove is not allowed");
+            }
+    
+            @Override
+            protected void removeRange(int fromIndex, int toIndex) {
+                throw new UnsupportedOperationException("Remove is not allowed");
+            }
+    
+            @Override
+            public boolean removeAll(Collection<?> c) {
+                throw new UnsupportedOperationException("Remove is not allowed");
+            }
+    
+            @Override
+            public boolean retainAll(Collection<?> c) {
+                throw new UnsupportedOperationException("Remove is not allowed");
+            }
+    
+            @Override
+            public boolean removeIf(Predicate<? super String> filter) {
+                throw new UnsupportedOperationException("Remove is not allowed");
+            }
+        };
+        try {
+            evergrowing.remove("test");
+            Assertions.fail("appendOnlyList allows removes..., what magic is this?");
+        } catch (UnsupportedOperationException e){
+            //expected
+        }
+        List<String> list = StringListUtils.toModifiableList(evergrowing);
+        Assertions.assertEquals(1,list.size());
+        list.add("Test2");
+        Assertions.assertEquals(list.get(0),("Test"));
+        Assertions.assertEquals(list.get(1),("Test2"));
+    
+    }
 }

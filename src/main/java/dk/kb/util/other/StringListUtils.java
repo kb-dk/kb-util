@@ -198,39 +198,48 @@ public class StringListUtils {
     /**
      * Return a modifiable list with the same content, or the same list if it is already modifiable
      *
-     * This method is NOT threadsafe, but the returned list should be (as threadsafe as the input). So
-     * ensure no other thread is accessing/modifying the list while we make it modifiable.
+     * This method is threadsafe,  IFF the input list is not modified by another thread during this method.
+     *
+     * So if you have full control of your input list, this method is thread-safe. Therefore, ensure that
+     * no other thread is accessing/modifying the list while we make it modifiable.
      *
      * @param list the list to get as modifiable
      * @param <E>  the type
      * @return the same list, if it is modifiable or a new Arraylist with the same content
      */
     public static <E> List<E> toModifiableList(@NotNull final List<E> list) {
+        if (list == null){
+            return null;
+        }
+        //Size beforehand
+        int orig_size = list.size();
         try {
             //First we check
             list.addAll(Collections.emptyList());
-            //Not all immutable lists trigger on this... Collections.emptyList() is one that accepts this
+            //Not all immutable lists trigger on this... Collections.emptyList() is one do NOT fail on addAll
             
-            //So to catch such fraggers, we try to add an element
-            int size = list.size();
             if (!list.isEmpty()) {
                 //If the list is not empty, try to add the first element as a new last element
                 list.add(list.get(0));
             } else {
                 //Otherwise just add null
+                //Some collections do not like null, so better to try something else beforehand
                 list.add(null);
             } //We cannot just add whatever because we do not know the type of the list
             
-            //Remove the newly added element
-            list.remove(size);
-            
-            //There is a risk that the add will complete, but the remove will fail.
-            //That would basically be a append-only list...
-            //If so, the list will end up with an additional null
+            //Remove the newly added element (orig_size is length = lastIndex+1 = index of newly added element)
+            list.remove(orig_size);
             
             return list;
         } catch (java.lang.UnsupportedOperationException e) {
-            return new ArrayList<>(list);
+            final ArrayList<E> asMutableList = new ArrayList<>(list);
+            
+            while (asMutableList.size() > orig_size){
+                //This removes any extra elements we added in the heuristic above
+                //asMutableList is an ArrayList so the remove operation is definitily good here
+                asMutableList.remove(asMutableList.size()-1);
+            }
+            return asMutableList;
         }
     }
     
