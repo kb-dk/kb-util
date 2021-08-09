@@ -4,7 +4,6 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,9 +85,9 @@ public class StringListUtils {
     
     /**
      * Remove empty elements from the list and distinct the list.
-     *
+     * <p>
      * The order of the list will be preserved, but elements will be removed.
-     *
+     * <p>
      * if list is null, return an empty list.
      *
      * @param list the list to filter
@@ -107,9 +106,9 @@ public class StringListUtils {
     
     /**
      * Remove empty elements from the list and distinct the list.
-     *
+     * <p>
      * The order of the list will be preserved, but elements will be removed.
-     *
+     * <p>
      * if list is null, return an empty list.
      *
      * @param list the list to filter
@@ -122,8 +121,6 @@ public class StringListUtils {
                      .distinct()
                      .collect(Collectors.toList());
     }
-    
-  
     
     
     /**
@@ -152,14 +149,14 @@ public class StringListUtils {
         return coll;
     }
     
-   
     
     /**
      * If value is null or blank, return defaultValue. Otherwise return value
-     * @param value the value
+     *
+     * @param value        the value
      * @param defaultValue the default value
      * @return see above
-     * This is a specialisation of #orDefault(Object, Object), where we check not just null but also blank
+     *         This is a specialisation of #orDefault(Object, Object), where we check not just null but also blank
      */
     public static String useDefaultIfNullOrEmpty(String value, String defaultValue) {
         if (value == null || value.isBlank()) {
@@ -171,9 +168,10 @@ public class StringListUtils {
     
     /**
      * If value is null, return defaultValue. Otherwise return value
-     * @param value the value
+     *
+     * @param value        the value
      * @param defaultValue the default value
-     * @param <T> the type
+     * @param <T>          the type
      * @return see above
      */
     public static <T> T useDefaultIfNull(T value, T defaultValue) {
@@ -185,7 +183,7 @@ public class StringListUtils {
      * Return the elements as a MODIFIABLE list
      *
      * @param elements the elements
-     * @param <T>     the type of elements
+     * @param <T>      the type of elements
      * @return the elements as a ArrayList
      */
     @SafeVarargs
@@ -197,30 +195,32 @@ public class StringListUtils {
             return new ArrayList<T>(Arrays.asList(elements));
         }
     }
-
-    private static final Set<Class<?>> goodLists = Set.of(ArrayList.class, LinkedList.class);
+    
+    private static final Set<Class<?>> definitelyMutableLists = Set.of(ArrayList.class,
+                                                                       LinkedList.class);
     
     /**
      * Return a modifiable list with the same content, or the same list if it is already modifiable
-     *
+     * <p>
      * This method is threadsafe,  IFF the input list is not modified by another thread during this method.
-     *
+     * <p>
      * So if you have full control of your input list, this method is thread-safe. Therefore, ensure that
      * no other thread is accessing/modifying the list while we make it modifiable.
-     *
-     * Please note that you are NOT guaranteed to get the same subtype of List back from this method.
-     * You can only trust that the resulting list implements List, not any subtypes from the input value
+     * <p>
+     * Please note that you are NOT guaranteed to get the same subtype of List back from this method. But
+     * you cannot trust that you do NOT get the same type back
      *
      * @param list the list to get as modifiable
      * @param <E>  the type
      * @return the same list, if it is modifiable or a new Arraylist with the same content
      */
     public static <L extends List<E>, E> List<E> toModifiableList(@NotNull final L list) {
-        if (list == null){
+        if (list == null) {
             return null;
         }
         
-        if (goodLists.contains(list.getClass())){
+        //If this list is one of the types we KNOW are mutable, just return it
+        if (definitelyMutableLists.contains(list.getClass())) {
             return list;
         }
         
@@ -230,36 +230,43 @@ public class StringListUtils {
             //First we check
             list.addAll(Collections.emptyList());
             //Not all immutable lists trigger on this... Collections.emptyList() is one do NOT fail on addAll
-    
+            
             boolean added;
             if (!list.isEmpty()) {
                 //If the list is not empty, try to add the first element as a new last element
                 added = list.add(list.get(0));
-            } else {
-                //Otherwise just add null
-                //Some collections do not like null, so better to try something else beforehand
-                added = list.add(null);
-            } //We cannot just add whatever because we do not know the type of the list
+                //Remove the newly added element (orig_size is length = lastIndex+1 = index of newly added element)
+                if (added) { //added is NOT always true, see org.apache.commons.collections4.list.SetUniqueList#add
+                    list.remove(orig_size);
+                }
+            }
             
+            //Otherwise just add null
+            //Some collections do not like null, so better to try something else beforehand
+            added = list.add(null);
+            //We cannot just add whatever because we do not know the type of the list
             //Remove the newly added element (orig_size is length = lastIndex+1 = index of newly added element)
-            if (added) { //added is NOT always true
+            if (added) { //added is NOT always true, see org.apache.commons.collections4.list.SetUniqueList#add
                 list.remove(orig_size);
             }
             
+            
             return list;
-        } catch (java.lang.UnsupportedOperationException e) {
-            final ArrayList<E> asMutableList = new ArrayList<>(list.subList(0,orig_size));
-            return asMutableList;
+        } catch (Exception e) { //Is ANYTHING went wrong in the heuristics, make a new list
+            //Use sublist to ensure that we do not include any elements added in heuristics
+            //Sublist is (should be) cheap
+            return new ArrayList<>(list.subList(0, orig_size));
         }
     }
     
     /**
      * Substring that allows for negative indexes and indexes beyound string length
-     * @param string the string
+     *
+     * @param string     the string
      * @param startIndex the start index. If negative, count backwards from the end of the string.
      *                   If longer than the string, cap at string length.
-     * @param endIndex the end index. If negative, count backwards from the end of the string.
-     *                 If longer than the string, cap at string length.
+     * @param endIndex   the end index. If negative, count backwards from the end of the string.
+     *                   If longer than the string, cap at string length.
      * @return the substring
      */
     public static String substring(String string, int startIndex, int endIndex) {
@@ -286,10 +293,10 @@ public class StringListUtils {
                 endIndex = 0;
             }
         }
-    
+        
         //If index is beyound the string length, set it to the the string length
         startIndex = Math.min(startIndex, string.length());
-        endIndex = Math.min(endIndex, string.length());
+        endIndex   = Math.min(endIndex, string.length());
         
         if (startIndex > endIndex) {
             //If start is beyound end, substring as two strings
@@ -306,7 +313,8 @@ public class StringListUtils {
     
     /**
      * Remove the middle part of the string, such that the result is no longer than maxLength
-     * @param string the string to cut
+     *
+     * @param string    the string to cut
      * @param maxLength the max length of the output
      * @return a string with the middle part replaced with ...
      */
@@ -331,7 +339,8 @@ public class StringListUtils {
     
     /**
      * Cut the end of the string such that the result is no longer than maxLength
-     * @param string the string
+     *
+     * @param string    the string
      * @param maxLength the max length
      * @return the string with the end replaced with ... if nessesary
      */
