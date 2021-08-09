@@ -6,6 +6,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -227,6 +228,25 @@ class StringListUtilsTest {
         Assertions.assertEquals(startSize, list.size());
         list.add("Test");
         Assertions.assertEquals(list.get(startSize),("Test"));
+    }
+
+    // Checking for immutability on an ArrayList (an extremely common scenario) causes an expansion of the ArrayList
+    // when the internal capacity of the ArrayList is equal to the number of elements (a fairly common scenario).
+    @Test
+    public void testArrayListExpansionOnToMutableList() throws NoSuchFieldException, IllegalAccessException {
+        ArrayList<String> arrayList = new ArrayList<>(Arrays.asList("foo", "bar"));
+
+        Field elementData = arrayList.getClass().getDeclaredField("elementData");
+        elementData.setAccessible(true);
+        final int startCapacity = ((Object[])elementData.get(arrayList)).length;
+        Assertions.assertEquals(2, startCapacity,
+                                "Start capacity should equal the number of initial elements");
+
+        testToModifiableList(arrayList);
+
+        final int afterCheckCapacity = ((Object[])elementData.get(arrayList)).length;
+        Assertions.assertEquals(2, afterCheckCapacity,
+                                "After check capacity should equal the number of initial elements");
     }
 
     @Test
