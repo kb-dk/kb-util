@@ -198,7 +198,7 @@ public class StringListUtils {
         }
     }
 
-    private static Set<Class<?>> goodLists = new HashSet<>(List.of(ArrayList.class, LinkedList.class));
+    private static final Set<Class<?>> goodLists = Set.of(ArrayList.class, LinkedList.class);
     
     /**
      * Return a modifiable list with the same content, or the same list if it is already modifiable
