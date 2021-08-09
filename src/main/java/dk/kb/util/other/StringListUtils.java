@@ -4,11 +4,14 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
@@ -194,6 +197,8 @@ public class StringListUtils {
             return new ArrayList<T>(Arrays.asList(elements));
         }
     }
+
+    private static Set<Class<?>> goodLists = new HashSet<>(List.of(ArrayList.class, LinkedList.class));
     
     /**
      * Return a modifiable list with the same content, or the same list if it is already modifiable
@@ -203,42 +208,47 @@ public class StringListUtils {
      * So if you have full control of your input list, this method is thread-safe. Therefore, ensure that
      * no other thread is accessing/modifying the list while we make it modifiable.
      *
+     * Please note that you are NOT guaranteed to get the same subtype of List back from this method.
+     * You can only trust that the resulting list implements List, not any subtypes from the input value
+     *
      * @param list the list to get as modifiable
      * @param <E>  the type
      * @return the same list, if it is modifiable or a new Arraylist with the same content
      */
-    public static <E> List<E> toModifiableList(@NotNull final List<E> list) {
+    public static <L extends List<E>, E> List<E> toModifiableList(@NotNull final L list) {
         if (list == null){
             return null;
         }
+        
+        if (goodLists.contains(list.getClass())){
+            return list;
+        }
+        
         //Size beforehand
         int orig_size = list.size();
         try {
             //First we check
             list.addAll(Collections.emptyList());
             //Not all immutable lists trigger on this... Collections.emptyList() is one do NOT fail on addAll
-            
+    
+            boolean added;
             if (!list.isEmpty()) {
                 //If the list is not empty, try to add the first element as a new last element
-                list.add(list.get(0));
+                added = list.add(list.get(0));
             } else {
                 //Otherwise just add null
                 //Some collections do not like null, so better to try something else beforehand
-                list.add(null);
+                added = list.add(null);
             } //We cannot just add whatever because we do not know the type of the list
             
             //Remove the newly added element (orig_size is length = lastIndex+1 = index of newly added element)
-            list.remove(orig_size);
+            if (added) { //added is NOT always true
+                list.remove(orig_size);
+            }
             
             return list;
         } catch (java.lang.UnsupportedOperationException e) {
-            final ArrayList<E> asMutableList = new ArrayList<>(list);
-            
-            while (asMutableList.size() > orig_size){
-                //This removes any extra elements we added in the heuristic above
-                //asMutableList is an ArrayList so the remove operation is definitily good here
-                asMutableList.remove(asMutableList.size()-1);
-            }
+            final ArrayList<E> asMutableList = new ArrayList<>(list.subList(0,orig_size));
             return asMutableList;
         }
     }

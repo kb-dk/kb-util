@@ -235,20 +235,28 @@ class StringListUtilsTest {
     @Test
     public void testArrayListExpansionOnToMutableList() throws NoSuchFieldException, IllegalAccessException {
         ArrayList<String> arrayList = new ArrayList<>(Arrays.asList("foo", "bar"));
-
+    
+        final int startCapacity = getInternalCapacity(arrayList);
+        Assertions.assertEquals(2, startCapacity,
+                                "Start capacity should equal the number of initial elements");
+    
+        StringListUtils.toModifiableList(arrayList);
+    
+        //Here we IGNORE the returned list. We just check if the input list have changed internal capacity due to the heuristics
+        final int finalCapacity = getInternalCapacity(arrayList);
+        Assertions.assertEquals(2, finalCapacity,
+                                "Final capacity should equal the number of initial elements");
+    
+    
+    }
+    
+    private int getInternalCapacity(ArrayList<String> arrayList) throws NoSuchFieldException, IllegalAccessException {
         Field elementData = arrayList.getClass().getDeclaredField("elementData");
         elementData.setAccessible(true);
         final int startCapacity = ((Object[])elementData.get(arrayList)).length;
-        Assertions.assertEquals(2, startCapacity,
-                                "Start capacity should equal the number of initial elements");
-
-        testToModifiableList(arrayList);
-
-        final int afterCheckCapacity = ((Object[])elementData.get(arrayList)).length;
-        Assertions.assertEquals(2, afterCheckCapacity,
-                                "After check capacity should equal the number of initial elements");
+        return startCapacity;
     }
-
+    
     @Test
     public void testSameList() {
         List<String> testList = new LinkedList<>();
