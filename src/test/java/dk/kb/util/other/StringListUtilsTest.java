@@ -1,5 +1,6 @@
 package dk.kb.util.other;
 
+import org.apache.commons.collections4.list.SetUniqueList;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
@@ -210,12 +211,24 @@ class StringListUtilsTest {
         } catch (UnsupportedOperationException e){
             //expected
         }
-        List<String> list = StringListUtils.toModifiableList(immutable);
-        Assertions.assertEquals(0,list.size());
-        list.add("Test");
-        Assertions.assertEquals(list.get(0),("Test"));
+        testToModifiableList(immutable);
     }
     
+    @Test
+    public void testApacheSetList() {
+        List<String> sList = SetUniqueList.setUniqueList(StringListUtils.toModifiableList(Arrays.asList("foo", "bar")));
+
+        testToModifiableList(sList);
+    }
+
+    private void testToModifiableList(List<String> immutableList) {
+        final int startSize = immutableList.size();
+        List<String> list = StringListUtils.toModifiableList(immutableList);
+        Assertions.assertEquals(startSize, list.size());
+        list.add("Test");
+        Assertions.assertEquals(list.get(startSize),("Test"));
+    }
+
     @Test
     public void testSameList() {
         List<String> testList = new LinkedList<>();
