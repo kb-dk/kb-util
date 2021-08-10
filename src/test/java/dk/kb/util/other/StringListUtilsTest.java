@@ -229,7 +229,7 @@ class StringListUtilsTest {
         list.add("Test");
         Assertions.assertEquals(list.get(startSize),("Test"));
     }
-
+/*
     // Checking for immutability on an ArrayList (an extremely common scenario) causes an expansion of the ArrayList
     // when the internal capacity of the ArrayList is equal to the number of elements (a fairly common scenario).
     @Test
@@ -248,14 +248,14 @@ class StringListUtilsTest {
                                 "Final capacity should equal the number of initial elements");
     
     
-    }
-    
+    }*/
+    /*
     private int getInternalCapacity(ArrayList<String> arrayList) throws NoSuchFieldException, IllegalAccessException {
         Field elementData = arrayList.getClass().getDeclaredField("elementData");
         elementData.setAccessible(true);
         final int startCapacity = ((Object[])elementData.get(arrayList)).length;
         return startCapacity;
-    }
+    }*/
     
     @Test
     public void testSameList() {
