@@ -14,6 +14,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -30,17 +31,14 @@ import java.nio.charset.StandardCharsets;
 public class XML {
     
     /**
-     * Serialiseses the given Document as a String
+     * Serialiseses the given Document as a (human-readable) String with indents and linebreaks
      * @param dom the dom
      * @return the doc in string form
      * @throws TransformerException if the transformation failed
+     * @see #domToCompactString(Node) for a more compact machine-readable version
      */
     public static String domToString(Node dom) throws TransformerException {
-        Transformer t = TransformerFactory.newInstance().newTransformer();
-        t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        
-        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        Transformer t = getTransformer();
         t.setOutputProperty(OutputKeys.INDENT, "yes");
         
         /* Transformer */
@@ -51,6 +49,36 @@ public class XML {
             throw new TransformerException(e);
         }
     }
+    
+    /**
+     * Serialiseses the given Document as a String, without indention
+     * @param dom the dom
+     * @return the doc in string form
+     * @throws TransformerException if the transformation failed
+     * @see #domToString(Node) for an indented version of the same string
+     */
+    public static String domToCompactString(Node dom) throws TransformerException {
+        Transformer t = getTransformer();
+        t.setOutputProperty(OutputKeys.INDENT, "no");
+        
+        /* Transformer */
+        try (StringWriter sw = new StringWriter();) {
+            t.transform(new DOMSource(dom), new StreamResult(sw));
+            return sw.toString();
+        } catch (IOException e) {
+            throw new TransformerException(e);
+        }
+    }
+    
+    private static Transformer getTransformer() throws TransformerConfigurationException {
+        Transformer t = TransformerFactory.newInstance().newTransformer();
+        t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        
+        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        return t;
+    }
+    
     
     /**
      * Marshall the given object as xml
