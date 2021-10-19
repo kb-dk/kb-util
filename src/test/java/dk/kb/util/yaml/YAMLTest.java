@@ -22,47 +22,47 @@ import static org.junit.jupiter.api.Assertions.*;
 class YAMLTest {
     @Test
     public void testLoad() throws IOException {
-        YAML.resolveConfig("test.yml");
+        YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
     }
     
     @Test
     public void testEmptyList() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml");
         List<YAML> result = yaml.getYAMLList("test.emptyList");
         assertEquals(0,result.size());
     }
 
     @Test
     public void testNested() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml");
         assertEquals("Hello World", yaml.getString("test.somestring"),
                      "Nested request for string should be supported");
     }
 
     @Test
     public void testRoot() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals("Hello World", yaml.getString("somestring"),
                      "Direct request for string from resolved root should be supported");
     }
     
     @Test
     public void testArray() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
     }
     
     @Test
     public void testKeptPath() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals("{nested.sublevel2string=sub1}", yaml.getSubMap("nested",true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs");
     }
     
     @Test
     public void testMissingSubMap() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         try {
             yaml.getSubMap("nonexisting");
         } catch(NotFoundException e) {
@@ -73,7 +73,7 @@ class YAMLTest {
     
     @Test
     public void testMissingString() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         try {
             yaml.getString("nonexisting");
         } catch(NotFoundException e) {
@@ -84,7 +84,7 @@ class YAMLTest {
     
     @Test
     public void testDefault() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals(87, yaml.getInteger("nonexisting", 87),
                      "Requesting a non-existing integer with a default value should work");
     }
@@ -190,7 +190,7 @@ class YAMLTest {
         Assertions.assertThrows(AccessDeniedException.class, () -> new YAML(nonRead.toString()),
                                 "Parsing  test file '" + nonRead + "' using constructor should throw an Exception");
 
-        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.resolveConfig(nonRead.toString()),
+        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.resolveLayeredConfigs(nonRead.toString()),
                                 "Parsing  test file '" + nonRead + "' using resolve should throw an Exception");
 
         Files.delete(nonRead);
@@ -215,7 +215,7 @@ class YAMLTest {
 
     @Test
     public void testIntArray() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         List<Integer> ints = yaml.getList("arrayofints");
         assertEquals("[1, 2]", ints.toString(),
                      "Arrays of integers should be supported");
@@ -223,7 +223,7 @@ class YAMLTest {
     
     @Test
     public void testTypes() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         final double EXPECTED = 87.13;
         double actual = yaml.getDouble("somedouble");
 
@@ -235,7 +235,7 @@ class YAMLTest {
 
     @Test
     public void testListEntry() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals("b", yaml.getString("arrayofstrings[1]"),
                      "Index-specified entry in arrays should be gettable");
         assertEquals("c", yaml.getString("arrayofstrings[last]"),
@@ -244,7 +244,7 @@ class YAMLTest {
 
     @Test
     public void testFailingListEntry() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         Assertions.assertThrows(Exception.class,
                                 () -> yaml.getString("arrayofstrings[3]"),
                                 "Requesting an index in a collection greater than or equal to list length should fail");
@@ -252,7 +252,7 @@ class YAMLTest {
 
     @Test
     public void testListMapEntry() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_maps.yml");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
         try {
             yaml.getSubMap("test.listofmaps[1]");
         } catch (NotFoundException e) {
@@ -265,7 +265,7 @@ class YAMLTest {
     
     @Test
     public void testNestedLists() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_lists.yml");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_lists.yml");
         try {
             yaml.getList("test.listoflists[1]");
         } catch (NotFoundException e) {

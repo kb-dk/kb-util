@@ -1,7 +1,5 @@
 package dk.kb.util.yaml;
 
-import dk.kb.util.yaml.YAML;
-import dk.kb.util.yaml.YAMLUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -15,7 +13,7 @@ class YAMLUtilsTest {
     
     @Test
     void yamlToPropertiesTest() throws IOException {
-        YAML yaml = YAML.resolveConfig("test.yml");
+        YAML yaml = YAML.resolveLayeredConfigs("test.yml");
     
         final Properties x = YAMLUtils.toProperties(yaml);
         assertEquals("Hello World", x.getProperty("test.somestring"));
@@ -25,7 +23,7 @@ class YAMLUtilsTest {
 
     @Test
     public void testNestedMaps() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_maps.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml").getSubMap("test");
 
         String flattenedValues = String.join(", ", YAMLUtils.values(yaml));
         assertEquals("barA1, barA2, barB", flattenedValues);
@@ -33,8 +31,8 @@ class YAMLUtilsTest {
     
     @Test
     public void testNestedMapsProperites() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_maps.yml", "test");
-    
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml").getSubMap("test");
+      
         String flattenedValues = YAMLUtils.toProperties(yaml).toString();
         assertEquals("{listofmaps.0.fooA2=barA2, listofmaps.0.fooA1=barA1, listofmaps.1.fooB=barB}",
                      flattenedValues);
@@ -43,7 +41,7 @@ class YAMLUtilsTest {
     
     @Test
     public void testNestedLists() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_lists.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_lists.yml").getSubMap("test");
     
         String flattenedValues = String.join(", ", YAMLUtils.values(yaml));
         assertEquals("llItemA1, llItemA2, llItemB",
@@ -52,7 +50,7 @@ class YAMLUtilsTest {
     
     @Test
     public void testNestedLists2() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_lists.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_lists.yml").getSubMap("test");
     
         List<String> flattened = YAMLUtils.flatten(yaml)
                                           .stream()
@@ -64,7 +62,7 @@ class YAMLUtilsTest {
     
     @Test
     public void testNestedListsProperites() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_lists.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_lists.yml").getSubMap("test");
         
         String flattenedValues = YAMLUtils.toProperties(yaml).toString();
         assertEquals("{listoflists.0.1=llItemA2, listoflists.1.0=llItemB, listoflists.0.0=llItemA1}",
@@ -74,7 +72,7 @@ class YAMLUtilsTest {
     
     @Test
     public void testNestedMix() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_mix.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_mix.yml").getSubMap("test");
     
         String flattenedValues = String.join(", ", YAMLUtils.values(yaml));
         assertEquals("barM, 87", flattenedValues);
@@ -82,7 +80,7 @@ class YAMLUtilsTest {
     
     @Test
     public void testNestedMixProperites() throws IOException {
-        YAML yaml = YAML.resolveConfig("nested_mix.yml", "test");
+        YAML yaml = YAML.resolveLayeredConfigs("nested_mix.yml").getSubMap("test");
         
         String flattenedValues = YAMLUtils.toProperties(yaml).toString();
         assertEquals("{mixedlist.0.fooM=barM, mixedlist.1=87}",
