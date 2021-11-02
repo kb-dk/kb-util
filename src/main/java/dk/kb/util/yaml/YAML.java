@@ -648,6 +648,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
     @NotNull
+    @Deprecated
     public static YAML resolveConfig(String configName) throws
             IOException, FileNotFoundException, MalformedURLException, NullPointerException, InvalidPathException {
         return resolveConfig(configName, null);
@@ -673,6 +674,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
      * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
+    @Deprecated
     public static YAML resolveConfig(String configName, String confRoot) throws IOException {
         YAML rootMap = resolveMultiConfig(configName);
 
