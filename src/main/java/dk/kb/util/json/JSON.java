@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import javax.ws.rs.ext.ContextResolver;
 import java.io.File;
@@ -32,7 +33,14 @@ public class JSON implements ContextResolver<ObjectMapper> {
         
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-    
+        
+        //Fixes errors like
+        // java.lang.RuntimeException: com.fasterxml.jackson.databind.exc.InvalidDefinitionException:
+        //  Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module
+        //  "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" to enable handling
+        // When trying to serialize or deserialize java 8 dates
+        mapper.registerModule(new JavaTimeModule());
+        
         StdDateFormat fmt = new StdDateFormat();
         fmt.withColonInTimeZone(true);
         mapper.setDateFormat(fmt);
