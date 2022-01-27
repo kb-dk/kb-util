@@ -4,6 +4,10 @@ import dk.kb.util.Resolver;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.chrono.ChronoLocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,6 +24,14 @@ class JSONTest {
         assertThat(JSON.toJson(List.of("foo", Map.of("bar","baz")),false), is("[\"foo\",{\"bar\":\"baz\"}]"));
     
         assertThat(JSON.toJson(List.of("foo", "bar", new Date(0)), false), is("[\"foo\",\"bar\",\"1970-01-01T00:00:00.000+00:00\"]"));
+    }
+    
+    
+    @Test
+    void toJsonTestJava8Dates() {
+        
+        assertThat(JSON.toJson(List.of("foo", "bar",
+                                       LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)), false), is("[\"foo\",\"bar\",\"1970-01-01T00:00:00\"]"));
     }
     
     @Test
