@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.4.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.5)
+
 ###
+
+Fixed JSON.java to correctly handle java 8 datetime objects
+
 Added `StringListUtils.toModifiableList(list)` utility to check, and, if nessesary, wrap your list as a modifiable list
 
 
