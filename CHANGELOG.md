@@ -5,17 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
 
+- `CallbackReplacer` and `XMLEscapeSanitiser`: Regexp-based replacements with callbacks
 
 ## [1.4.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.5)
+### Added
 
-###
+- Added `StringListUtils.toModifiableList(list)` utility to check, and, if nessesary, wrap your list as a modifiable list
 
-Fixed JSON.java to correctly handle java 8 datetime objects
+### Changed
 
-Added `StringListUtils.toModifiableList(list)` utility to check, and, if nessesary, wrap your list as a modifiable list
-
-
+- Fixed JSON.java to correctly handle java 8 datetime objects
 
 ## [1.4.4](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.4)
 
