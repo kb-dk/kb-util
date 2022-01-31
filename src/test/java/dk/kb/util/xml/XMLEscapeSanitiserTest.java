@@ -74,8 +74,20 @@ class XMLEscapeSanitiserTest {
     void extendedEscapeIllegal() {
         assertEquals("<foo>Barbarian?</foo>", escape("<foo>Barbarian&#x10FFFE;</foo>"));
     }
+    
+    
+    @Test
+    void escapeWithReplace() {
+        assertEquals("<foo>Barbarian_ESCAPED_</foo>", escapeAndReplace("<foo>Barbarian&#x0;</foo>"));
+    }
+
 
     private String escape(String xml) {
         return new XMLEscapeSanitiser().apply(xml);
     }
+    
+    private String escapeAndReplace(String xml) {
+        return new XMLEscapeSanitiser("_ESCAPED_").apply(xml);
+    }
+    
 }
