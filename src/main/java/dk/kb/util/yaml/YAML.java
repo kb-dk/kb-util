@@ -15,6 +15,7 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
+import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -62,6 +63,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
 
+    private boolean extrapolateSystemProperties = false;
+    
     /**
      * Creates an empty YAML.
      */
@@ -90,7 +93,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param map a map presumable delivered by SnakeYAML.
      */
-    public YAML(Map<String, Object> map) {
+    public YAML(Map<String, Object> map, boolean extrapolateSystemProperties) {
+        this.extrapolateSystemProperties = extrapolateSystemProperties;
         this.putAll(map);
     }
     
@@ -150,7 +154,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             ));
         }
         
-        return new YAML(result);
+        return new YAML(result, extrapolateSystemProperties);
     }
     
     /**
@@ -231,7 +235,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException(
                     "Exception casting '" + found + "' to List<Map<String, Object>>", path, e);
         }
-        return hmList.stream().map(YAML::new).collect(Collectors.toList());
+        return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties)).collect(Collectors.toList());
     }
     
     /**
@@ -602,7 +606,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
             
             if (i == pathElements.length - 1) { //If this is the final pathElement, just return it
-                return sub;
+                return extrapolate(sub);
             } //Otherwise, we require that it is a map so we can continue to query
             
             //If sub is a list, make it a map with the indexes as keys
@@ -610,7 +614,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 List<Object> list = (List<Object>) sub;
                 LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
                 for (int j = 0; j < list.size(); j++) {
-                    map.put(j + "", list.get(j));
+                    map.put(j + "", extrapolate(list.get(j)));
                 }
                 sub = map;
             }
@@ -619,7 +623,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                         "The " + i + "'th sub-element ('" + pathKey + "') was not a Map", path);
             }
             try { //Update current as the sub we have found
-                current = new YAML((Map<String, Object>) sub);
+                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties);
             } catch (ClassCastException e) {
                 throw new InvalidTypeException(
                         "Expected a Map<String, Object> for path but got ClassCastException", path, e);
@@ -627,7 +631,23 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         return current;
     }
-
+    
+    private Object extrapolate(Object sub) {
+        if (sub == null){
+            return null;
+        }
+        if (extrapolateSystemProperties()){
+            if (sub instanceof String) {
+                return StringSubstitutor.replaceSystemProperties(sub);
+            }
+            if (sub instanceof List<?>) {
+                List<?> objects = (List<?>) sub;
+                return objects.stream().map(o -> extrapolate(o)).collect(Collectors.toList());
+            }
+        }
+        return sub;
+    }
+    
     /* **************************** Fetching YAML ************************************ */
     
     /**
@@ -707,7 +727,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             for (String s : map.keySet());
             for (Object o : map.values());
 
-            YAML rootMap = new YAML(map);
+            YAML rootMap = new YAML(map, false);
             log.trace("Parsed YAML config stream");
             return rootMap;
         } else {
@@ -1008,8 +1028,17 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         base.put(key, mergeEntry(path + "." + key, base.get(key), value, defaultMA, listMA));
     }
-
-
+    
+    public boolean extrapolateSystemProperties() {
+        return extrapolateSystemProperties;
+    }
+    
+    public YAML extrapolateSystemProperties(boolean extrapolateSystemProperties) {
+        this.extrapolateSystemProperties = extrapolateSystemProperties;
+        return this;
+    }
+    
+    
     public enum MERGE_ACTION {
         /**
          * Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry
