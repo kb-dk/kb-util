@@ -18,8 +18,17 @@ import dk.kb.util.Resolver;
 import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
+import org.snakeyaml.engine.v2.api.Dump;
+import org.snakeyaml.engine.v2.api.DumpSettings;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
+import org.snakeyaml.engine.v2.common.FlowStyle;
+import org.snakeyaml.engine.v2.common.ScalarStyle;
+import org.snakeyaml.engine.v2.nodes.Node;
+import org.snakeyaml.engine.v2.nodes.Tag;
+import org.snakeyaml.engine.v2.representer.BaseRepresenter;
+import org.snakeyaml.engine.v2.representer.StandardRepresenter;
+import org.snakeyaml.engine.v2.resolver.JsonScalarResolver;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -61,14 +70,14 @@ import java.util.stream.Collectors;
  * </ol>
  */
 public class YAML extends LinkedHashMap<String, Object> {
-
+    
     private static final Logger log = LoggerFactory.getLogger(YAML.class);
-
+    
     private static final long serialVersionUID = -5211961549015821194L;
-
+    
     
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
-
+    
     private boolean extrapolateSystemProperties = false;
     
     /**
@@ -77,13 +86,14 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML() {
         super();
     }
-
+    
     /**
      * Resolves one or more resources using globbing and returns YAML based on the concatenated resources.
      * <p>
      * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
      * Use {@link #resolveLayeredConfigs} for treating YAML files as overlays when loading.
+     *
      * @param resourceName glob for YAML files.
      * @throws IOException if the files could not be loaded or parsed.
      * @see #resolveLayeredConfigs(String...)
@@ -92,7 +102,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML(String resourceName) throws IOException {
         this.putAll(YAML.resolveMultiConfig(resourceName));
     }
-
+    
     /**
      * Creates a YAML wrapper around the given map.
      * Changes to the map will be reflected in the YAML instance and vice versa.
@@ -107,7 +117,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Creates a YAML wrapper around the given map.
      * Changes to the map will be reflected in the YAML instance and vice versa.
      *
-     * @param map a map presumable delivered by SnakeYAML.
+     * @param map                         a map presumable delivered by SnakeYAML.
      * @param extrapolateSystemProperties should system properties be extrapolated in values
      */
     public YAML(Map<String, Object> map, boolean extrapolateSystemProperties) {
@@ -168,7 +178,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             result = result.entrySet().stream().collect(Collectors.toMap(
                     entry -> path + "." + entry.getKey(),
                     Map.Entry::getValue
-            ));
+                                                                        ));
         }
         
         return new YAML(result, extrapolateSystemProperties);
@@ -179,7 +189,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      *
      * @param path path for the list.
-     * @param <T> the type of elements in the list
+     * @param <T>  the type of elements in the list
      * @return the list at the path
      * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List
@@ -198,7 +208,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
         }
         try {
-            return (List<T>) found;
+            return (List<T>) extrapolate(found);
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + found + "' to List<T>", path, e);
         }
@@ -209,7 +219,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      *
      * @param path        path for the list.
-     * @param <T> the type of elements in the list
+     * @param <T>         the type of elements in the list
      * @param defaultList if the path cannot be resolved, return this value.
      * @return the list at the path or defaultList if it could not be located.
      */
@@ -269,7 +279,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public Short getShort(String path) {
         Object o = get(path);
         try {
-            return Short.valueOf(o.toString());
+            return Short.valueOf(toString(o));
         } catch (NumberFormatException e) {
             throw new InvalidTypeException("Exception casting '" + o + "' to Short", path, e);
         }
@@ -307,7 +317,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public Integer getInteger(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object o = get(path);
         try {
-            return Integer.valueOf(o.toString());
+            return Integer.valueOf(toString(o));
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + o + "' to Integer", path, e);
         }
@@ -352,7 +362,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public Long getLong(String path) {
         Object o = get(path);
         try {
-            return Long.valueOf(o.toString());
+            return Long.valueOf(toString(o));
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + o + "' to Long", path, e);
         }
@@ -389,7 +399,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public Double getDouble(String path) {
         Object o = get(path);
         try {
-            return Double.valueOf(o.toString());
+            return Double.valueOf(toString(o));
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + o + "' to Double", path, e);
         }
@@ -426,7 +436,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public Float getFloat(String path) {
         Object o = get(path);
         try {
-            return Float.valueOf(o.toString());
+            return Float.valueOf(toString(o));
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + o + "' to Float", path, e);
         }
@@ -461,7 +471,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     @NotNull
     public Boolean getBoolean(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object o = get(path);
-        return Boolean.valueOf(o.toString());
+        return Boolean.valueOf(toString(o));
     }
     
     /**
@@ -476,7 +486,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     @NotNull
     public Boolean getBoolean(String path, Boolean defaultValue) throws NullPointerException {
         try {
-           return getBoolean(path);
+            return getBoolean(path);
         } catch (NotFoundException | InvalidTypeException e) {
             return defaultValue;
         }
@@ -495,7 +505,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @NotNull
     public String getString(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
-        return get(path).toString();
+        return toString(get(path)).stripTrailing();
     }
     
     /**
@@ -549,7 +559,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either -
      * YAML-key for direct traversal, e.g. "foo" or "foo.bar" - YAML-key[index] for a specific element in a list, e.g.
-     * "foo.[2]" or "foo.[2].bar" - YAML-key.[last] for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"
+     * "foo.[2]" or "foo.[2].bar" - YAML-key.[last] for the last element in a list, e.g. "foo.[last]" or
+     * "foo.bar.[last]"
      * Note: Keys in the YAML must not contain dots.
      * <p>
      * Returns this object if the path is empty
@@ -580,10 +591,10 @@ public class YAML extends LinkedHashMap<String, Object> {
             final String pathKey;
             final String arrayElementIndex;
             if (matcher.matches()) { // foo.bar[2]
-                pathKey = matcher.group(1);
+                pathKey           = matcher.group(1);
                 arrayElementIndex = matcher.group(2);
             } else {
-                pathKey = fullPathElement;
+                pathKey           = fullPathElement;
                 arrayElementIndex = null;
             }
             Object sub;
@@ -602,17 +613,17 @@ public class YAML extends LinkedHashMap<String, Object> {
                 if (sub instanceof List) {
                     subCollection = (List<Object>) sub;
                 } else if (sub instanceof Map) {
-                    subCollection = ((Map<String,Object>) sub).values();
+                    subCollection = ((Map<String, Object>) sub).values();
                 } else {
                     throw new InvalidTypeException(String.format(
                             Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
                             fullPathElement, pathKey, sub.getClass().getSimpleName()), path);
-        
+                    
                 }
-    
+                
                 int index = "last".equals(arrayElementIndex) ?
-                                    subCollection.size() - 1 :
-                                    Integer.parseInt(arrayElementIndex);
+                            subCollection.size() - 1 :
+                            Integer.parseInt(arrayElementIndex);
                 if (index >= subCollection.size()) {
                     throw new IndexOutOfBoundsException(String.format(
                             Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
@@ -623,7 +634,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
             
             if (i == pathElements.length - 1) { //If this is the final pathElement, just return it
-                return extrapolate(sub);
+                return sub;
             } //Otherwise, we require that it is a map so we can continue to query
             
             //If sub is a list, make it a map with the indexes as keys
@@ -631,7 +642,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 List<Object> list = (List<Object>) sub;
                 LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
                 for (int j = 0; j < list.size(); j++) {
-                    map.put(j + "", extrapolate(list.get(j)));
+                    map.put(j + "", list.get(j));
                 }
                 sub = map;
             }
@@ -649,17 +660,17 @@ public class YAML extends LinkedHashMap<String, Object> {
         return current;
     }
     
-    private Object extrapolate(Object sub) {
-        if (sub == null){
+    private <T> T extrapolate(T sub) {
+        if (sub == null) {
             return null;
         }
-        if (extrapolateSystemProperties()){
+        if (extrapolateSystemProperties()) {
             if (sub instanceof String) {
-                return StringSubstitutor.replaceSystemProperties(sub);
+                return (T) StringSubstitutor.replaceSystemProperties(sub);
             }
             if (sub instanceof List<?>) {
                 List<?> objects = (List<?>) sub;
-                return objects.stream().map(o -> extrapolate(o)).collect(Collectors.toList());
+                return (T) objects.stream().map(o -> extrapolate(o)).collect(Collectors.toList());
             }
         }
         return sub;
@@ -687,7 +698,11 @@ public class YAML extends LinkedHashMap<String, Object> {
     @NotNull
     @Deprecated
     public static YAML resolveConfig(String configName) throws
-            IOException, FileNotFoundException, MalformedURLException, NullPointerException, InvalidPathException {
+                                                        IOException,
+                                                        FileNotFoundException,
+                                                        MalformedURLException,
+                                                        NullPointerException,
+                                                        InvalidPathException {
         return resolveConfig(configName, null);
     }
     
@@ -708,50 +723,60 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws NullPointerException           if the configName is null
      * @throws IllegalArgumentException       if the config cannot be parsed as YAML
      * @throws NotFoundException              if the confRoot is not null and is not found in the YAML document
-     * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
+     * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a
+     *                                        map)
      * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
     @Deprecated
     public static YAML resolveConfig(String configName, String confRoot) throws IOException {
         YAML rootMap = resolveMultiConfig(configName);
-
+        
         if (confRoot == null) {
             return rootMap;
         }
-
+        
         if (!rootMap.containsKey(confRoot)) {
             throw new NotFoundException("YAML configuration must contain the '" + confRoot + "' element", confRoot);
         } else {
             return rootMap.getSubMap(confRoot);
         }
     }
-
+    
     /**
      * Parse the given configStream as a single YAML.
      * <p>
      * Note: This method merges the YAML config as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair. Sub-entries are not merged on key collisions, meaning that key-collisions at the root level
      * replaces the full tree under the key. References are supported with this method.
+     *
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
     public static YAML parse(InputStream yamlStream) {
-        Object raw = new Yaml().load(yamlStream);
+        Object raw = new Load(LoadSettings.builder()
+                                          .setParseComments(true)
+                                          .setAllowDuplicateKeys(true)
+                                          .build()).loadFromInputStream(yamlStream);
+        
         if (raw instanceof Map) {
             @SuppressWarnings("unchecked")
-            Map<String,Object> map = (Map<String,Object>) raw;
+            Map<String, Object> map = (Map<String, Object>) raw;
             //Get a classcast exception here, and not someplace later https://stackoverflow.com/a/509288
-            for (String s : map.keySet());
-            for (Object o : map.values());
-
+            for (String s : map.keySet())
+                ;
+            for (Object o : map.values())
+                ;
+            
             YAML rootMap = new YAML(map, false);
             log.trace("Parsed YAML config stream");
             return rootMap;
         } else {
-            throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
+            throw new IllegalArgumentException(
+                    "The config resource does not evaluate to a valid YAML configuration.");
         }
+        
     }
-
+    
     /**
      * Parse the given Paths as a single YAML, effectively concatenating all paths.
      * It is possible to cross-reference between the individual paths.
@@ -761,7 +786,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param yamlPaths paths to YAML Files.
      * @return a YAML based on the given paths.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if a yamlFile could not be located.
      * @throws AccessDeniedException if a resource at a yamlPath could not be read.
      */
@@ -778,13 +803,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param yamlFiles path to YAML Files.
      * @return a YAML based on the given stream.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if a yamlFile could not be located.
      * @throws AccessDeniedException if a resource at a yamlFile could not be read.
      */
     public static YAML parse(File... yamlFiles) throws IOException {
         // Check is files can be read
-        for (File yamlFile: yamlFiles) {
+        for (File yamlFile : yamlFiles) {
             if (!yamlFile.exists()) {
                 throw new FileNotFoundException("The file '" + yamlFile + "' could not be found");
             }
@@ -792,20 +817,20 @@ public class YAML extends LinkedHashMap<String, Object> {
                 throw new AccessDeniedException("The file '" + yamlFile + "' could not be read (check permissions)");
             }
         }
-
+        
         List<InputStream> configs = null;
         try {
             // Convert to InputStreams
             configs = Arrays.stream(yamlFiles)
-                    .map(YAML::openStream)
-                    .collect(Collectors.toList());
-
+                            .map(YAML::openStream)
+                            .collect(Collectors.toList());
+            
             // Concatenate all InputStreams
             InputStream yamlStream = null;
             for (InputStream config : configs) {
                 yamlStream = yamlStream == null ? config : new SequenceInputStream(yamlStream, config);
             }
-
+            
             // Perform a single parse of the content
             return parse(yamlStream);
         } finally {
@@ -831,21 +856,21 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveLayeredConfigs for alternative.
      */
     public static YAML resolveMultiConfig(String... configResources) throws IOException {
         Path[] configPaths = Arrays.stream(configResources)
-                .map(Resolver::resolveGlob).flatMap(Collection::stream)
-                .toArray(Path[]::new);
+                                   .map(Resolver::resolveGlob).flatMap(Collection::stream)
+                                   .toArray(Path[]::new);
         if (configPaths.length == 0) {
             throw new FileNotFoundException("No paths resolved from " + Arrays.toString(configResources));
         }
         return parse(configPaths);
     }
-
+    
     /**
      * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
      * This is typically used to support easy overwriting of specific parts of a major configuration file.
@@ -862,7 +887,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveMultiConfig for alternative.
@@ -870,7 +895,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public static YAML resolveLayeredConfigs(String... configResources) throws IOException {
         return resolveLayeredConfigs(MERGE_ACTION.union, MERGE_ACTION.keep_extra, configResources);
     }
-
+    
     /**
      * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
      * This is typically used to support easy overwriting of specific parts of a major configuration file.
@@ -883,12 +908,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * order for that glob. The overall order is the given array of configResources
      *
      * @param configResources the names, paths or globs of the configuration files.
+     * @param defaultMA       the general action to take when a key collision is encountered. Also used for maps
+     *                        (YAMLs).
+     *                        Typically this will be {@link MERGE_ACTION#union}.
+     * @param listMA          the action to take when a key collision for a list is encountered.
+     *                        Typically this will be {@link MERGE_ACTION#union}.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs).
-     *                  Typically this will be {@link MERGE_ACTION#union}.
-     * @param listMA    the action to take when a key collision for a list is encountered.
-     *                  Typically this will be {@link MERGE_ACTION#union}.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveMultiConfig for alternative.
@@ -896,18 +922,18 @@ public class YAML extends LinkedHashMap<String, Object> {
     public static YAML resolveLayeredConfigs(MERGE_ACTION defaultMA, MERGE_ACTION listMA, String... configResources)
             throws IOException {
         List<Path> configPaths = Arrays.stream(configResources)
-                .map(Resolver::resolveGlob).flatMap(Collection::stream)
-                .collect(Collectors.toList());
+                                       .map(Resolver::resolveGlob).flatMap(Collection::stream)
+                                       .collect(Collectors.toList());
         if (configPaths.isEmpty()) {
             throw new FileNotFoundException("No paths resolved from " + Arrays.toString(configResources));
         }
         YAML compound = new YAML();
-        for (Path configPath: configPaths) {
+        for (Path configPath : configPaths) {
             compound = compound.merge(YAML.parse(configPath), defaultMA, listMA);
         }
         return compound;
     }
-
+    
     private static InputStream openStream(Path path) {
         try {
             return path.toUri().toURL().openStream();
@@ -915,6 +941,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new RuntimeException("IOException opening stream for '" + path + "'", e);
         }
     }
+    
     private static InputStream openStream(File file) {
         try {
             return file.toPath().toUri().toURL().openStream();
@@ -922,7 +949,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new RuntimeException("IOException opening stream for '" + file + "'", e);
         }
     }
-
+    
     /**
      * Merges the extra YAML into this YAML.
      * <p>
@@ -930,18 +957,20 @@ public class YAML extends LinkedHashMap<String, Object> {
      * lists and atomic values are overwritten with the values from extra.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     *
      * @param extra the YAML that will be added to this.
      * @return this YAML, updated with the values from extra.
      */
     public YAML merge(YAML extra) {
         return merge(this, extra, MERGE_ACTION.union, MERGE_ACTION.keep_extra);
     }
-
+    
     /**
      * Merges the extra YAML into this YAML. In case of key collisions, the stated merge actions are taken.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
-     * @param extra the YAML that will be added to this.
+     *
+     * @param extra     the YAML that will be added to this.
      * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
      *                  Typically this will be {@link MERGE_ACTION#union}.
      * @param listMA    the action to take when a key collision for a list is encountered.
@@ -951,21 +980,22 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML merge(YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
         return merge(this, extra, defaultMA, listMA);
     }
-
+    
     /**
      * Merges the extra YAML into the base YAML.
      * The merge uses union/extra-wins: The values for duplicate keys in YAMLs are merged, lists and atomic values are
      * overwritten with the values from extra.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
-     * @param base the YAML that will be updated with the content from extra.
+     *
+     * @param base  the YAML that will be updated with the content from extra.
      * @param extra the YAML that will be added to base.
      * @return the updated base YAML.
      */
     public static YAML merge(YAML base, YAML extra) {
         return merge(base, extra, MERGE_ACTION.union, MERGE_ACTION.keep_extra);
     }
-
+    
     /**
      * Merges the extra YAML into the base YAML. In case of key collisions, the stated merge actions are taken.
      * <p>
@@ -974,11 +1004,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The available MERGE_ACTIONs are<br>
      * union: Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry.<br>
      * keep_base: Duplicate maps, lists and atomics are ignored.<br>
-     * keep_extra: Duplicate maps, lists and atomics are overwrittes, so that the last encounterd key-value pair wins.<br>
+     * keep_extra: Duplicate maps, lists and atomics are overwrittes, so that the last encounterd key-value pair
+     * wins.<br>
      * fail: Duplicate maps, lists and atomics throws an exception.<br>
      *
-     * @param base the YAML that will be updated with the content from extra.
-     * @param extra the YAML that will be added to base.
+     * @param base      the YAML that will be updated with the content from extra.
+     * @param extra     the YAML that will be added to base.
      * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
      *                  Typically this will be {@link MERGE_ACTION#union}.
      * @param listMA    the action to take when a key collision for a list is encountered.
@@ -986,14 +1017,14 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the updated base YAML.
      */
     public static YAML merge(YAML base, YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
-        return (YAML)mergeEntry("", base, extra, defaultMA, listMA);
+        return (YAML) mergeEntry("", base, extra, defaultMA, listMA);
     }
-
+    
     @SuppressWarnings("unchecked")
     private static Object mergeEntry(
             String path, Object base, Object extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
         final String pre = "Configuration incompatibility at " + path;
-
+        
         if (extra instanceof LinkedHashMap) { // YAML is a LinkedHashMap
             if (!(base instanceof LinkedHashMap)) {
                 throw new IllegalArgumentException(
@@ -1007,36 +1038,45 @@ public class YAML extends LinkedHashMap<String, Object> {
             });
             return base;
         }
-
+        
         if (extra instanceof List) {
             if (!(base instanceof List)) {
                 throw new IllegalArgumentException(
                         pre + ": Attempting to merge value type " + List.class + " to type " + base.getClass());
             }
             switch (listMA) {
-                case fail: throw new IllegalArgumentException(
-                        pre + ": Duplicate keys with list merge action " + MERGE_ACTION.fail);
-                case keep_base: return base;
-                case keep_extra: return extra;
+                case fail:
+                    throw new IllegalArgumentException(
+                            pre + ": Duplicate keys with list merge action " + MERGE_ACTION.fail);
+                case keep_base:
+                    return base;
+                case keep_extra:
+                    return extra;
                 case union:
-                    ((List<Object>)base).addAll((List<Object>)extra);
+                    ((List<Object>) base).addAll((List<Object>) extra);
                     break;
-                default: throw new UnsupportedOperationException("Unknown merge action for list '" + defaultMA + "'");
+                default:
+                    throw new UnsupportedOperationException("Unknown merge action for list '" + defaultMA + "'");
             }
             return base;
         }
-
+        
         // When it's not a map or a list we don't care about type
         switch (defaultMA) {
-            case fail: throw new IllegalArgumentException(
-                    pre + ": Duplicate keys with merge action " + MERGE_ACTION.fail);
-            case keep_base: return base;
-            case keep_extra: return extra;
-            case union: return extra; // TODO: Should we do something else here? Make a type-aware merger? Fail?
-            default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
+            case fail:
+                throw new IllegalArgumentException(
+                        pre + ": Duplicate keys with merge action " + MERGE_ACTION.fail);
+            case keep_base:
+                return base;
+            case keep_extra:
+                return extra;
+            case union:
+                return extra; // TODO: Should we do something else here? Make a type-aware merger? Fail?
+            default:
+                throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
         }
     }
-
+    
     private static void mergeValueToYAML(String path, LinkedHashMap<Object, Object> base, Object key, Object value,
                                          MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
         if (!base.containsKey(key)) {
@@ -1048,6 +1088,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * If the YAML will extrapolate the current values of System.getProperties() in the values returned
+     *
      * @return true if extrapolation is enabled
      */
     public boolean extrapolateSystemProperties() {
@@ -1056,6 +1097,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
+     *
      * @return this YAML, not a copy
      */
     public YAML extrapolateSystemProperties(boolean extrapolateSystemProperties) {
@@ -1065,6 +1107,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * If the YAML will extrapolate the current values of System.getProperties() in the values returned
+     *
      * @return true if extrapolation is enabled
      */
     public boolean isExtrapolateSystemProperties() {
@@ -1078,15 +1121,45 @@ public class YAML extends LinkedHashMap<String, Object> {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
     }
     
-    
-    public String toString(){
-        DumperOptions dumperOptions = new DumperOptions();
-        dumperOptions.setIndentWithIndicator(true);
-        dumperOptions.setIndicatorIndent(2);
-        dumperOptions.setProcessComments(true);
-        // dumperOptions.setPrettyFlow(true);
-        return new Yaml(dumperOptions).dumpAs(this, null, DumperOptions.FlowStyle.BLOCK);
+    public String toString() {
+        return toString(this);
     }
+    
+    public String toString(Object object) {
+        JsonScalarResolver tagResolver = new JsonScalarResolver();
+        
+        DumpSettings settings = DumpSettings.builder()
+                                            .setDefaultFlowStyle(FlowStyle.BLOCK)
+                                            .setIndentWithIndicator(true)
+                                            .setIndicatorIndent(2)
+                                            .setExplicitEnd(false)
+                                            .setScalarResolver(tagResolver)
+                                            .setIndent(2)
+                                            .build();
+        BaseRepresenter representer = new StandardRepresenter(settings) {
+            @Override
+            protected Node representScalar(Tag tag, String value, ScalarStyle style) {
+                if (extrapolateSystemProperties()) {
+                    String newValue = StringSubstitutor.replaceSystemProperties(value);
+                    if (!newValue.equals(value)) {
+                        value = newValue;
+                        tag   = tagResolver.resolve(value, tag == Tag.STR);
+                    }
+                }
+                return super.representScalar(tag, value, style);
+            }
+        };
+        
+        return new Dump(settings, representer).dumpToString(object).stripTrailing();
+        // return null;
+        // DumperOptions dumperOptions = new DumperOptions();
+        // dumperOptions.setIndentWithIndicator(true);
+        // dumperOptions.setIndicatorIndent(2);
+        // dumperOptions.setProcessComments(true);
+        // // dumperOptions.setPrettyFlow(true);
+        // return new YamlEngineException(dumperOptions).dumpAs(this, null, DumperOptions.FlowStyle.BLOCK);
+    }
+    
     public enum MERGE_ACTION {
         /**
          * Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry
@@ -1103,6 +1176,9 @@ public class YAML extends LinkedHashMap<String, Object> {
         /**
          * Duplicate maps, lists and atomics throws an exception.
          */
-        fail};
+        fail
+    }
+    
+    ;
     
 }

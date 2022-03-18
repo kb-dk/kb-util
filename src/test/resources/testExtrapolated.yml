@@ -8,7 +8,7 @@ test:
     sublevel2string: ${user.name}
   arrayofstrings:
     - a
-    - "${user.name}"
+    - \"${user.name}\"
     - c
   arrayofints:
     - ${java.vm.specification.version}
