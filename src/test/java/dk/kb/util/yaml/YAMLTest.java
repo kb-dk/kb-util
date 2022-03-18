@@ -143,6 +143,13 @@ class YAMLTest {
     }
     
     @Test
+    public void testNonResolvableExtrapolated() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolateSystemProperties(true);
+        assertEquals("${cannot.be.resolved}", yaml.getString("test.somestring"),
+                     "Requesting a non-resolvable system property should return the original string");
+    }
+
+    @Test
     public void testDefaultExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true).getSubMap("test");
         assertEquals(87, yaml.getInteger("nonexisting", 87),
