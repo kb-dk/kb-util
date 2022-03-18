@@ -93,6 +93,17 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param map a map presumable delivered by SnakeYAML.
      */
+    public YAML(Map<String, Object> map) {
+        this.putAll(map);
+    }
+    
+    /**
+     * Creates a YAML wrapper around the given map.
+     * Changes to the map will be reflected in the YAML instance and vice versa.
+     *
+     * @param map a map presumable delivered by SnakeYAML.
+     * @param extrapolateSystemProperties should system properties be extrapolated in values
+     */
     public YAML(Map<String, Object> map, boolean extrapolateSystemProperties) {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
         this.putAll(map);
@@ -1029,15 +1040,37 @@ public class YAML extends LinkedHashMap<String, Object> {
         base.put(key, mergeEntry(path + "." + key, base.get(key), value, defaultMA, listMA));
     }
     
+    /**
+     * If the YAML will extrapolate the current values of System.getProperties() in the values returned
+     * @return true if extrapolation is enabled
+     */
     public boolean extrapolateSystemProperties() {
         return extrapolateSystemProperties;
     }
     
+    /**
+     * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
+     * @return this YAML, not a copy
+     */
     public YAML extrapolateSystemProperties(boolean extrapolateSystemProperties) {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
         return this;
     }
     
+    /**
+     * If the YAML will extrapolate the current values of System.getProperties() in the values returned
+     * @return true if extrapolation is enabled
+     */
+    public boolean isExtrapolateSystemProperties() {
+        return extrapolateSystemProperties;
+    }
+    
+    /**
+     * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
+     */
+    public void setExtrapolateSystemProperties(boolean extrapolateSystemProperties) {
+        this.extrapolateSystemProperties = extrapolateSystemProperties;
+    }
     
     public enum MERGE_ACTION {
         /**
