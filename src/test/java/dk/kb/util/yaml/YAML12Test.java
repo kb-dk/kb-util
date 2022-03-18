@@ -1,6 +1,7 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
+import org.apache.commons.text.StringSubstitutor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +17,8 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,7 +26,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-class YAMLTest {
+class YAML12Test {
+    
+    @Test
+    public void regExpTest() {
+        Pattern
+                pattern
+                = Pattern.compile("^\\$\\{\\s*((?<name>\\w+)((?<separator>:?(-|\\?))(?<value>\\w+)?)?)\\s*\\}$");
+        Matcher matcher = pattern.matcher("${javaspecificationversion}");
+        
+        assertTrue(matcher.matches());
+    }
+    
     @Test
     public void testToString() throws IOException {
         String contents = Files.readAllLines(Resolver.getPathFromClasspath("test.yml"))
@@ -31,56 +45,72 @@ class YAMLTest {
                                .map(line -> line.replaceAll("#.*$", "").stripTrailing())
                                .filter(line -> !line.isBlank())
                                .collect(Collectors.joining("\n"));
-        assertEquals(contents, YAML.resolveLayeredConfigs("test.yml").toString());
+        assertEquals(contents, YAML12.resolveLayeredConfigs("test.yml").toString());
     }
     
     
     @Test
+    public void testToStringExtrapolated() throws IOException {
+        String contents = StringSubstitutor.replaceSystemProperties(Files.readAllLines(Resolver.getPathFromClasspath(
+                                                                                 "testExtrapolated.yml"))
+                                                                         .stream()
+                                                                         .map(line -> line.replaceAll("#.*$", "")
+                                                                                          .stripTrailing())
+                                                                         .filter(line -> !line.isBlank())
+                                                                         .collect(Collectors.joining("\n")))
+                                           .replaceAll("\"", "");
+        final String actual = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                                  .extrapolateSystemProperties(true)
+                                  .toString();
+        assertEquals(contents, actual);
+    }
+    
+    @Test
     public void testLoad() throws IOException {
-        YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
     }
     
     @Test
     public void testEmptyList() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml");
-        List<YAML> result = yaml.getYAMLList("test.emptyList");
-        assertEquals(0,result.size());
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml");
+        List<YAML12> result = yaml.getYAMLList("test.emptyList");
+        assertEquals(0, result.size());
     }
-
+    
     @Test
     public void testNested() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml");
         assertEquals("Hello World", yaml.getString("test.somestring"),
                      "Nested request for string should be supported");
     }
-
+    
     @Test
     public void testRoot() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals("Hello World", yaml.getString("somestring"),
                      "Direct request for string from resolved root should be supported");
     }
     
     @Test
     public void testArray() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
     }
     
     @Test
     public void testKeptPath() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
-        assertEquals("nested.sublevel2string: sub1", yaml.getSubMap("nested",true).toString(),
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
+        assertEquals("nested.sublevel2string: sub1", yaml.getSubMap("nested", true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs");
     }
     
     @Test
     public void testMissingSubMap() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         try {
             yaml.getSubMap("nonexisting");
-        } catch(NotFoundException e) {
+        } catch (NotFoundException e) {
             return;
         }
         fail("Requesting a non-existing sub map should result in a NotFoundException");
@@ -88,10 +118,10 @@ class YAMLTest {
     
     @Test
     public void testMissingString() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         try {
             yaml.getString("nonexisting");
-        } catch(NotFoundException e) {
+        } catch (NotFoundException e) {
             return;
         }
         fail("Requesting a non-existing String should result in a NotFoundException");
@@ -99,48 +129,69 @@ class YAMLTest {
     
     @Test
     public void testDefault() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals(87, yaml.getInteger("nonexisting", 87),
                      "Requesting a non-existing integer with a default value should work");
     }
     
     
-    
     @Test
     public void testNestedExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true);
-        assertEquals(System.getProperties().getProperty("user.home")+" Hello World", yaml.getString("test.somestring"),
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true);
+        assertEquals(System.getProperties().getProperty("user.home") + " Hello World",
+                     yaml.getString("test.somestring"),
                      "Nested request for string should be supported");
     }
     
     @Test
     public void testRootExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
-        assertEquals(System.getProperties().getProperty("user.home")+" Hello World", yaml.getString("somestring"),
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(true);
+        assertEquals(System.getProperties().getProperty("user.home") + " Hello World", yaml.getString("somestring"),
                      "Direct request for string from resolved root should be supported");
     }
     
     @Test
     public void testArrayExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
-        assertEquals("[a, "+System.getProperties().getProperty("user.name")+", c]", yaml.getList("arrayofstrings").toString(),
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(true);
+        assertEquals(StringSubstitutor.replaceSystemProperties("[a, ${user.name}, c]"),
+                     yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
     }
     
     @Test
     public void testKeptPathExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
-        
-        assertEquals("nested.sublevel2string: ${user.name}", yaml.getSubMap("nested",true).toString(),
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(true);
+        assertEquals(StringSubstitutor.replaceSystemProperties(
+                             "nested.sublevel2string: ${user.name}"),
+                     yaml.getSubMap("nested", true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs. Extrapolation does NOT happen on toString");
     }
     
     @Test
+    public void testKeptPathExtrapolatedNot() throws IOException {
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(false);
+        assertEquals("nested.sublevel2string: ${user.name}",
+                     yaml.getSubMap("nested", true).toString(),
+                     "When we get map with subkeys preserved, we should see the nested previs. Extrapolation does NOT happen on toString");
+    }
+    
+    
+    @Test
     public void testMissingSubMapExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(true);
         try {
             yaml.getSubMap("nonexisting");
-        } catch(NotFoundException e) {
+        } catch (NotFoundException e) {
             return;
         }
         fail("Requesting a non-existing sub map should result in a NotFoundException");
@@ -148,10 +199,12 @@ class YAMLTest {
     
     @Test
     public void testMissingStringExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true).getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .extrapolateSystemProperties(true)
+                        .getSubMap("test");
         try {
             yaml.getString("nonexisting");
-        } catch(NotFoundException e) {
+        } catch (NotFoundException e) {
             return;
         }
         fail("Requesting a non-existing String should result in a NotFoundException");
@@ -159,14 +212,16 @@ class YAMLTest {
     
     @Test
     public void testNonResolvableExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolateSystemProperties(true);
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolateSystemProperties(true);
         assertEquals("${cannot.be.resolved}", yaml.getString("test.somestring"),
                      "Requesting a non-resolvable system property should return the original string");
     }
-
+    
     @Test
     public void testDefaultExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true).getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .extrapolateSystemProperties(true)
+                        .getSubMap("test");
         assertEquals(87, yaml.getInteger("nonexisting", 87),
                      "Requesting a non-existing integer with a default value should work");
     }
@@ -174,7 +229,9 @@ class YAMLTest {
     
     @Test
     public void testIntArrayExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(true);
         List<Integer> ints = yaml.getList("arrayofints");
         assertEquals("[11, 2]", ints.toString(),
                      "Arrays of integers should be supported");
@@ -182,11 +239,13 @@ class YAMLTest {
     
     @Test
     public void testTypesExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(true);
         final double EXPECTED = 55.00;
         double actual = yaml.getDouble("somedouble");
         
-        assertTrue(actual >= EXPECTED*0.99 && actual <= EXPECTED*1.01,
+        assertTrue(actual >= EXPECTED * 0.99 && actual <= EXPECTED * 1.01,
                    "Double should be supported and as expected");
         assertEquals(true, yaml.getBoolean("somebool"),
                      "Boolean should be supported and as expected");
@@ -194,8 +253,11 @@ class YAMLTest {
     
     @Test
     public void testListEntryExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
-        assertEquals(System.getProperty("user.name"), yaml.getString("arrayofstrings[1]"),
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml")
+                        .getSubMap("test")
+                        .extrapolateSystemProperties(true);
+        assertEquals(StringSubstitutor.replaceSystemProperties("${user.name}"),
+                     yaml.getString("arrayofstrings[1]"),
                      "Index-specified entry in arrays should be gettable");
         assertEquals("c", yaml.getString("arrayofstrings[last]"),
                      "Last entry in arrays should be gettable");
@@ -203,142 +265,139 @@ class YAMLTest {
     
     @Test
     public void testFailingListEntryExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test");
         Assertions.assertThrows(Exception.class,
                                 () -> yaml.getString("arrayofstrings[3]"),
                                 "Requesting an index in a collection greater than or equal to list length should fail");
     }
     
     
-    
-    
     @Test
     public void testAlias() throws IOException {
-        YAML yaml = YAML.resolveMultiConfig("alias.yml");
+        YAML12 yaml = YAML12.resolveMultiConfig("alias.yml");
         assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
-                     "The alias YAML should have the expected value for alias-using 'theServer'");
+                     "The alias YAML12 should have the expected value for alias-using 'theServer'");
     }
-
+    
     @Test
     public void testMultiConfig() throws IOException {
-        YAML yaml = YAML.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
+        YAML12 yaml = YAML12.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
         assertEquals("bar", yaml.getString("serviceSetup.someString"),
-                     "The merged YAML should have the expected value for plain key 'somestring'");
+                     "The merged YAML12 should have the expected value for plain key 'somestring'");
         assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
-                     "The merged YAML should have the expected value for alias-using 'theServer'");
+                     "The merged YAML12 should have the expected value for alias-using 'theServer'");
     }
-
+    
     @Test
     public void testLayeredConfigsDefault() throws IOException {
-        YAML first = YAML.resolveLayeredConfigs("yaml/overwrite-1.yaml");
-        YAML multi = YAML.resolveLayeredConfigs("yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
-
+        YAML12 first = YAML12.resolveLayeredConfigs("yaml/overwrite-1.yaml");
+        YAML12 multi = YAML12.resolveLayeredConfigs("yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
+        
         final String FIRST_ONLY = "upperA.subYAML.sub2Element";
         assertTrue(first.containsKey(FIRST_ONLY),
                    "Non-merged first file should contain element '" + FIRST_ONLY + "'");
         assertEquals("bar", multi.getString(FIRST_ONLY),
                      "Merged YAML should contain element '" + FIRST_ONLY + "' from file #1");
-
+        
         assertEquals("baz", multi.getString("upperA.subElement"),
                      "Merged YAML should contain overwritten element 'upperA.subElement'");
-
+        
         assertEquals(12, multi.getInteger("upperC.subCElement"),
                      "Merged YAML should contain element 'upperC.subClement' from file #2");
-
+        
         List<String> aList = multi.getList("upperA.subList");
         List<String> eList = Arrays.asList("three", "four");
         assertEquals(eList, aList,
                      "Merged YAML should contain the last list");
     }
-
+    
     @Test
     public void testLayeredConfigsFail() throws IOException {
         try {
-            YAML.resolveLayeredConfigs(YAML.MERGE_ACTION.fail, YAML.MERGE_ACTION.fail,
+            YAML12.resolveLayeredConfigs(YAML12.MERGE_ACTION.fail, YAML12.MERGE_ACTION.fail,
                                        "yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
             fail("Merging with duplicate keys and MERGE_ACTION.fail should throw an Exception");
         } catch (IllegalArgumentException e) {
             // Expected
         }
     }
-
+    
     @Test
     public void testLayeredConfigsListOverwrite() throws IOException {
-        YAML multi = YAML.resolveLayeredConfigs(YAML.MERGE_ACTION.union, YAML.MERGE_ACTION.keep_extra,
+        YAML12 multi = YAML12.resolveLayeredConfigs(YAML12.MERGE_ACTION.union, YAML12.MERGE_ACTION.keep_extra,
                                                 "yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
-
+        
         List<String> aList = multi.getList("upperA.subList");
         List<String> eList = Arrays.asList("three", "four");
         assertEquals(eList, aList,
-                     "Merged YAML should a list of only the elements from file #2");
+                     "Merged YAML12 should a list of only the elements from file #2");
     }
-
+    
     @Test
     public void testFailingMultiConfig() throws IOException {
         Assertions.assertThrows(FileNotFoundException.class,
-                                () -> YAML.resolveMultiConfig("Not_there.yml", "Not_there_2.yml"),
+                                () -> YAML12.resolveMultiConfig("Not_there.yml", "Not_there_2.yml"),
                                 "Attempting to resolve non-existing multi-config should throw an Exception");
     }
-
+    
     @Test
     public void testFailingParse() throws IOException {
         File nonExisting = new File("Non-existing");
         Assertions.assertThrows(FileNotFoundException.class,
-                                () -> YAML.parse(nonExisting),
+                                () -> YAML12.parse(nonExisting),
                                 "Attempting to resolve non-existing config File should throw an Exception");
-
+        
         Assertions.assertThrows(FileNotFoundException.class,
-                                () -> YAML.parse(nonExisting.toPath()),
+                                () -> YAML12.parse(nonExisting.toPath()),
                                 "Attempting to resolve non-existing config Path should throw an Exception");
     }
-
+    
     @Test
     void nonReadableException() throws IOException {
         Set<PosixFilePermission> ownerWritable = PosixFilePermissions.fromString("-w-------"); // Only writable
         FileAttribute<?> permissions = PosixFilePermissions.asFileAttribute(ownerWritable);
         Path nonRead = Files.createTempFile("kbutil_", "tmp", permissions);
         Files.writeString(nonRead, "Hello World");
-
+        
         // Check that the temp file was created correctly
         assertThat("Test file '" + nonRead + "' exists", Files.exists(nonRead));
         Assertions.assertThrows(AccessDeniedException.class, () -> Files.readString(nonRead),
                                 "Reading test file '" + nonRead + "' should throw an Exception");
         
-
-
-        // Test that YAML throws appropriate exceptions when the resource cannot be read
-        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.parse(nonRead),
+        
+        // Test that YAML12 throws appropriate exceptions when the resource cannot be read
+        Assertions.assertThrows(AccessDeniedException.class, () -> YAML12.parse(nonRead),
                                 "Parsing  test file '" + nonRead + "' directly should throw an Exception");
-
-        Assertions.assertThrows(AccessDeniedException.class, () -> new YAML(nonRead.toString()),
+        
+        Assertions.assertThrows(AccessDeniedException.class, () -> new YAML12(nonRead.toString()),
                                 "Parsing  test file '" + nonRead + "' using constructor should throw an Exception");
-
-        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.resolveLayeredConfigs(nonRead.toString()),
+        
+        Assertions.assertThrows(AccessDeniedException.class, () -> YAML12.resolveLayeredConfigs(nonRead.toString()),
                                 "Parsing  test file '" + nonRead + "' using resolve should throw an Exception");
-
+        
         Files.delete(nonRead);
     }
-
-
+    
+    
     @Test
     public void testMultiGlob() throws IOException {
-        YAML yaml = YAML.resolveMultiConfig("config_pair_part_[1-2].yml");
+        YAML12 yaml = YAML12.resolveMultiConfig("config_pair_part_[1-2].yml");
         assertEquals("bar", yaml.getString("serviceSetup.someString"),
-                     "The merged YAML should have the expected value for plain key 'somestring'");
+                     "The merged YAML12 should have the expected value for plain key 'somestring'");
         assertEquals("FooServer", yaml.getString("serviceSetup.theServer"),
-                     "The merged YAML should have the expected value for alias-using 'theServer'");
+                     "The merged YAML12 should have the expected value for alias-using 'theServer'");
     }
-
+    
     @Test
     public void testMergeCollision() throws IOException {
-        YAML yaml = YAML.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
+        YAML12 yaml = YAML12.resolveMultiConfig("config_pair_part_1.yml", "config_pair_part_2.yml");
         assertEquals("number_2", yaml.getString("collision"),
                      "When merging, the latest definition should win");
     }
-
+    
     @Test
     public void testIntArray() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         List<Integer> ints = yaml.getList("arrayofints");
         assertEquals("[1, 2]", ints.toString(),
                      "Arrays of integers should be supported");
@@ -346,49 +405,49 @@ class YAMLTest {
     
     @Test
     public void testTypes() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         final double EXPECTED = 87.13;
         double actual = yaml.getDouble("somedouble");
-
-        assertTrue(actual >= EXPECTED*0.99 && actual <= EXPECTED*1.01,
-                     "Double should be supported and as expected");
+        
+        assertTrue(actual >= EXPECTED * 0.99 && actual <= EXPECTED * 1.01,
+                   "Double should be supported and as expected");
         assertEquals(true, yaml.getBoolean("somebool"),
                      "Boolean should be supported and as expected");
     }
-
+    
     @Test
     public void testListEntry() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         assertEquals("b", yaml.getString("arrayofstrings[1]"),
                      "Index-specified entry in arrays should be gettable");
         assertEquals("c", yaml.getString("arrayofstrings[last]"),
                      "Last entry in arrays should be gettable");
     }
-
+    
     @Test
     public void testFailingListEntry() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("test.yml").getSubMap("test");
         Assertions.assertThrows(Exception.class,
                                 () -> yaml.getString("arrayofstrings[3]"),
                                 "Requesting an index in a collection greater than or equal to list length should fail");
     }
-
+    
     @Test
     public void testListMapEntry() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("nested_maps.yml");
         try {
             yaml.getSubMap("test.listofmaps[1]");
         } catch (NotFoundException e) {
             fail("listofmaps[1] should return a map but failed", e);
         }
-
+        
         assertEquals("barA2", yaml.getString("test.listofmaps[0].fooA2"),
                      "Index-specified sub-map sub-entry should be gettable");
     }
     
     @Test
     public void testNestedLists() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("nested_lists.yml");
+        YAML12 yaml = YAML12.resolveLayeredConfigs("nested_lists.yml");
         try {
             yaml.getList("test.listoflists[1]");
         } catch (NotFoundException e) {
