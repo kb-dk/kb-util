@@ -1,5 +1,6 @@
 package dk.kb.util.yaml;
 
+import dk.kb.util.Resolver;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,11 +16,25 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class YAMLTest {
+    @Test
+    public void testToString() throws IOException {
+        String contents = Files.readAllLines(Resolver.getPathFromClasspath("test.yml"))
+                               .stream()
+                               .map(line -> line.replaceAll("#.*$", "").stripTrailing())
+                               .filter(line -> !line.isBlank())
+                               .collect(Collectors.joining("\n")) + "\n";
+        assertEquals(contents, YAML.resolveLayeredConfigs("test.yml").toString());
+    }
+    
+    
     @Test
     public void testLoad() throws IOException {
         YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
@@ -56,7 +71,7 @@ class YAMLTest {
     @Test
     public void testKeptPath() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
-        assertEquals("{nested.sublevel2string=sub1}", yaml.getSubMap("nested",true).toString(),
+        assertEquals("nested.sublevel2string: sub1\n", yaml.getSubMap("nested",true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs");
     }
     
