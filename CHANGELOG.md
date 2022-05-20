@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Fix resource leak in `Resolver#walkMatches`
+
 ## [1.4.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.5)
 ### Added
 
