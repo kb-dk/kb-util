@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `CallbackReplacer` and `XMLEscapeSanitiser`: Regexp-based replacements with callbacks
 
+### Changed
+
+- Fix resource leak in `Resolver#walkMatches`
 ## [1.4.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.5)
 ### Added
 
