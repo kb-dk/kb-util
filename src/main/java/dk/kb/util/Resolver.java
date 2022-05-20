@@ -204,10 +204,10 @@ public class Resolver {
             }
             return;
         }
-        // List the content of the current folder, recursively descending to the ones matching the relevant
-        // segment from the overall glob
-        try (Stream<Path> folderContent = Files.list(current)) { // Must be closed after use
-            folderContent.
+        try {
+            // List the content of the current folder, recursively descending to the ones matching the relevant
+            // segment from the overall glob
+            Files.list(current).
                     filter(path -> matchers.get(matchersIndex).matches(path.getFileName())).
                     forEach(path -> walkMatches(path, matchers, matchersIndex+1, consumer));
         } catch (IOException e) {
