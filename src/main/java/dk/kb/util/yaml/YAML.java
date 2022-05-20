@@ -971,9 +971,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             
             LinkedHashMap<Object, Object> bYAML = (LinkedHashMap<Object, Object>) base;
             LinkedHashMap<Object, Object> eYAML = (LinkedHashMap<Object, Object>) extra;
-            eYAML.forEach((key, value) -> {
-                mergeValueToYAML(path, bYAML, key, value, defaultMA, listMA);
-            });
+            eYAML.forEach((key, value) -> mergeValueToYAML(path, bYAML, key, value, defaultMA, listMA));
             return base;
         }
 
