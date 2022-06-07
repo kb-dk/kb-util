@@ -131,7 +131,7 @@ class YAMLTest {
     public void testKeptPathExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
         
-        assertEquals("{nested.sublevel2string=${user.name}}", yaml.getSubMap("nested",true).toString(),
+        assertEquals("nested.sublevel2string: ${user.name}\n", yaml.getSubMap("nested",true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs. Extrapolation does NOT happen on toString");
     }
     
