@@ -60,4 +60,7 @@ which boils down to
    * Check that everything went well, then run `mvn clean release:perform`
    * Run `git push`   
    If anything goes wrong during release, rollback and delete tags using something like
-   `mvn release:rollback ; git tag -d kb-util-1.4.2 ; git push --delete origin kb-util-1.4.2`
+   `mvn release:rollback ; git tag -d kb-util-1.4.x ; git push --delete origin kb-util-1.4.x`
+
+Note that `kb-util-1.4.x` is not an existing tag and should be replaced with the
+version selected during `mvn clean release:prepare`.
