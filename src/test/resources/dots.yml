@@ -1,0 +1,9 @@
+# It is fully legal (but mostly counter intuitive) to have dots in YAML keys
+test:
+  plain: 'Hello'
+  foo.bar: 87
+  sub.list:
+    - 1
+    - 2
+  zoo.baz:
+    inner.sub: 'World'
