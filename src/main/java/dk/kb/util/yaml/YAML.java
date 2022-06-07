@@ -17,6 +17,7 @@ package dk.kb.util.yaml;
 import dk.kb.util.Resolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.validation.constraints.NotNull;
@@ -24,12 +25,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.io.SequenceInputStream;
+import java.net.MalformedURLException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -648,6 +654,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
     @NotNull
+    @Deprecated
     public static YAML resolveConfig(String configName) throws
             IOException, FileNotFoundException, MalformedURLException, NullPointerException, InvalidPathException {
         return resolveConfig(configName, null);
@@ -673,6 +680,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
      * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
+    @Deprecated
     public static YAML resolveConfig(String configName, String confRoot) throws IOException {
         YAML rootMap = resolveMultiConfig(configName);
 
@@ -1006,7 +1014,15 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         base.put(key, mergeEntry(path + "." + key, base.get(key), value, defaultMA, listMA));
     }
-
+    
+    public String toString(){
+        DumperOptions dumperOptions = new DumperOptions();
+        dumperOptions.setIndentWithIndicator(true);
+        dumperOptions.setIndicatorIndent(2);
+        dumperOptions.setProcessComments(true);
+        // dumperOptions.setPrettyFlow(true);
+        return new Yaml(dumperOptions).dumpAs(this, null, DumperOptions.FlowStyle.BLOCK);
+    }
 
     public enum MERGE_ACTION {
         /**
