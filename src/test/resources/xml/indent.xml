@@ -1,0 +1,15 @@
+<record xmlns="http://www.loc.gov/MARC21/slim">
+    <datafield ind1=" " ind2=" " tag="084">
+        <subfield code="a">38.79</subfield>
+        <subfield code="2">z</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="084">
+<subfield code="a&#10;n">34.51</subfield>
+<subfield code="2">z</subfield>
+    </datafield>
+    <multiline>
+        foo
+        bar&#10;zoo
+    </multiline>
+    <!-- A comment -->
+</record>

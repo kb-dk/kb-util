@@ -1,5 +1,6 @@
 package dk.kb.util.xml;
 
+import dk.kb.util.Resolver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -31,52 +32,61 @@ import java.nio.charset.StandardCharsets;
 public class XML {
     
     /**
-     * Serialiseses the given Document as a (human-readable) String with indents and linebreaks
+     * Serialises the given Document as a (human-readable) String with indents and linebreaks
      * @param dom the dom
      * @return the doc in string form
      * @throws TransformerException if the transformation failed
-     * @see #domToCompactString(Node) for a more compact machine-readable version
+     * @see #domToString(Node, boolean) for a more compact machine-readable version
      */
     public static String domToString(Node dom) throws TransformerException {
-        Transformer t = getTransformer();
-        t.setOutputProperty(OutputKeys.INDENT, "yes");
-        
-        /* Transformer */
-        try (StringWriter sw = new StringWriter();) {
-            t.transform(new DOMSource(dom), new StreamResult(sw));
-            return sw.toString();
-        } catch (IOException e) {
-            throw new TransformerException(e);
-        }
+        return domToString(dom, true);
     }
-    
+
     /**
-     * Serialiseses the given Document as a String, without indention
+     * Serialiseses the given Document as a String, with optional indent.
      * @param dom the dom
+     * @param indent if true, the output will be indented. If false, output will be a single line.
      * @return the doc in string form
      * @throws TransformerException if the transformation failed
      * @see #domToString(Node) for an indented version of the same string
      */
-    public static String domToCompactString(Node dom) throws TransformerException {
-        Transformer t = getTransformer();
-        t.setOutputProperty(OutputKeys.INDENT, "no");
+    public static String domToString(Node dom, boolean indent) throws TransformerException {
+        Transformer transformer;
+        if (indent) {
+            transformer = getTransformer(null);
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        } else {
+            transformer = getTransformer("trim-whitespace.xslt");
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
+        }
         
         /* Transformer */
-        try (StringWriter sw = new StringWriter();) {
-            t.transform(new DOMSource(dom), new StreamResult(sw));
-            return sw.toString();
+        try (StringWriter sw = new StringWriter()) {
+            transformer.transform(new DOMSource(dom), new StreamResult(sw));
+            // After transformation, the only newlines are in text elements where they can be replaced
+            // with the newline entity
+            return indent ? sw.toString() : sw.toString().replace("\n", "&#10;");
         } catch (IOException e) {
             throw new TransformerException(e);
         }
     }
     
-    private static Transformer getTransformer() throws TransformerConfigurationException {
-        Transformer t = TransformerFactory.newInstance().newTransformer();
-        t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        
-        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        t.setOutputProperty(OutputKeys.METHOD, "xml");
-        return t;
+    private static Transformer getTransformer(String xsltResource) throws TransformerConfigurationException {
+        Transformer transformer;
+        if (xsltResource == null) {
+            transformer = TransformerFactory.newInstance().newTransformer();
+        } else {
+            try (InputStream xsltStream = Resolver.resolveStream(xsltResource)) {
+                transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xsltStream));
+            } catch (IOException e) {
+                throw new TransformerConfigurationException(
+                        "Unable to retrieve and compile XSLT resource '" + xsltResource + "'", e);
+            }
+        }
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+        return transformer;
     }
     
     

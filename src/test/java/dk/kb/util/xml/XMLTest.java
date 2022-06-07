@@ -30,6 +30,20 @@ class XMLTest {
             assertThat(splitActual[i].trim(), is(splitExpected[i].trim()));
         }
     }
+
+    @Test
+    void indent() throws Exception {
+        String xmlFileContents = Resolver.readFileFromClasspath("xml/indent.xml");
+        Document document = XML.fromXML(xmlFileContents, true);
+        {
+            String xml = XML.domToString(document);
+            assertThat("Indent should produce multi line", xml.split("\n").length, is(27));
+        }
+        {
+            String xml = XML.domToString(document, false);
+            assertThat("No-indent should produce single line", xml.split("\n").length, is(1));
+        }
+    }
     
     @Test
     void marshall() throws JAXBException {
