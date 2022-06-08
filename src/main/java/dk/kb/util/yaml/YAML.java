@@ -60,6 +60,10 @@ import java.util.stream.Collectors;
  *     <li>myapp_environment.yaml (servers, usernames, passwords..., is controlled by Operations)</li>
  *     <li>myapp_local_overrides.yaml (local overrides, used for developing and testing)</li>
  * </ol>
+ *
+ * System properties can be used in the YAML values with the syntax {@code ${environment.variable}}.
+ * Due to limitations of the Generics implementation in Java, using system properties as list values
+ * involves fixed conversions: Integral numbers are treated as Integers, floating point numbers as Doubles.
  */
 public class YAML extends LinkedHashMap<String, Object> {
 
@@ -663,12 +667,47 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
             if (sub instanceof List<?>) {
                 List<?> objects = (List<?>) sub;
-                return objects.stream().map(this::extrapolate).collect(Collectors.toList());
+                return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
             }
         }
         return sub;
     }
-    
+
+    /**
+     * Attempts to guess the type of atomic elements: {@code 123} is int, {@code true} is boolean, {@code 1.2} is double
+     * and String is the fallback.
+     * @param sub an Object that is to be substituted.
+     * @return the sub with environment variables substituted.
+     */
+    private Object extrapolateGuessType(Object sub) {
+        if (sub == null){
+            return null;
+        }
+        if (extrapolateSystemProperties()){
+            if (sub instanceof String) {
+                String any = StringSubstitutor.replaceSystemProperties(sub);
+                if (INTEGRAL_MATCHER.matcher(any).matches()) {
+                    return Integer.valueOf(any);
+                }
+                if (FLOAT_MATCHER.matcher(any).matches()) {
+                    return Double.valueOf(any);
+                }
+                if (BOOLEAN_MATCHER.matcher(any).matches()) {
+                    return Boolean.valueOf(any);
+                }
+                return any; // Fallback to String
+            }
+            if (sub instanceof List<?>) {
+                List<?> objects = (List<?>) sub;
+                return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
+            }
+        }
+        return sub;
+    }
+    private final Pattern INTEGRAL_MATCHER = Pattern.compile("[0-9]+");
+    private final Pattern FLOAT_MATCHER = Pattern.compile("[0-9]*[.][0-9]*"); // Leading digit optional: .2 is ok
+    private final Pattern BOOLEAN_MATCHER = Pattern.compile("true|false");
+
 
     /**
      * Splits the given path on {@code .}, with support for quoting with single {@code '} and double {@code "} quotes.
