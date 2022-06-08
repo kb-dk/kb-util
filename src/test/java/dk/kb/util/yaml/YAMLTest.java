@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -34,8 +35,7 @@ class YAMLTest {
                                .collect(Collectors.joining("\n")) + "\n";
         assertEquals(contents, YAML.resolveLayeredConfigs("test.yml").toString());
     }
-    
-    
+
     @Test
     public void testLoad() throws IOException {
         YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
@@ -174,21 +174,38 @@ class YAMLTest {
     
     
     @Test
-    public void testIntArrayExtrapolated() throws IOException {
+    public void testIntExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
-        List<Integer> ints = yaml.getList("arrayofints");
-        assertEquals("[11, 2]", ints.toString(),
-                     "Arrays of integers should be supported");
+        Integer i = yaml.getInteger("someint");
+        assertTrue(i instanceof Integer, "Extracted object should be an Integer");
+        assertTrue(i >= 11, "Extracted integer should be at least 11 (the lowest Java version " +
+                            "supported by kb-util), but was " + i);
     }
     
+    @Test
+    public void testIntArrayExtrapolatedType() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        List<Integer> ints = yaml.getList("arrayofints");
+        assertTrue(ints.get(0) instanceof Integer,
+                   "First element in the extracted Integer list should be an Integer but was " + ints.get(0).getClass());
+    }
+
+    @Test
+    public void testIntArrayExtrapolatedContent() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        List<Integer> ints = yaml.getList("arrayofints");
+        assertTrue(ints.get(0) >= 11,
+                   "Arrays of integers should be supported. Expected first element to be >= 11, but got array " + ints);
+    }
+
     @Test
     public void testTypesExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
         final double EXPECTED = 55.00;
         double actual = yaml.getDouble("somedouble");
         
-        assertTrue(actual >= EXPECTED*0.99 && actual <= EXPECTED*1.01,
-                   "Double should be supported and as expected");
+        assertTrue(actual >= EXPECTED*0.99, // 55 = Java 11. Anything highter is also OK
+                   "Double should be supported and as expected. Expected=" + EXPECTED + ", resolved=" + actual);
         assertEquals(true, yaml.getBoolean("somebool"),
                      "Boolean should be supported and as expected");
     }
