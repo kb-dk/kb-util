@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class YAMLTest {
+    @SuppressWarnings("ConstantConditions")
     @Test
     public void testToString() throws IOException {
         String contents = Files.readAllLines(Resolver.getPathFromClasspath("test.yml"))
@@ -166,14 +167,14 @@ class YAMLTest {
     }
 
     @Test
-    public void testFailingMultiConfig() throws IOException {
+    public void testFailingMultiConfig() {
         Assertions.assertThrows(FileNotFoundException.class,
                                 () -> YAML.resolveMultiConfig("Not_there.yml", "Not_there_2.yml"),
                                 "Attempting to resolve non-existing multi-config should throw an Exception");
     }
 
     @Test
-    public void testFailingParse() throws IOException {
+    public void testFailingParse() {
         File nonExisting = new File("Non-existing");
         Assertions.assertThrows(FileNotFoundException.class,
                                 () -> YAML.parse(nonExisting),
@@ -290,5 +291,31 @@ class YAMLTest {
         assertEquals("llItemB", yaml.getString("test.listoflists[1].[0]"),
                      "Index-specified sub-map sub-entry should be gettable");
     }
-    
+
+    @Test
+    public void testDotEscape() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("dots.yml");
+        // test:
+        //  plain: 'Hello'
+        //  foo.bar: 87
+        //  zoo.baz:
+        //    inner.sub: 'World'
+        assertEquals("Hello", yaml.getString("test.plain"),
+                     "Basic non-dotted key test.plain");
+        assertEquals(87, yaml.getInteger("test.'foo.bar'"),
+                     "Dotted sub-key test.'foo.bar'");
+        assertEquals(87, yaml.getInteger("test.\"foo.bar\""),
+                     "Dotted sub-key test.\"foo.bar\"");
+        assertEquals("World", yaml.getString("test.\"zoo.baz\".'inner.sub'"),
+                     "Double-dotted sub-key test.\"zoo.baz\".'inner.sub'");
+        try {
+            yaml.getInteger("test.\"zoo.baz\".inner.sub");
+            fail("Missing quote sub-key test.\"zoo.baz\".inner.sub should fail but did not");
+        } catch (Exception e) {
+            // Expected
+        }
+        assertEquals(1, yaml.getInteger("test.'sub.list'.[0]"),
+                     "Dotted list-key with index test.'sub.list'.[0]");
+    }
+
 }

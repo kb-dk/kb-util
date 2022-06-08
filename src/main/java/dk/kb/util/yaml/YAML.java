@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -63,7 +64,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     private static final Logger log = LoggerFactory.getLogger(YAML.class);
 
-    private static final long serialVersionUID = -5211961549015821194L;
+    private static final long serialVersionUID = -5211961549015821195L;
 
     
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
@@ -102,8 +103,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Resolves the YAML sub map at the given path in the YAML. Supports {@code .} for path separation,
-     * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      *
      * @param path path for the sub map.
      * @return the map at the path
@@ -119,7 +120,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Resolves the YAML sub map at the given path in the YAML. See {@link #get(Object)} for path syntax.
-     * Sample path: foo.bar
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      *
      * @param path         path for the sub map.
      * @param maintainKeys preserve the path prefix for the keys in the result
@@ -161,7 +163,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
-     * Sample path: foo.bar
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      *
      * @param path path for the list.
      * @param <T> the type of elements in the list
@@ -535,7 +538,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either -
      * YAML-key for direct traversal, e.g. "foo" or "foo.bar" - YAML-key[index] for a specific element in a list, e.g.
      * "foo.[2]" or "foo.[2].bar" - YAML-key.[last] for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"
-     * Note: Keys in the YAML must not contain dots.
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      * <p>
      * Returns this object if the path is empty
      *
@@ -557,10 +561,10 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
-        String[] pathElements = path.split(Pattern.quote("."));
+        List<String> pathElements = splitPath(path);
         YAML current = this;
-        for (int i = 0; i < pathElements.length; i++) {
-            String fullPathElement = pathElements[i];
+        for (int i = 0; i < pathElements.size(); i++) {
+            String fullPathElement = pathElements.get(i);
             Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
             final String pathKey;
             final String arrayElementIndex;
@@ -607,7 +611,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                         () -> new RuntimeException("This should not happen..."));
             }
             
-            if (i == pathElements.length - 1) { //If this is the final pathElement, just return it
+            if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
                 return sub;
             } //Otherwise, we require that it is a map so we can continue to query
             
@@ -633,6 +637,24 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         return current;
     }
+
+    /**
+     * Splits the given path on {@code .}, with support for quoting with single {@code '} and double {@code "} quotes.
+     * {@code foo.bar."baz.zoo".'eni.meni' -> [foo, bar, baz.zoo, eni.meni]}.
+     * @param path a YAML path with dots {@code .} as dividers.
+     * @return the path split on {@code .}.
+     */
+    private List<String> splitPath(String path) {
+        List<String> tokens = new ArrayList<>();
+        Matcher matcher = QUOTE_DOT_SPLIT.matcher(path);
+        while (matcher.find()) {
+            // Getting group(0) would not remove quote characters so a check for capturing group is needed
+            tokens.add(matcher.group(1) == null ? matcher.group(2) : matcher.group(1));
+        }
+        return tokens;
+    }
+    private final Pattern QUOTE_DOT_SPLIT = Pattern.compile("[\"']([^\"']*)[\"']|([^.]+)");
+
 
     /* **************************** Fetching YAML ************************************ */
     
