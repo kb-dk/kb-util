@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.sbforge</groupId>
         <artifactId>sbforge-parent</artifactId>
         <version>22</version>
-        <relativePath /><!-- override default parentpath of ../pom.xml which allows this to be a git submodule without reporting errors-->
+        <relativePath/><!-- override default parentpath of ../pom.xml which allows this to be a git submodule without reporting errors-->
     </parent>
 
     <groupId>dk.kb.util</groupId>
@@ -55,6 +56,11 @@
         <resources>
             <resource>
                 <directory>target/generated-resources</directory>
+            </resource>
+            <!-- Needed as specifying <resources> overrides all previous definitions -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
             </resource>
         </resources>
         <plugins>
