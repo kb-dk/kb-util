@@ -32,6 +32,6 @@ public class YAML extends dk.kb.util.yaml.YAML {
     }
 
     public YAML(Map<String, Object> map) {
-        super(map);
+        super(map, false);
     }
 }

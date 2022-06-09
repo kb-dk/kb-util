@@ -15,6 +15,8 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
+import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.text.lookup.StringLookupFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -30,6 +32,7 @@ import java.net.MalformedURLException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -58,16 +61,38 @@ import java.util.stream.Collectors;
  *     <li>myapp_environment.yaml (servers, usernames, passwords..., is controlled by Operations)</li>
  *     <li>myapp_local_overrides.yaml (local overrides, used for developing and testing)</li>
  * </ol>
+ *
+ * System properties can be used in the YAML values with the syntax {@code ${environment.variable}}
+ * if it has been activated with {@link #setExtrapolate(boolean)}. The default is NOT to extrapolate.
+ *
+ * If extrapolation is enabled, system property values can be used as YAML values, such as
+ * {@code greeting: "Running with {myapp.threads} threads"}
+ * User controlled properties can be specified for the application from command line
+ * {@code java -Dmyapp.threads=4 -jar myapp.jar}, container configuration or similar.
+ *
+ * A list of locally available system properties can be obtained with {@code System.getProperties().list(System.out)}
+ * but only some of them are guaranteed to be set. See https://howtodoinjava.com/java/basics/java-system-properties/
+ * Commonly used properties are {@code user.name} and {@code user.home}.
+ *
+ * Due to limitations of the Generics implementation in Java, using system properties as list values
+ * involves fixed conversions: Integral numbers are treated as Integers, floating point numbers as Doubles.
+ *
+ * Note: Besides system environment, it is possible to use other substitutions, such as environment variables using
+ * the syntax {@code ${env:USERNAME}}. See the JavaDoc for {@link StringSubstitutor} for examples. Where possible,
+ * use system environment as that is the least unstable across platforms.
  */
 public class YAML extends LinkedHashMap<String, Object> {
 
     private static final Logger log = LoggerFactory.getLogger(YAML.class);
 
-    private static final long serialVersionUID = -5211961549015821194L;
+    private static final long serialVersionUID = -5211961549015821195L;
 
     
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
 
+    private boolean extrapolateSystemProperties = false;
+    private static List<StringSubstitutor> substitutors = null;
+    
     /**
      * Creates an empty YAML.
      */
@@ -101,9 +126,21 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
+     * Creates a YAML wrapper around the given map.
+     * Changes to the map will be reflected in the YAML instance and vice versa.
+     *
+     * @param map a map presumable delivered by SnakeYAML.
+     * @param extrapolateSystemProperties should system properties be extrapolated in values
+     */
+    public YAML(Map<String, Object> map, boolean extrapolateSystemProperties) {
+        this.extrapolateSystemProperties = extrapolateSystemProperties;
+        this.putAll(map);
+    }
+    
+    /**
      * Resolves the YAML sub map at the given path in the YAML. Supports {@code .} for path separation,
-     * Sample path: foo.bar
-     * Note: Keys in the YAML must not contain dots.
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      *
      * @param path path for the sub map.
      * @return the map at the path
@@ -119,7 +156,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     
     /**
      * Resolves the YAML sub map at the given path in the YAML. See {@link #get(Object)} for path syntax.
-     * Sample path: foo.bar
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      *
      * @param path         path for the sub map.
      * @param maintainKeys preserve the path prefix for the keys in the result
@@ -156,12 +194,13 @@ public class YAML extends LinkedHashMap<String, Object> {
             ));
         }
         
-        return new YAML(result);
+        return new YAML(result, extrapolateSystemProperties);
     }
     
     /**
      * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
-     * Sample path: foo.bar
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      *
      * @param path path for the list.
      * @param <T> the type of elements in the list
@@ -237,7 +276,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException(
                     "Exception casting '" + found + "' to List<Map<String, Object>>", path, e);
         }
-        return hmList.stream().map(YAML::new).collect(Collectors.toList());
+        return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties)).collect(Collectors.toList());
     }
     
     /**
@@ -535,7 +574,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either -
      * YAML-key for direct traversal, e.g. "foo" or "foo.bar" - YAML-key[index] for a specific element in a list, e.g.
      * "foo.[2]" or "foo.[2].bar" - YAML-key.[last] for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"
-     * Note: Keys in the YAML must not contain dots.
+     * Sample path: {@code foo.bar}
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      * <p>
      * Returns this object if the path is empty
      *
@@ -557,10 +597,10 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
-        String[] pathElements = path.split(Pattern.quote("."));
+        List<String> pathElements = splitPath(path);
         YAML current = this;
-        for (int i = 0; i < pathElements.length; i++) {
-            String fullPathElement = pathElements[i];
+        for (int i = 0; i < pathElements.size(); i++) {
+            String fullPathElement = pathElements.get(i);
             Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
             final String pathKey;
             final String arrayElementIndex;
@@ -607,8 +647,8 @@ public class YAML extends LinkedHashMap<String, Object> {
                         () -> new RuntimeException("This should not happen..."));
             }
             
-            if (i == pathElements.length - 1) { //If this is the final pathElement, just return it
-                return sub;
+            if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
+                return extrapolate(sub);
             } //Otherwise, we require that it is a map so we can continue to query
             
             //If sub is a list, make it a map with the indexes as keys
@@ -616,7 +656,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 List<Object> list = (List<Object>) sub;
                 LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
                 for (int j = 0; j < list.size(); j++) {
-                    map.put(j + "", list.get(j));
+                    map.put(j + "", extrapolate(list.get(j)));
                 }
                 sub = map;
             }
@@ -625,7 +665,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                         "The " + i + "'th sub-element ('" + pathKey + "') was not a Map", path);
             }
             try { //Update current as the sub we have found
-                current = new YAML((Map<String, Object>) sub);
+                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties);
             } catch (ClassCastException e) {
                 throw new InvalidTypeException(
                         "Expected a Map<String, Object> for path but got ClassCastException", path, e);
@@ -633,6 +673,72 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         return current;
     }
+
+    private Object extrapolate(Object sub) {
+        if (sub == null || !isExtrapolating()){
+            return sub;
+        }
+        if (sub instanceof String) {
+            return substitute((String) sub);
+        }
+        if (sub instanceof List<?>) {
+            List<?> objects = (List<?>) sub;
+            return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
+        }
+        return sub;
+    }
+
+    /**
+     * Attempts to guess the type of atomic elements: {@code 123} is int, {@code true} is boolean, {@code 1.2} is double
+     * and String is the fallback.
+     * @param sub an Object that is to be substituted.
+     * @return the sub with environment variables substituted.
+     */
+    private Object extrapolateGuessType(Object sub) {
+        if (sub == null || !isExtrapolating()){
+            return sub;
+        }
+        if (sub instanceof String) {
+            String any = substitute((String) sub);
+            if (INTEGRAL_MATCHER.matcher(any).matches()) {
+                return Integer.valueOf(any);
+            }
+            if (FLOAT_MATCHER.matcher(any).matches()) {
+                return Double.valueOf(any);
+            }
+            if (BOOLEAN_MATCHER.matcher(any).matches()) {
+                return Boolean.valueOf(any);
+            }
+            return any; // Fallback to String
+        }
+        if (sub instanceof List<?>) {
+            List<?> objects = (List<?>) sub;
+            return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
+        }
+        return sub;
+    }
+    private final Pattern INTEGRAL_MATCHER = Pattern.compile("[0-9]+");
+    private final Pattern FLOAT_MATCHER = Pattern.compile("[0-9]*[.][0-9]*"); // Leading digit optional: .2 is ok
+    private final Pattern BOOLEAN_MATCHER = Pattern.compile("true|false");
+
+
+    /**
+     * Splits the given path on {@code .}, with support for quoting with single {@code '} and double {@code "} quotes.
+     * {@code foo.bar."baz.zoo".'eni.meni' -> [foo, bar, baz.zoo, eni.meni]}.
+     * @param path a YAML path with dots {@code .} as dividers.
+     * @return the path split on {@code .}.
+     */
+    private List<String> splitPath(String path) {
+        List<String> tokens = new ArrayList<>();
+        Matcher matcher = QUOTE_DOT_SPLIT.matcher(path);
+        while (matcher.find()) {
+            // Getting group(0) would not remove quote characters so a check for capturing group is needed
+            tokens.add(matcher.group(1) == null ? matcher.group(2) : matcher.group(1));
+        }
+        return tokens;
+    }
+    private final Pattern QUOTE_DOT_SPLIT = Pattern.compile("[\"']([^\"']*)[\"']|([^.]+)");
+
 
     /* **************************** Fetching YAML ************************************ */
     
@@ -713,7 +819,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             for (String s : map.keySet());
             for (Object o : map.values());
 
-            YAML rootMap = new YAML(map);
+            YAML rootMap = new YAML(map, false);
             log.trace("Parsed YAML config stream");
             return rootMap;
         } else {
@@ -797,6 +903,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
+     * <p>
+     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
@@ -828,6 +936,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
+     * <p>
+     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
@@ -850,6 +960,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
+     * <p>
+     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
@@ -1015,6 +1127,31 @@ public class YAML extends LinkedHashMap<String, Object> {
         base.put(key, mergeEntry(path + "." + key, base.get(key), value, defaultMA, listMA));
     }
     
+    /**
+     * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
+     * @return this YAML, not a copy
+     */
+    public YAML extrapolate(boolean extrapolateSystemProperties) {
+        this.extrapolateSystemProperties = extrapolateSystemProperties;
+        return this;
+    }
+    
+    /**
+     * If the YAML will extrapolate the current values of System.getProperties() in the values returned
+     * @return true if extrapolation is enabled
+     */
+    public boolean isExtrapolating() {
+        return extrapolateSystemProperties;
+    }
+    
+    /**
+     * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
+     */
+    public void setExtrapolate(boolean extrapolateSystemProperties) {
+        this.extrapolateSystemProperties = extrapolateSystemProperties;
+    }
+    
+    
     public String toString(){
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setIndentWithIndicator(true);
@@ -1023,7 +1160,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         // dumperOptions.setPrettyFlow(true);
         return new Yaml(dumperOptions).dumpAs(this, null, DumperOptions.FlowStyle.BLOCK);
     }
-
     public enum MERGE_ACTION {
         /**
          * Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry
@@ -1041,5 +1177,23 @@ public class YAML extends LinkedHashMap<String, Object> {
          * Duplicate maps, lists and atomics throws an exception.
          */
         fail};
-    
+
+    /**
+     * Extrapolates the given string, using lazy created {@link StringSubstitutor}s.
+     * @param s the String to substitute.
+     * @return s substituted.
+     */
+    static String substitute(String s) {
+        synchronized (YAML.class) {
+            if (substitutors == null) {
+                substitutors = new ArrayList<>(2);
+                substitutors.add(StringSubstitutor.createInterpolator()); // General prefix based
+                substitutors.add(new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()));
+            }
+        }
+        for (StringSubstitutor substitutor: substitutors) {
+            s = substitutor.replace(s);
+        }
+        return s;
+    }
 }

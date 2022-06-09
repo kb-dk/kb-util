@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
-- `CallbackReplacer` and `XMLEscapeSanitiser`: Regexp-based replacements with callbacks
+- Support for quoting keys in `YAML` paths to allow for keys with dots (.)
+- Expansion of system properties in YAML
 
+## [1.4.7](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.7)
 ### Changed
 
 - Fix resource leak in `Resolver#walkMatches`
+
+## [1.4.6](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.6)
+### Added
+
+- `CallbackReplacer` and `XMLEscapeSanitiser`: Regexp-based replacements with callbacks
 
 ## [1.4.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.5)
 ### Added
