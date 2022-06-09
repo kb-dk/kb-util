@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for quoting keys in `YAML` paths to allow for keys with dots (.)
 - Expansion of system properties in YAML
+- Fully flattening (single line) XML.domToString method
 
 ## [1.4.7](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.7)
 ### Changed
