@@ -1,0 +1,18 @@
+# Test YAML
+test:
+  somestring: ${user.home} Hello World
+  someint: ${java.specification.version}
+  somedouble: ${java.class.version}
+  somebool: true
+  fallback: ${nonexisting.property:-mydefault}
+  sysuser: ${sys:user.name}
+  nested:
+    sublevel2string: ${user.name}
+  arrayofstrings:
+    - a
+    - "${user.name}"
+    - c
+  arrayofints:
+    - ${java.vm.specification.version}
+    - 2
+  emptyList: []
