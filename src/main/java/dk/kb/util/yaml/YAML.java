@@ -61,7 +61,14 @@ import java.util.stream.Collectors;
  *     <li>myapp_local_overrides.yaml (local overrides, used for developing and testing)</li>
  * </ol>
  *
- * System properties can be used in the YAML values with the syntax {@code ${environment.variable}}.
+ * System properties can be used in the YAML values with the syntax {@code ${environment.variable}}
+ * if it has been activated with {@link #setExtrapolate(boolean)}. The default is NOT to extrapolate.
+ *
+ * If extrapolation is enabled, system property values can be used as YAML values, such as
+ * {@code greeting: "Running with {myapp.threads} threads"}
+ * User controlled properties can be specified for the application from command line
+ * {@code java -Dmyapp.threads=4 -jar myapp.jar}, container configuration or similar.
+ *
  * Due to limitations of the Generics implementation in Java, using system properties as list values
  * involves fixed conversions: Integral numbers are treated as Integers, floating point numbers as Doubles.
  */
@@ -658,17 +665,15 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     private Object extrapolate(Object sub) {
-        if (sub == null){
-            return null;
+        if (sub == null || !isExtrapolating()){
+            return sub;
         }
-        if (extrapolateSystemProperties()){
-            if (sub instanceof String) {
-                return StringSubstitutor.replaceSystemProperties(sub);
-            }
-            if (sub instanceof List<?>) {
-                List<?> objects = (List<?>) sub;
-                return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
-            }
+        if (sub instanceof String) {
+            return StringSubstitutor.replaceSystemProperties(sub);
+        }
+        if (sub instanceof List<?>) {
+            List<?> objects = (List<?>) sub;
+            return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
         }
         return sub;
     }
@@ -680,27 +685,25 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the sub with environment variables substituted.
      */
     private Object extrapolateGuessType(Object sub) {
-        if (sub == null){
-            return null;
+        if (sub == null || !isExtrapolating()){
+            return sub;
         }
-        if (extrapolateSystemProperties()){
-            if (sub instanceof String) {
-                String any = StringSubstitutor.replaceSystemProperties(sub);
-                if (INTEGRAL_MATCHER.matcher(any).matches()) {
-                    return Integer.valueOf(any);
-                }
-                if (FLOAT_MATCHER.matcher(any).matches()) {
-                    return Double.valueOf(any);
-                }
-                if (BOOLEAN_MATCHER.matcher(any).matches()) {
-                    return Boolean.valueOf(any);
-                }
-                return any; // Fallback to String
+        if (sub instanceof String) {
+            String any = StringSubstitutor.replaceSystemProperties(sub);
+            if (INTEGRAL_MATCHER.matcher(any).matches()) {
+                return Integer.valueOf(any);
             }
-            if (sub instanceof List<?>) {
-                List<?> objects = (List<?>) sub;
-                return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
+            if (FLOAT_MATCHER.matcher(any).matches()) {
+                return Double.valueOf(any);
             }
+            if (BOOLEAN_MATCHER.matcher(any).matches()) {
+                return Boolean.valueOf(any);
+            }
+            return any; // Fallback to String
+        }
+        if (sub instanceof List<?>) {
+            List<?> objects = (List<?>) sub;
+            return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
         }
         return sub;
     }
@@ -1109,18 +1112,10 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * If the YAML will extrapolate the current values of System.getProperties() in the values returned
-     * @return true if extrapolation is enabled
-     */
-    public boolean extrapolateSystemProperties() {
-        return extrapolateSystemProperties;
-    }
-    
-    /**
      * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
      * @return this YAML, not a copy
      */
-    public YAML extrapolateSystemProperties(boolean extrapolateSystemProperties) {
+    public YAML extrapolate(boolean extrapolateSystemProperties) {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
         return this;
     }
@@ -1129,14 +1124,14 @@ public class YAML extends LinkedHashMap<String, Object> {
      * If the YAML will extrapolate the current values of System.getProperties() in the values returned
      * @return true if extrapolation is enabled
      */
-    public boolean isExtrapolateSystemProperties() {
+    public boolean isExtrapolating() {
         return extrapolateSystemProperties;
     }
     
     /**
      * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
      */
-    public void setExtrapolateSystemProperties(boolean extrapolateSystemProperties) {
+    public void setExtrapolate(boolean extrapolateSystemProperties) {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
     }
     

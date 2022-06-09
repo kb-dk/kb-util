@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -109,28 +108,28 @@ class YAMLTest {
     
     @Test
     public void testNestedExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolate(true);
         assertEquals(System.getProperties().getProperty("user.home")+" Hello World", yaml.getString("test.somestring"),
                      "Nested request for string should be supported");
     }
     
     @Test
     public void testRootExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         assertEquals(System.getProperties().getProperty("user.home")+" Hello World", yaml.getString("somestring"),
                      "Direct request for string from resolved root should be supported");
     }
     
     @Test
     public void testArrayExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         assertEquals("[a, "+System.getProperties().getProperty("user.name")+", c]", yaml.getList("arrayofstrings").toString(),
                      "Arrays of strings should be supported");
     }
     
     @Test
     public void testKeptPathExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         
         assertEquals("nested.sublevel2string: ${user.name}\n", yaml.getSubMap("nested",true).toString(),
                      "When we get map with subkeys preserved, we should see the nested previs. Extrapolation does NOT happen on toString");
@@ -138,7 +137,7 @@ class YAMLTest {
     
     @Test
     public void testMissingSubMapExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         try {
             yaml.getSubMap("nonexisting");
         } catch(NotFoundException e) {
@@ -149,7 +148,7 @@ class YAMLTest {
     
     @Test
     public void testMissingStringExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true).getSubMap("test");
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolate(true).getSubMap("test");
         try {
             yaml.getString("nonexisting");
         } catch(NotFoundException e) {
@@ -160,14 +159,14 @@ class YAMLTest {
     
     @Test
     public void testNonResolvableExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolate(true);
         assertEquals("${cannot.be.resolved}", yaml.getString("test.somestring"),
                      "Requesting a non-resolvable system property should return the original string");
     }
 
     @Test
     public void testDefaultExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolateSystemProperties(true).getSubMap("test");
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolate(true).getSubMap("test");
         assertEquals(87, yaml.getInteger("nonexisting", 87),
                      "Requesting a non-existing integer with a default value should work");
     }
@@ -175,7 +174,7 @@ class YAMLTest {
     
     @Test
     public void testIntExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         Integer i = yaml.getInteger("someint");
         assertTrue(i instanceof Integer, "Extracted object should be an Integer");
         assertTrue(i >= 11, "Extracted integer should be at least 11 (the lowest Java version " +
@@ -184,7 +183,7 @@ class YAMLTest {
     
     @Test
     public void testIntArrayExtrapolatedType() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         List<Integer> ints = yaml.getList("arrayofints");
         assertTrue(ints.get(0) instanceof Integer,
                    "First element in the extracted Integer list should be an Integer but was " + ints.get(0).getClass());
@@ -192,7 +191,7 @@ class YAMLTest {
 
     @Test
     public void testIntArrayExtrapolatedContent() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         List<Integer> ints = yaml.getList("arrayofints");
         assertTrue(ints.get(0) >= 11,
                    "Arrays of integers should be supported. Expected first element to be >= 11, but got array " + ints);
@@ -200,7 +199,7 @@ class YAMLTest {
 
     @Test
     public void testTypesExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         final double EXPECTED = 55.00;
         double actual = yaml.getDouble("somedouble");
         
@@ -212,7 +211,7 @@ class YAMLTest {
     
     @Test
     public void testListEntryExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolateSystemProperties(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         assertEquals(System.getProperty("user.name"), yaml.getString("arrayofstrings[1]"),
                      "Index-specified entry in arrays should be gettable");
         assertEquals("c", yaml.getString("arrayofstrings[last]"),
