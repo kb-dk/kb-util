@@ -1,6 +1,7 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
+import org.apache.commons.text.StringSubstitutor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -209,6 +210,22 @@ class YAMLTest {
                      "Boolean should be supported and as expected");
     }
     
+    @Test
+    public void testExtrapolatedFallback() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        String actual = yaml.getString("fallback");
+        assertEquals("mydefault", actual,
+                     "Looking up a non-existing property with fallback should return the fallback");
+    }
+
+    @Test
+    public void testExtrapolatedExplicit() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        String actual = yaml.getString("sysuser");
+        assertEquals(System.getProperty("user.name"), actual,
+                     "Looking up an explicit system property should work");
+    }
+
     @Test
     public void testListEntryExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);

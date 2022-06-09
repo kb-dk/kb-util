@@ -4,6 +4,8 @@ test:
   someint: ${java.specification.version}
   somedouble: ${java.class.version}
   somebool: true
+  fallback: ${nonexisting.property:-mydefault}
+  sysuser: ${sys:user.name}
   nested:
     sublevel2string: ${user.name}
   arrayofstrings:

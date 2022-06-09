@@ -16,6 +16,7 @@ package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
 import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.text.lookup.StringLookupFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -69,8 +70,16 @@ import java.util.stream.Collectors;
  * User controlled properties can be specified for the application from command line
  * {@code java -Dmyapp.threads=4 -jar myapp.jar}, container configuration or similar.
  *
+ * A list of locally available system properties can be obtained with {@code System.getProperties().list(System.out)}
+ * but only some of them are guaranteed to be set. See https://howtodoinjava.com/java/basics/java-system-properties/
+ * Commonly used properties are {@code user.name} and {@code user.home}.
+ *
  * Due to limitations of the Generics implementation in Java, using system properties as list values
  * involves fixed conversions: Integral numbers are treated as Integers, floating point numbers as Doubles.
+ *
+ * Note: Besides system environment, it is possible to use other substitutions, such as environment variables using
+ * the syntax {@code ${env:USERNAME}}. See the JavaDoc for {@link StringSubstitutor} for examples. Where possible,
+ * use system environment as that is the least unstable across platforms.
  */
 public class YAML extends LinkedHashMap<String, Object> {
 
@@ -82,6 +91,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
 
     private boolean extrapolateSystemProperties = false;
+    private static List<StringSubstitutor> substitutors = null;
     
     /**
      * Creates an empty YAML.
@@ -669,7 +679,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return sub;
         }
         if (sub instanceof String) {
-            return StringSubstitutor.replaceSystemProperties(sub);
+            return substitute((String) sub);
         }
         if (sub instanceof List<?>) {
             List<?> objects = (List<?>) sub;
@@ -689,7 +699,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return sub;
         }
         if (sub instanceof String) {
-            String any = StringSubstitutor.replaceSystemProperties(sub);
+            String any = substitute((String) sub);
             if (INTEGRAL_MATCHER.matcher(any).matches()) {
                 return Integer.valueOf(any);
             }
@@ -1167,5 +1177,23 @@ public class YAML extends LinkedHashMap<String, Object> {
          * Duplicate maps, lists and atomics throws an exception.
          */
         fail};
-    
+
+    /**
+     * Extrapolates the given string, using lazy created {@link StringSubstitutor}s.
+     * @param s the String to substitute.
+     * @return s substituted.
+     */
+    static String substitute(String s) {
+        synchronized (YAML.class) {
+            if (substitutors == null) {
+                substitutors = new ArrayList<>(2);
+                substitutors.add(StringSubstitutor.createInterpolator()); // General prefix based
+                substitutors.add(new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()));
+            }
+        }
+        for (StringSubstitutor substitutor: substitutors) {
+            s = substitutor.replace(s);
+        }
+        return s;
+    }
 }
