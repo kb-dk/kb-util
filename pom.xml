@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.sbforge</groupId>
         <artifactId>sbforge-parent</artifactId>
         <version>22</version>
-        <relativePath/><!-- override default parentpath of ../pom.xml which allows this to be a git submodule without reporting errors-->
+        <relativePath /><!-- override default parentpath of ../pom.xml which allows this to be a git submodule without reporting errors-->
     </parent>
 
     <groupId>dk.kb.util</groupId>
     <artifactId>kb-util</artifactId>
-    <version>1.4.8-SNAPSHOT</version>
+    <version>1.4.8</version>
 
     <scm>
         <url>https://github.com/kb-dk/kb-util</url>
         <connection>scm:git:git@github.com:kb-dk/kb-util.git</connection>
         <developerConnection>scm:git:git@github.com:kb-dk/kb-util.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>kb-util-1.4.8</tag>
     </scm>
 
     <licenses>
