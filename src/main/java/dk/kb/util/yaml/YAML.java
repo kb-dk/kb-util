@@ -893,6 +893,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
+     * <p>
+     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
@@ -924,6 +926,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
+     * <p>
+     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
@@ -946,6 +950,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
+     * <p>
+     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
