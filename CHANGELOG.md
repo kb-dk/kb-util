@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Auto updating YAMP based config
+- Auto updating YAML based config
 - Streaming export, used by webservices
 - HTTP Exceptions used by webservices
 - OpenAPI implementation super class used by OpenAPI applications
