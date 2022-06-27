@@ -49,6 +49,10 @@
              <api.check.phase>none</api.check.phase>
              to disable forbidden APIs check -->
         <api.check.phase>process-test-classes</api.check.phase>
+
+        <!-- Needed to populate kbutil.build.properties -->
+        <timestamp>${maven.build.timestamp}</timestamp>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     </properties>
 
     <build>
@@ -60,6 +64,14 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources/</directory>
+                <includes>
+                    <!-- Normally named 'build.properties', but prefixed here to avoid class path resource load clashes -->
+                    <include>kbutil.build.properties</include>
+                </includes>
+                <filtering>true</filtering>
             </resource>
         </resources>
         <plugins>
