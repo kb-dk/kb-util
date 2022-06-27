@@ -108,7 +108,7 @@
         </dependency>
 
 
-        <!--Included utiltities-->
+        <!--Included utilities-->
         <!--Not all of these are used, but you would want to use them, so include them here-->
         <dependency>
             <groupId>commons-io</groupId>
@@ -142,6 +142,47 @@
         </dependency>
         <!--Utilities end-->
 
+        <!-- Webservice -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>4.0.2</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+            <version>3.3.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-jaxrs</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jsr311-api</artifactId>
+                    <groupId>javax.ws.rs</groupId>
+                </exclusion>
+                <exclusion>
+                    <!-- swagger-jaxrs has 1.1.0.Final, but transitive resolving has 2.0.2 somewhere-->
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                </exclusion>
+            </exclusions>
+            <version>1.5.23</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-xml-provider</artifactId>
+            <version>2.10.1</version>
+        </dependency>
 
         <!--YAML-->
         <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
@@ -232,6 +273,14 @@
             <version>2.2</version>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>3.2.4</version>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 
