@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Auto updating YAMP based config
+- Streaming export, used by webservices
+- HTTP Exceptions used by webservices
+- OpenAPI implementation super class used by OpenAPI applications
+- build.properties programmatic access (application-ID, version, build-time)
+- kbutil.build.properties file in the kb-util JAR
 
 ## [1.4.8](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.8)
 ### Added
