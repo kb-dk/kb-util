@@ -64,12 +64,6 @@ public class BuildInfoManager {
         return name;
     }
 
-    public static String getPackageName() {
-        String name = BuildInfoManager.class.getPackage().getName();
-
-        return name.substring(0, name.lastIndexOf('.'));
-    }
-
     /**
      * @return the version of the application, as defined in pom.xml.
      */

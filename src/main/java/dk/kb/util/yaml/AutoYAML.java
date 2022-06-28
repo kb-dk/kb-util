@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Handling of auto-reloading of YAML configt with notification og changes to listeners.
+ * Handling of auto-reloading of YAML configs with notification og changes to listeners.
  * See {@link {@url https://en.wikipedia.org/wiki/Observer_pattern}}
  *
  * If wanted, changes to the configuration source (typically files) can result in an update and
