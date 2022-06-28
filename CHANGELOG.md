@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+
+## [1.4.9](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.9)
+### Added
+
 - Auto updating YAML based config
 - Streaming export, used by webservices
 - HTTP Exceptions used by webservices
