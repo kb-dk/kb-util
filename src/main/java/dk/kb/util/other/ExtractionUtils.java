@@ -14,10 +14,13 @@
  */
 package dk.kb.util.other;
 
+import com.google.common.collect.Iterators;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -30,11 +33,53 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Extraction of subsets of streams or collections.
  */
 public class ExtractionUtils {
+
+    /**
+     * Lazily partition the input to the given partitionSize.
+     *
+     * All partitions will have exactly partitionSize elements, except for the last partition which will contain
+     * {@code input_size % partitionSize} elements.
+     *
+     * The implementation is fully streaming and only holds the current partition in memory.
+     *
+     * The implementation does not support parallelism: If source is parallel, it will be sequentialized.
+     *
+     * If the end result should be a list of lists, use {@code splitToList(myStream, 87).collect(Collectors.toList())}.
+     * @param source any stream.
+     * @param partitionSize the maximum size for the partitions.
+     * @return the input partitioned into lists, each with partitionSize elements.
+     */
+    public static <T> Stream<List<T>> splitToLists(Stream<T> source, int partitionSize) {
+        return splitToStreams(source, partitionSize).map(stream -> stream.collect(Collectors.toList()));
+    }
+
+    /**
+     * Lazily partition the input to the given partitionSize.
+     *
+     * All partitions will have exactly partitionSize elements, except for the last partition which will contain
+     * {@code input_size % partitionSize} elements.
+     *
+     * The implementation is fully streaming and only holds the current partition in memory.
+     *
+     * The implementation does not support parallelism: If source is parallel, it will be sequentialized.
+     * @param source any stream.
+     * @param partitionSize the maximum size for the partitions.
+     * @return the input partitioned into streams, each with partitionSize elements.
+     */
+    public static <T> Stream<Stream<T>> splitToStreams(Stream<T> source, int partitionSize) {
+        // https://stackoverflow.com/questions/32434592/partition-a-java-8-stream
+        final Iterator<T> it = source.iterator();
+        final Iterator<Stream<T>> partIt = Iterators.transform(Iterators.partition(it, partitionSize), List::stream);
+        final Iterable<Stream<T>> iterable = () -> partIt;
+
+        return StreamSupport.stream(iterable.spliterator(), false);
+    }
 
     /**
      * Returns a random element from a stream. This involves collecting all elements temporarily.
