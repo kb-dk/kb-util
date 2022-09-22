@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ExtractionUtils focused on sampling and extracting minimum or maximum values from Streams and Collections.
+- Splitting of an incoming Stream to multiple partitions 
 
 ## [1.4.9](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.9)
 ### Added
