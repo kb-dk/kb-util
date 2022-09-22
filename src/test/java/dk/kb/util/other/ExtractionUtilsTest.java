@@ -40,7 +40,7 @@ class ExtractionUtilsTest {
         assertEquals(2, outLists.get(1).size(), "The second stream should contain a list of the expected size");
         assertEquals(1, outLists.get(2).size(), "The third stream should contain a list of the expected size");
 
-        assertEquals(4, outLists.get(1).get(1), "The second element in the second stream should be correct");
+        assertEquals("[[1, 2], [3, 4], [5]]", outLists.toString(), "The total output should be as expected");
     }
 
     @Test
@@ -57,7 +57,7 @@ class ExtractionUtilsTest {
         assertEquals(2, outLists.get(1).size(), "The second stream should contain a stream of the expected size");
         assertEquals(1, outLists.get(2).size(), "The third stream should contain a stream of the expected size");
 
-        assertEquals(4, outLists.get(1).get(1), "The second element in the second stream should be correct");
+        assertEquals("[[1, 2], [3, 4], [5]]", outLists.toString(), "The total output should be as expected");
     }
 
     @Test
