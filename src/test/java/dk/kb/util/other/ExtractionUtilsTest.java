@@ -2,10 +2,12 @@ package dk.kb.util.other;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,8 +26,57 @@ import static org.junit.jupiter.api.Assertions.*;
  *  limitations under the License.
  *
  */
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 class ExtractionUtilsTest {
+
+    @Test
+    void testPartitionList() {
+        Stream<List<Integer>> out = ExtractionUtils.splitToLists(Stream.of(1, 2, 3, 4, 5), 2);
+
+        List<List<Integer>> outLists = out.collect(Collectors.toList());
+
+        assertEquals(3, outLists.size(), "There should be 3 streams in the output");
+
+        assertEquals(2, outLists.get(0).size(), "The first stream should contain a list of the expected size");
+        assertEquals(2, outLists.get(1).size(), "The second stream should contain a list of the expected size");
+        assertEquals(1, outLists.get(2).size(), "The third stream should contain a list of the expected size");
+
+        assertEquals("[[1, 2], [3, 4], [5]]", outLists.toString(), "The total output should be as expected");
+    }
+
+    @Test
+    void testPartitionStream() {
+        Stream<Stream<Integer>> out = ExtractionUtils.splitToStreams(Stream.of(1, 2, 3, 4, 5), 2);
+
+        List<List<Integer>> outLists = out.
+                map(stream -> stream.collect(Collectors.toList())).
+                collect(Collectors.toList());
+
+        assertEquals(3, outLists.size(), "There should be 3 streams in the output");
+
+        assertEquals(2, outLists.get(0).size(), "The first stream should contain a stream of the expected size");
+        assertEquals(2, outLists.get(1).size(), "The second stream should contain a stream of the expected size");
+        assertEquals(1, outLists.get(2).size(), "The third stream should contain a stream of the expected size");
+
+        assertEquals("[[1, 2], [3, 4], [5]]", outLists.toString(), "The total output should be as expected");
+    }
+
+    @Test
+    void testPartitionStreamparallel() {
+        Stream<Stream<Integer>> out = ExtractionUtils.splitToStreams(Stream.of(1, 2, 3, 4, 5).parallel(), 2);
+
+        List<List<Integer>> outLists = out.
+                map(stream -> stream.collect(Collectors.toList())).
+                collect(Collectors.toList());
+
+        assertEquals(3, outLists.size(), "There should be 3 streams in the output");
+
+        assertEquals(2, outLists.get(0).size(), "The first stream should contain a stream of the expected size");
+        assertEquals(2, outLists.get(1).size(), "The second stream should contain a stream of the expected size");
+        assertEquals(1, outLists.get(2).size(), "The third stream should contain a stream of the expected size");
+        
+        List<Integer> sorted = outLists.stream().flatMap(Collection::stream).sorted().collect(Collectors.toList());
+        assertEquals("[1, 2, 3, 4, 5]", sorted.toString(), "All values should be present in the output");
+    }
 
     @Test
     void testSample() {
