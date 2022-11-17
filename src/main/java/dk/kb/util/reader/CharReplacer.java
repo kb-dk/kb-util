@@ -22,8 +22,6 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -41,9 +39,6 @@ import java.util.NoSuchElementException;
  *
  * @see CharArrayReplacer
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class CharReplacer extends ReplaceReader {
     private char[] rules;
 

@@ -22,7 +22,6 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -41,9 +40,6 @@ import java.util.Map;
  * @see StringReplacer
  * @see ReplaceReader
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class ReplaceFactory {
 
     private ReplaceReader replacer;

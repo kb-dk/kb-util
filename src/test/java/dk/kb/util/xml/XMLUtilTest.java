@@ -1,6 +1,5 @@
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import junit.framework.TestCase;
 
 import static dk.statsbiblioteket.util.xml.XMLUtil.encode;
 

@@ -17,11 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -47,9 +46,6 @@ import static org.junit.Assert.fail;
 
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class XSLTTest {
     private static Log log = LogFactory.getLog(XSLTTest.class);
 

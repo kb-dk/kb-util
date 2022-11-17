@@ -12,12 +12,12 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import dk.statsbiblioteket.util.MutablePair;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.reader.CharSequenceReader;
-import dk.statsbiblioteket.util.reader.ThreadedPiper;
+import dk.kb.util.MutablePair;
+import dk.kb.util.reader.CharSequenceReader;
+import dk.kb.util.reader.ThreadedPiper;
+import dk.kb.util.string.Strings;
 
 import javax.xml.stream.*;
 import java.io.*;

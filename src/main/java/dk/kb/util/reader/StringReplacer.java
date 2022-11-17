@@ -22,8 +22,7 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.kb.util.string.Strings;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -37,9 +36,6 @@ import java.util.Map;
  * among the replacements (e.g. "aaa1" ⇒ "foo", "aaa2" ⇒ "bar" etc.) will give
  * poor performance when the number of cases is in the hundreds or thousands.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class StringReplacer extends ReplaceReader {
     private CircularCharBuffer readerBuffer;
     private CircularCharBuffer destinationBuffer;

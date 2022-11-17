@@ -19,8 +19,6 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.io.IOException;
 import java.io.Reader;
 
@@ -31,9 +29,6 @@ import java.io.Reader;
  * While a lot of the methods seem to do the exactly same thing, having them
  * explicitely defined allows for an implementation to do optimizations.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public interface TextTransformer {
     public static final String NO_SOURCE =
             "Neither sourceReader nor sourceBuffer has been set as source";

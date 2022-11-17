@@ -12,11 +12,10 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

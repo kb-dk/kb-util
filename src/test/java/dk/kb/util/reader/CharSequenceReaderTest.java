@@ -1,6 +1,5 @@
 package dk.kb.util.reader;
 
-import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.io.Reader;

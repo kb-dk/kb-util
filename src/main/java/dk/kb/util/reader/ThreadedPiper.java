@@ -14,8 +14,6 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.io.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -27,9 +25,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * Helper for converting an {@link OutputStream}-using job to a background task which exposes
  * a buffered {@link InputStream} containing the output.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class ThreadedPiper {
 
     private static AtomicLong threads = new AtomicLong(0);

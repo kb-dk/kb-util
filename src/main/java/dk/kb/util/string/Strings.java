@@ -20,9 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
+package dk.kb.util.string;
 
 import java.io.*;
 import java.util.Arrays;
@@ -31,8 +29,7 @@ import java.util.Collection;
 /**
  * Convenience methods for string manipulations.
  */
-@QAInfo(state = QAInfo.State.QA_NEEDED,
-        level = QAInfo.Level.NORMAL)
+
 public class Strings {
 
     /**

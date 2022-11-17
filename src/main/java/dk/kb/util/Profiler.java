@@ -20,9 +20,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.StringWriter;
 import java.util.Calendar;
@@ -35,8 +34,7 @@ import java.util.Calendar;
  * Time: 8:32:37 AM
  * CVS:  $Id: Profiler.java,v 1.7 2007/12/04 13:22:01 mke Exp $
  */
-@QAInfo(state = QAInfo.State.QA_NEEDED,
-        level = QAInfo.Level.NORMAL)
+
 public class Profiler {
 // TODO: Make the useCurrentSpeed handle situations where beat was called
 // with a number larger than 1. This can be done by storing the current

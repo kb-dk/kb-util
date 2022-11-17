@@ -22,7 +22,6 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -39,9 +38,6 @@ import java.util.NoSuchElementException;
  * Note: the Queue-calls involved conversion between char and Character and
  * are thus not the fastest.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class CircularIntBuffer implements Iterable<Integer> {
     private static final int GROWTH_FACTOR = 2;
 

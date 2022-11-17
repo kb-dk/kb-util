@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;

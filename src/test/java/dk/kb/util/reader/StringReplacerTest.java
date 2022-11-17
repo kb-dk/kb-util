@@ -2,7 +2,6 @@ package dk.kb.util.reader;
 
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.IOException;

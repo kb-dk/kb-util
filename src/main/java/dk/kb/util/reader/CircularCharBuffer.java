@@ -22,7 +22,6 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -40,13 +39,6 @@ import java.util.NoSuchElementException;
  * Note: the Queue-calls involves conversion between char and Character and
  * are thus not the fastest.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te, mke",
-        comment = "Lots of room for performance-improvements (basically for all "
-                  + "iterative usages as arrayCopy is much more efficient). "
-                  + "The Reader-compatible and Query-compatible methods are "
-                  + "largely untested")
 public class CircularCharBuffer implements CharSequence, Iterable<Character> {
     private static final int GROWTH_FACTOR = 2;
 

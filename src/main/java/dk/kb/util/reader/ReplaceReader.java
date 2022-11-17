@@ -22,7 +22,6 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.FilterReader;
 import java.io.IOException;
@@ -33,9 +32,6 @@ import java.io.StringReader;
  * Abstract class providing basic methods for making a TextTransformer that is
  * also a Reader.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public abstract class ReplaceReader extends FilterReader implements TextTransformer, Cloneable {
 
     protected CircularCharBuffer sourceBuffer = null;

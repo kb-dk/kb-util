@@ -17,11 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.kb.util.BuildInfoManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import javax.xml.stream.XMLStreamException;
@@ -50,12 +52,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Note: Transformer-errors and exceptions are thrown when they occur while
  * warnings are logged on {@link #warnlog}.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class XSLT {
-    private static Log warnlog = LogFactory.getLog(XSLT.class.getName() + "#warnings");
-    private static Log log = LogFactory.getLog(XSLT.class);
+    private static final Logger warnlog = LoggerFactory.getLogger(XSLT.class.getName() + "#warnings");
+    private static final Logger log = LoggerFactory.getLogger(XSLT.class);
 
     /**
      * Creates a new transformer based on the given XSLTLocation.

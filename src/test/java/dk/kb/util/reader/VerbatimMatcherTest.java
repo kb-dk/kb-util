@@ -1,6 +1,5 @@
 package dk.kb.util.reader;
 
-import junit.framework.TestCase;
 
 import java.io.*;
 import java.nio.file.Files;

@@ -1,9 +1,7 @@
 package dk.kb.util.reader;
 
 import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import javax.print.DocFlavor;

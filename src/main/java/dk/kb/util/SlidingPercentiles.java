@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
 import dk.statsbiblioteket.util.reader.CircularIntBuffer;
 

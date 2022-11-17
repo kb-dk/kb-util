@@ -20,7 +20,6 @@
 package dk.kb.util.reader;
 
 import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -32,9 +31,6 @@ import java.util.*;
  * trivial (and slow) implementation of String ⇒ String replacement.
  * Used for monkey-tests of proper Replacers.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class BaselineReplacer extends ReplaceReader {
 //    private static Log log = LogFactory.getLog(BaselineReplacer.class);
 

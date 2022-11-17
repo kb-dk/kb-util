@@ -20,7 +20,6 @@
 package dk.kb.util.reader;
 
 import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Ignore;
@@ -39,9 +38,6 @@ import static org.junit.Assert.assertEquals;
  * Performs comparisons and tests of different replacers.
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class ReplacerTest {
     private static Log log = LogFactory.getLog(ReplacerTest.class);
 

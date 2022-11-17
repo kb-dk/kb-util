@@ -17,12 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.reader.ReplaceFactory;
-import dk.statsbiblioteket.util.reader.ReplaceReader;
+import dk.kb.util.reader.ReplaceFactory;
+import dk.kb.util.reader.ReplaceReader;
+import dk.kb.util.string.Strings;
 
 import javax.xml.stream.events.XMLEvent;
 import java.io.StringReader;
@@ -30,9 +29,6 @@ import java.io.StringReader;
 /**
  * Misc. helpers for XML handling.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class XMLUtil {
 
     private static final ThreadLocal<ReplaceReader> localEncoder =
