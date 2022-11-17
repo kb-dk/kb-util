@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.util.reader;
+package dk.kb.util.reader;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 

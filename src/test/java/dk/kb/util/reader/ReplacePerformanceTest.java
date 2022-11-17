@@ -2,7 +2,7 @@
  * Created: te 30-01-2009 20:09:34
  * CVS:     $Id$
  */
-package dk.statsbiblioteket.util.reader;
+package dk.kb.util.reader;
 
 import dk.statsbiblioteket.util.Profiler;
 import junit.framework.Test;

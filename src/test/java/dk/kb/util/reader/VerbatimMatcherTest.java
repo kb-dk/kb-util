@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.util.reader;
+package dk.kb.util.reader;
 
 import junit.framework.TestCase;
 

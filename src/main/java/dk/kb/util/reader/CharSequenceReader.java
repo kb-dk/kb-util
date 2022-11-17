@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.util.reader;
+package dk.kb.util.reader;
 
 import java.io.IOException;
 import java.io.Reader;

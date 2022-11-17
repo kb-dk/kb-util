@@ -6,7 +6,7 @@
  * This is confidential source code. Unless an explicit written permit has been obtained,
  * distribution, compiling and all other use of this code is prohibited.    
   */
-package dk.statsbiblioteket.util.reader;
+package dk.kb.util.reader;
 
 import java.util.ArrayList;
 import java.util.List;
