@@ -20,22 +20,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.TestCase;
+package dk.kb.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-@QAInfo(state = QAInfo.State.QA_NEEDED,
-        level = QAInfo.Level.NORMAL,
-        author = "mke, te")
-public class FilesTest extends TestCase {
+public class FilesTest {
 
     String inputDir; // build dir for the sbutil installation is used for test input
     String inputFile; // test input file
@@ -102,13 +99,12 @@ public class FilesTest extends TestCase {
         try {
             Files.copy(new File(inputDir), tmpDir, false);
         } catch (FileAlreadyExistsException e) {
-            System.out.println("Got FileAlreadyExistsException as we should: "
-                               + e.getMessage());
+            System.out.println("Got FileAlreadyExistsException as we should: " + e.getMessage());
             return;
         }
 
-        assertTrue("Overwriting with overwrite=false should throw an exception",
-                   false);
+        assertTrue(false,
+                   "Overwriting with overwrite=false should throw an exception");
     }
 
 
@@ -131,25 +127,27 @@ public class FilesTest extends TestCase {
 
     public void testBytesToString() throws Exception {
         String aString = "This is a string ���";
-        byte[] someBytes = aString.getBytes("UTF-8");
-        String afterConversion = new String(someBytes, "utf-8");
-        assertEquals("The strings should be equal before and after conversion",
-                     aString, afterConversion);
+        byte[] someBytes = aString.getBytes(StandardCharsets.UTF_8);
+        String afterConversion = new String(someBytes, StandardCharsets.UTF_8);
+        assertEquals(aString, afterConversion,
+                     "The strings should be equal before and after conversion");
 
     }
 
     public void testSaveString() throws Exception {
         File tempDir =
                 new File(System.getProperties().getProperty("java.io.tmpdir"));
-        assertTrue("The temp dir should be a dir", tempDir.isDirectory());
+        assertTrue(tempDir.isDirectory(),
+                   "The temp dir should be a dir");
         String testString = "Hello darkness my old friend";
         File testFile = new File(tempDir, "Sound.silence.tmp");
         Files.saveString(testString, testFile);
-        assertTrue("The test file should exist", testFile.exists());
+        assertTrue(testFile.exists(),
+                   "The test file should exist");
 
         String loadedString = Files.loadString(testFile);
-        assertEquals("The string should be the same before and after storage",
-                     testString, loadedString);
+        assertEquals(testString, loadedString,
+                     "The string should be the same before and after storage");
     }
 
     public void testSaveStringMultiple() throws Exception {
@@ -157,9 +155,8 @@ public class FilesTest extends TestCase {
         int ITERATIONS = 5000;
         for (int i = 0; i < ITERATIONS; i++) {
             Files.saveString("Zoo" + i, tempFile);
-            assertEquals("The string should be the same before and after "
-                         + "storage #" + i,
-                         "Zoo" + i, Files.loadString(tempFile));
+            assertEquals("Zoo" + i, Files.loadString(tempFile),
+                         "The string should be the same before and after storage #" + i);
         }
         tempFile.delete();
     }
@@ -181,11 +178,11 @@ public class FilesTest extends TestCase {
         destination.mkdirs();
 
         Files.move(sub1, destination, true);
-        assertFalse("The folder '" + sub1 + "' should be deleted", sub1.exists());
+        assertFalse(sub1.exists(),
+                    "The folder '" + sub1 + "' should be deleted");
         File shouldExist = new File(destination, "sub1/sub2/foo.bar");
-        assertTrue("The folder '" + shouldExist.getAbsoluteFile()
-                   + "' should be created",
-                   shouldExist.exists());
+        assertTrue(shouldExist.exists(),
+                   "The folder '" + shouldExist.getAbsoluteFile() + "' should be created");
     }
 
     public void testMoveToFolderFail() throws Exception {
@@ -201,38 +198,38 @@ public class FilesTest extends TestCase {
             // Expected
         }
 
-        assertTrue("The file '" + subFile1 + "' should still exist",
-                   sub1.exists());
+        assertTrue(sub1.exists(),
+                   "The file '" + subFile1 + "' should still exist");
     }
 
     public void testMoveToNonExistingFolder() throws Exception {
         File destination = new File(tmpDir, "destination");
 
         Files.move(sub1, destination, true);
-        assertFalse("The folder '" + sub1 + "' should be deleted", sub1.exists());
+        assertFalse(sub1.exists(),
+                    "The folder '" + sub1 + "' should be deleted");
         File shouldExist = new File(destination, "sub2/foo.bar");
-        assertTrue("The folder '" + shouldExist.getAbsoluteFile()
-                   + "' should be created",
-                   shouldExist.exists());
+        assertTrue(shouldExist.exists(),
+                   "The folder '" + shouldExist.getAbsoluteFile() + "' should be created");
     }
 
     public void testMoveFileToFile() throws Exception {
         File destination = new File(tmpDir, "destination");
         Files.move(subFile1, destination, true);
-        assertFalse("The source '" + subFile1 + "' should now be deleted",
-                    subFile1.exists());
-        assertTrue("The file '" + destination + "' should exist",
-                   destination.exists());
+        assertFalse(subFile1.exists(),
+                    "The source '" + subFile1 + "' should now be deleted");
+        assertTrue(destination.exists(),
+                   "The file '" + destination + "' should exist");
     }
 
     public void testMoveFileToExistingFileOverwrite() throws Exception {
         File destination = new File(tmpDir, "destination");
         destination.createNewFile();
         Files.move(subFile1, destination, true);
-        assertFalse("The source '" + subFile1 + "' should now be deleted",
-                    subFile1.exists());
-        assertTrue("The file '" + destination + "' should exist",
-                   destination.exists());
+        assertFalse(subFile1.exists(),
+                    "The source '" + subFile1 + "' should now be deleted");
+        assertTrue(destination.exists(),
+                   "The file '" + destination + "' should exist");
     }
 
     public void testMoveFileToExistingFileNotOverwrite() throws Exception {
@@ -240,13 +237,12 @@ public class FilesTest extends TestCase {
         destination.createNewFile();
         try {
             Files.move(subFile1, destination, false);
-            fail("The moving of '" + subFile1 + "' to '" + destination
-                 + "' should fail");
+            fail("The moving of '" + subFile1 + "' to '" + destination + "' should fail");
         } catch (FileAlreadyExistsException e) {
             // Expected
         }
-        assertTrue("The source '" + subFile1 + "' should still exist",
-                   subFile1.exists());
+        assertTrue(subFile1.exists(),
+                   "The source '" + subFile1 + "' should still exist");
     }
 
     public void testCopyFileOverwrite() throws Exception {
@@ -264,12 +260,12 @@ public class FilesTest extends TestCase {
 
         String expectedFilename =
                 new File(tmpDir, Files.baseName(inputFile)).toString();
-        assertEquals("Returned file should be in provided dir",
-                     result.toString(), expectedFilename);
+        assertEquals(result.toString(), expectedFilename,
+                     "Returned file should be in provided dir");
 
-        assertTrue("Checksums of source and downloaded file should match",
-                   Arrays.equals(Checksums.md5(result),
-                                 Checksums.md5(new File(expectedFilename))));
+        assertTrue(Arrays.equals(Checksums.md5(result),
+                                 Checksums.md5(new File(expectedFilename))),
+                   "Checksums of source and downloaded file should match");
     }
 
     public void testDownloadNoOverwrite() throws Exception {

@@ -19,6 +19,7 @@
  */
 package dk.kb.util.xml;
 
+import dk.kb.util.Files;
 import dk.kb.util.reader.CircularCharBuffer;
 import dk.kb.util.string.Strings;
 

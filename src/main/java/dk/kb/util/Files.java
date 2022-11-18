@@ -20,12 +20,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.ConnectException;
@@ -35,10 +33,8 @@ import java.net.URL;
  * General purpose methods to handle files
  * $Id: Files.java,v 1.11 2007/12/04 13:22:01 mke Exp $
  */
-@QAInfo(state = QAInfo.State.QA_NEEDED,
-        level = QAInfo.Level.NORMAL)
 public class Files {
-    private static Log log = LogFactory.getLog(Files.class);
+    private static Logger log = LoggerFactory.getLogger(Files.class);
 
     // TODO: Add method for recursively copying directories (and just plain file copying)
 
@@ -128,8 +124,7 @@ public class Files {
      * @throws FileAlreadyExistsException if {@code overwrite=false} and the
      *                                    method is about to overwrite an existing file.
      */
-    public static void copy(File path, File toPath, boolean overwrite) throws
-                                                                       IOException {
+    public static void copy(File path, File toPath, boolean overwrite) throws IOException {
         log.trace("copy(" + path + ", " + toPath + ", " + overwrite + ")");
         if (path.isFile()) {
             copyFile(path, toPath, overwrite);
@@ -137,8 +132,7 @@ public class Files {
             if (!toPath.exists()) {
                 copyDirectory(path, toPath, overwrite);
             } else {
-                copyDirectory(path, new File(toPath, path.getName()),
-                              overwrite);
+                copyDirectory(path, new File(toPath, path.getName()), overwrite);
             }
         }
     }
