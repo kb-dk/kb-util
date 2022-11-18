@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

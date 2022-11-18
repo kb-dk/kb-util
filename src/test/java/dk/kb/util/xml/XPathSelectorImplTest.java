@@ -1,16 +1,17 @@
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import static dk.statsbiblioteket.util.xml.DOM.stringToDOM;
+import static dk.kb.util.xml.DOM.stringToDOM;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test cases for the {@code XPathSelectorImpl.select*} methods
  */
-public class XPathSelectorImplTest extends TestCase {
+public class XPathSelectorImplTest {
 
     static final String SIMPLE_XML =
             DOM.XML_HEADER +
@@ -24,7 +25,7 @@ public class XPathSelectorImplTest extends TestCase {
     Document dom;
     XPathSelector selector;
 
-    @Override
+    @BeforeEach
     public void setUp() {
         selector = DOM.createXPathSelector("ex", "http://example.com/ex",
                                            "foo", "http://example.com/default");
