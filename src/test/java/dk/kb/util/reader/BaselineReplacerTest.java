@@ -19,57 +19,37 @@
  */
 package dk.kb.util.reader;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class BaselineReplacerTest extends TestCase {
-    public BaselineReplacerTest(String name) {
-        super(name);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public static Test suite() {
-        return new TestSuite(BaselineReplacerTest.class);
-    }
-
+public class BaselineReplacerTest {
     public void testSimpleReplacement() throws IOException {
         Map<String, String> map = new HashMap<String, String>(10);
         map.put("a", "foo");
         map.put("b", "bar");
-        assertEquals("Simple replacement should work",
-                     "mfoonyfooffool bar",
-                     getReplacedBaseline(map, "manyafal b"));
+        assertEquals("mfoonyfooffool bar", getReplacedBaseline(map, "manyafal b"),
+                     "Simple replacement should work");
     }
 
     public void testTrivialReplacement() throws IOException {
         Map<String, String> map = new HashMap<String, String>(10);
         map.put("a", "foo");
-        assertEquals("Trivial replacement should work",
-                     "foo", getReplacedBaseline(map, "a"));
+        assertEquals("foo", getReplacedBaseline(map, "a"),
+                     "Trivial replacement should work");
     }
 
     public void testSingleCharReplacement() throws IOException {
         Map<String, String> map = new HashMap<String, String>(10);
         map.put("a", "b");
         map.put("b", "c");
-        assertEquals("Single-char replacement should work",
-                     "bcde", getReplacedBaseline(map, "abde"));
+        assertEquals("bcde", getReplacedBaseline(map, "abde"),
+                     "Single-char replacement should work");
     }
 
     public void testMisc() throws IOException {
@@ -78,25 +58,20 @@ public class BaselineReplacerTest extends TestCase {
         map.put("aa", "bar");
         map.put("aaa", "zoo");
         //noinspection DuplicateStringLiteralInspection
-        assertEquals("None-test should work",
-                     "ffreege", getReplacedBaseline(
-                map, "ffreege"));
+        assertEquals("ffreege", getReplacedBaseline(map, "ffreege"),
+                     "None-test should work");
 
         map.put("baa", "zap");
-        assertEquals("Mix-test should work",
-                     "barzapfoo", getReplacedBaseline(
-                map, "aabaaa"));
+        assertEquals("barzapfoo", getReplacedBaseline(map, "aabaaa"),
+                     "Mix-test should work");
 
-        assertEquals("no-input-test should work",
-                     "", getReplacedBaseline(
-                map, ""));
+        assertEquals("", getReplacedBaseline(map, ""),
+                     "no-input-test should work");
 
         map.clear();
         //noinspection DuplicateStringLiteralInspection
-        assertEquals("No-rules-test should work",
-                     "klamm", getReplacedBaseline(
-                map, "klamm"));
-
+        assertEquals("klamm", getReplacedBaseline(map, "klamm"),
+                     "No-rules-test should work");
     }
 
     public static String getReplacedBaseline(Map<String, String> rules,

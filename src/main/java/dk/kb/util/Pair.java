@@ -41,7 +41,7 @@ public class Pair<L,R> {
             return false;
         }
 
-        Pair pair = (Pair) o;
+        Pair<?, ?> pair = (Pair<?, ?>) o;
 
         if (left != null ? !left.equals(pair.left) : pair.left != null) {
             return false;

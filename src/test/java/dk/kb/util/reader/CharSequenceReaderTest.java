@@ -4,10 +4,12 @@ package dk.kb.util.reader;
 import java.io.IOException;
 import java.io.Reader;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * Unit tests for the {@link CharSequenceReader}
  */
-public class CharSequenceReaderTest extends TestCase {
+public class CharSequenceReaderTest {
 
     StringBuffer buf;
     CharSequenceReader seq;

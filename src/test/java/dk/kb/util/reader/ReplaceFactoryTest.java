@@ -19,64 +19,41 @@
  */
 package dk.kb.util.reader;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ReplaceFactoryTest extends TestCase {
-    public ReplaceFactoryTest(String name) {
-        super(name);
-    }
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public static Test suite() {
-        return new TestSuite(ReplaceFactoryTest.class);
-    }
-
-    public void testThreeCases() throws Exception {
+public class ReplaceFactoryTest {
+    public void testThreeCases() {
         Map<String, String> rules =
                 ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 1, 1);
-        assertTrue("1=>1 should yield a CharReplacer",
-                   ReplaceFactory.getReplacer(rules) instanceof CharReplacer);
-        assertTrue("1=>1 should yield a CharReplacer with get",
-                   new ReplaceFactory(rules).getReplacer() instanceof CharReplacer);
+        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharReplacer,
+                   "1=>1 should yield a CharReplacer");
+        assertTrue(new ReplaceFactory(rules).getReplacer() instanceof CharReplacer,
+                   "1=>1 should yield a CharReplacer with get");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 0, 1);
-        assertTrue("1=>0-1 should yield a CharArrayReplacer",
-                   ReplaceFactory.getReplacer(rules) instanceof
-                           CharArrayReplacer);
-        assertTrue("1=>0-1 should yield a CharArrayReplacer with get",
-                   new ReplaceFactory(rules).getReplacer() instanceof
-                           CharArrayReplacer);
+        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharArrayReplacer,
+                   "1=>0-1 should yield a CharArrayReplacer");
+        assertTrue(new ReplaceFactory(rules).getReplacer() instanceof CharArrayReplacer,
+                   "1=>0-1 should yield a CharArrayReplacer with get");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 0, 5);
-        assertTrue("1=>0-5 should yield a CharArrayReplacer",
-                   ReplaceFactory.getReplacer(rules) instanceof
-                           CharArrayReplacer);
-        assertTrue("1=>0-5 should yield a CharArrayReplacer with get",
-                   new ReplaceFactory(rules).getReplacer() instanceof
-                           CharArrayReplacer);
+        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharArrayReplacer,
+                   "1=>0-5 should yield a CharArrayReplacer");
+        assertTrue(new ReplaceFactory(rules).getReplacer() instanceof CharArrayReplacer,
+                   "1=>0-5 should yield a CharArrayReplacer with get");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 1, 5);
-        assertTrue("1=>1-5 should yield a CharArrayReplacer",
-                   ReplaceFactory.getReplacer(rules) instanceof
-                           CharArrayReplacer);
+        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharArrayReplacer,
+                   "1=>1-5 should yield a CharArrayReplacer");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 5, 0, 5);
-        assertTrue("1-5=>1-5 should yield a StringReplacer",
-                   ReplaceFactory.getReplacer(rules) instanceof StringReplacer);
+        assertTrue(ReplaceFactory.getReplacer(rules) instanceof StringReplacer,
+                   "1-5=>1-5 should yield a StringReplacer");
     }
 
     public void testComplexFactory() throws Exception {
@@ -86,8 +63,8 @@ public class ReplaceFactoryTest extends TestCase {
         ReplaceReader replacer = factory.getReplacer();
         String actual =
                 replacer.transform(StringReplacerTest.JAVASCRIPT + "foo");
-        assertEquals("Complex factory based replacement should work",
-                     "foo", actual);
+        assertEquals("foo", actual,
+                     "Complex factory based replacement should work");
     }
 
     /* This used to fail due to a missing proper initialization of minBufferSize
@@ -103,7 +80,7 @@ public class ReplaceFactoryTest extends TestCase {
         CircularCharBuffer actual =
                 new CircularCharBuffer(10, Integer.MAX_VALUE);
         replacer.read(actual, Integer.MAX_VALUE);
-        assertEquals("Complex factory & stream based replacement should work",
-                     "foo", actual.toString());
+        assertEquals("foo", actual.toString(),
+                     "Complex factory & stream based replacement should work");
     }
 }

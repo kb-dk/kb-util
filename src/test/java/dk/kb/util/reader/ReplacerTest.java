@@ -19,11 +19,10 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.Strings;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.Ignore;
-import org.junit.Test;
+import dk.kb.util.string.Strings;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -31,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -39,7 +38,7 @@ import static org.junit.Assert.assertEquals;
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ReplacerTest {
-    private static Log log = LogFactory.getLog(ReplacerTest.class);
+    private static final Logger log = LoggerFactory.getLogger(ReplacerTest.class);
 
 
     // 'f' => 'b'
@@ -143,8 +142,7 @@ public class ReplacerTest {
         assertEquals(-1, rep.read());
     }
 
-    @Test
-    @Ignore
+    // disabled @Test
         public void testSpeedCharsVsString() throws Exception {
         Random random = new Random(456);
         int RUNS = 10;
@@ -183,8 +181,7 @@ public class ReplacerTest {
         }
     }
 
-    @Test
-    @Ignore
+    // disabled@Test
     public void testSpeedCharVsChars() throws Exception {
         Random random = new Random(456);
         int RUNS = 10;

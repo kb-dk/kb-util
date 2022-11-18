@@ -1,7 +1,6 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
-import org.apache.commons.text.StringSubstitutor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

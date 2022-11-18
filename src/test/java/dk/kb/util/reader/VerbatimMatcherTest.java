@@ -10,7 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class VerbatimMatcherTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.*;
+
+public class VerbatimMatcherTest {
 
     public void testSimple() {
         CollectingMatcher matcher = new CollectingMatcher();
@@ -84,20 +86,24 @@ public class VerbatimMatcherTest extends TestCase {
     public void testGetExistingNode() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
-        assertNotNull("There should be a Node for 'London'", matcher.getNode("London", false));
+        assertNotNull(matcher.getNode("London", false),
+                      "There should be a Node for 'London'");
     }
 
     public void testGetNonExistingNode() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
-        assertNull("There should not be a Node for 'France'", matcher.getNode("France", false));
+        assertNull(matcher.getNode("France", false),
+                   "There should not be a Node for 'France'");
     }
 
     public void testAutoCreateNode() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
-        assertNotNull("A Node for 'France' should be created", matcher.getNode("France", true));
-        assertNotNull("The newly created Node for 'France' should be available", matcher.getNode("France", false));
+        assertNotNull(matcher.getNode("France", true),
+                      "A Node for 'France' should be created");
+        assertNotNull(matcher.getNode("France", false),
+                      "The newly created Node for 'France' should be available");
     }
 
     public void testPayload() {
@@ -231,31 +237,35 @@ public class VerbatimMatcherTest extends TestCase {
 
     private void assertMatchesPayload(
             CollectingMatcher matcher, String source, List<String> verbatims, List<String> payloads) {
-        assertEquals("There should be the right number of matches",
-                     verbatims.size(), matcher.findMatches(source));
+        assertEquals(verbatims.size(), matcher.findMatches(source),
+                     "There should be the right number of matches");
         for (int i = 0 ; i < verbatims.size() ; i++) {
-            assertEquals("Match " + i + " verbatim should be as expected", verbatims.get(i), matcher.matches.get(i));
-            assertEquals("Match " + i + " payload should be as expected", payloads.get(i), matcher.payloads.get(i));
+            assertEquals(verbatims.get(i), matcher.matches.get(i),
+                         "Match " + i + " verbatim should be as expected");
+            assertEquals(payloads.get(i), matcher.payloads.get(i),
+                         "Match " + i + " payload should be as expected");
         }
     }
 
     private void assertMatches(CollectingMatcher matcher, String source, String... matches) {
-        assertEquals("There should be the right number of matches",
-                     matches.length, matcher.findMatches(source));
+        assertEquals(matches.length, matcher.findMatches(source),
+                     "There should be the right number of matches");
         for (int i = 0 ; i < matches.length ; i++) {
-            assertEquals("Match " + i + " should be as expected", matches[i], matcher.matches.get(i));
+            assertEquals(matches[i], matcher.matches.get(i),
+                         "Match " + i + " should be as expected");
         }
     }
 
     private void assertMatches(CollectingMatcher matcher, Pattern delimiter, String source, String... matches) {
-        assertEquals("There should be the right number of matches",
-                     matches.length, matcher.findMatches(source, delimiter));
+        assertEquals(matches.length, matcher.findMatches(source, delimiter),
+                     "There should be the right number of matches");
         for (int i = 0 ; i < matches.length ; i++) {
-            assertEquals("Match " + i + " should be as expected", matches[i], matcher.matches.get(i));
+            assertEquals(matches[i], matcher.matches.get(i),
+                         "Match " + i + " should be as expected");
         }
     }
 
-    private class CollectingMatcher extends VerbatimMatcher<String> {
+    private static class CollectingMatcher extends VerbatimMatcher<String> {
         public final List<String> matches = new ArrayList<String>();
         public final List<String> payloads = new ArrayList<String>();
 

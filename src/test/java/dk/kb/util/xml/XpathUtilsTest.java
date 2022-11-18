@@ -1,7 +1,6 @@
 package dk.kb.util.xml;
 
 import dk.kb.util.Resolver;
-import org.apache.commons.lang3.ClassPathUtils;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -12,7 +11,6 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class XpathUtilsTest {
     

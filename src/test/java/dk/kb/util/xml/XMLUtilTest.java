@@ -1,12 +1,13 @@
 package dk.kb.util.xml;
 
 
-import static dk.statsbiblioteket.util.xml.XMLUtil.encode;
+import static dk.kb.util.xml.XMLUtil.encode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for the {@link XMLUtil} class
  */
-public class XMLUtilTest extends TestCase {
+public class XMLUtilTest {
 
     public void testEncode() {
         assertEquals("&gt;", encode(">"));

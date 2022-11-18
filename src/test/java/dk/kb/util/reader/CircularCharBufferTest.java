@@ -1,35 +1,12 @@
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.Strings;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import javax.print.DocFlavor;
 import java.util.NoSuchElementException;
 
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te, mke")
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class CircularCharBufferTest extends TestCase {
-    public CircularCharBufferTest(String name) {
-        super(name);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public static Test suite() {
-        return new TestSuite(CircularCharBufferTest.class);
-    }
-
+public class CircularCharBufferTest {
     public void testMax() {
         CircularCharBuffer b = new CircularCharBuffer(2, 2);
         b.put('a');
@@ -60,9 +37,11 @@ public class CircularCharBufferTest extends TestCase {
         b.put('a');
         b.put('b');
         b.put('c');
-        assertEquals("First take should work", 'a', b.take());
+        assertEquals('a', b.take(),
+                     "First take should work");
         b.put('d');
-        assertEquals("Second take should work", 'b', b.take());
+        assertEquals('b', b.take(),
+                     "Second take should work");
         b.put('e');
         try {
             b.put('f');
@@ -77,10 +56,12 @@ public class CircularCharBufferTest extends TestCase {
         b.put('a');
         b.put('b');
         b.put('c');
-        assertEquals("Peek(1) should work ", 'b', b.peek(1));
+        assertEquals('b', b.peek(1),
+                     "Peek(1) should work");
         b.take();
         b.put('d');
-        assertEquals("Peek(2) should work ", 'd', b.peek(2));
+        assertEquals('d', b.peek(2),
+                     "Peek(2) should work");
     }
 
     public void testGetArray() {
@@ -89,10 +70,10 @@ public class CircularCharBufferTest extends TestCase {
         b.take();
         b.put('d');
         char[] buf = new char[4];
-        assertEquals("The number of copied chars should match",
-                     3, b.read(buf, 0, 4));
-        assertEquals("The extracted chars should be correct",
-                     "bcd", new String(buf, 0, 3));
+        assertEquals(3, b.read(buf, 0, 4),
+                     "The number of copied chars should match");
+        assertEquals("bcd", new String(buf, 0, 3),
+                     "The extracted chars should be correct");
     }
 
     public void testEmpty() {
@@ -115,7 +96,8 @@ public class CircularCharBufferTest extends TestCase {
     public void testShiftetCharSequence() {
         CircularCharBuffer b = new CircularCharBuffer(5, 5);
         b.put("zhell");
-        assertEquals("Get should return the first char", 'z', b.take());
+        assertEquals('z', b.take(),
+                     "Get should return the first char");
         b.put('o');
         testAsCharSequence(b);
 
@@ -156,27 +138,38 @@ public class CircularCharBufferTest extends TestCase {
         b.put("zhell");
         b.take();
         b.put("o");
-        assertEquals("indexOf ell should be correct", 1, b.indexOf("ell"));
-        assertEquals("indexOf o should be correct", 4, b.indexOf("o"));
-        assertEquals("indexOf l should be correct", 2, b.indexOf("l"));
-        assertEquals("indexOf hello should be correct", 0, b.indexOf("hello"));
-        assertEquals("indexOf fnaf should be correct", -1, b.indexOf("fnaf"));
-        assertEquals("indexOf ello should be correct", 1, b.indexOf("ello"));
-        assertEquals("indexOf elloz should be correct", -1, b.indexOf("elloz"));
-        assertEquals("indexOf helloz should be correct",
-                     -1, b.indexOf("helloz"));
+        assertEquals(1, b.indexOf("ell"),
+                     "indexOf ell should be correct");
+        assertEquals(4, b.indexOf("o"),
+                     "indexOf o should be correct");
+        assertEquals(2, b.indexOf("l"),
+                     "indexOf l should be correct");
+        assertEquals(0, b.indexOf("hello"),
+                     "indexOf hello should be correct");
+        assertEquals(-1, b.indexOf("fnaf"),
+                     "indexOf fnaf should be correct");
+        assertEquals(1, b.indexOf("ello"),
+                     "indexOf ello should be correct");
+        assertEquals(-1, b.indexOf("elloz"),
+                     "indexOf elloz should be correct");
+        assertEquals(-1, b.indexOf("helloz"),
+                     "indexOf helloz should be correct");
     }
 
     public void testLength() {
         CircularCharBuffer cb = new CircularCharBuffer(2, 2);
         cb.add("1");
-        assertEquals("add(1);", cb.size(), 1);
+        assertEquals(cb.size(), 1,
+                     "add(1);");
         cb.add("2");
-        assertEquals("add(1); add(2);", cb.size(), 2);
+        assertEquals(cb.size(), 2,
+                     "add(1); add(2);");
         cb.take();
-        assertEquals("add(1); add(2); take();", cb.size(), 1);
+        assertEquals(cb.size(), 1,
+                     "add(1); add(2); take();");
         cb.take();
-        assertEquals("add(1); add(2); take(); take();", cb.size(), 0);
+        assertEquals(cb.size(), 0,
+                     "add(1); add(2); take(); take();");
     }
 
     public void testCopyDirect() {
@@ -203,6 +196,7 @@ public class CircularCharBufferTest extends TestCase {
         for (int i = 0; i < retrieved; i++) {
             o += OUTPUT[i];
         }
-        assertEquals("Input '" + input + "' with CB-size " + cbSize, expected, o);
+        assertEquals(expected, o,
+                     "Input '" + input + "' with CB-size " + cbSize);
     }
 }

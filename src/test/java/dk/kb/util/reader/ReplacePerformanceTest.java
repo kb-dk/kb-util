@@ -4,11 +4,9 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.Profiler;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import dk.kb.util.Profiler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -19,27 +17,8 @@ import java.util.*;
  * Performance-test of different streaming String replacement implementations.
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class ReplacePerformanceTest extends TestCase {
-    public Log log = LogFactory.getLog(ReplacePerformanceTest.class);
-
-    public ReplacePerformanceTest(String name) {
-        super(name);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public static Test suite() {
-        return new TestSuite(ReplacePerformanceTest.class);
-    }
-
+public class ReplacePerformanceTest {
+    public Logger log = LoggerFactory.getLogger(ReplacePerformanceTest.class);
 
     public void testSmall() throws IOException {
         int GETS = 10000; //100000;
@@ -292,9 +271,8 @@ public class ReplacePerformanceTest extends TestCase {
          * @param size            the virtual size of the content (the number of characters
          *                        generated).
          */
-        public RandomReader(Random random, char[] validChars,
-                            List<char[]> knownWords,
-                            double knownWordChance, int size) {
+        public RandomReader(
+                Random random, char[] validChars, List<char[]> knownWords, double knownWordChance, int size) {
             this.validChars = validChars;
             this.random = random;
             this.knownWords = knownWords;
@@ -308,7 +286,7 @@ public class ReplacePerformanceTest extends TestCase {
         }
 
         @Override
-        public int read() throws IOException {
+        public int read() {
             if (readCount >= size) {
                 return -1;
             }
@@ -318,7 +296,7 @@ public class ReplacePerformanceTest extends TestCase {
         }
 
         @Override
-        public int read(char cbuf[], int off, int len) throws IOException {
+        public int read(char cbuf[], int off, int len) {
             if (readCount >= size) {
                 return -1;
             }
@@ -357,9 +335,7 @@ public class ReplacePerformanceTest extends TestCase {
      * @param replacements the replacements for the readers.
      * @throws IOException if an I/O error occured.
      */
-    private void createSpeedTest(int runs, int creations, int reads,
-                                 Map<String, String> replacements)
-            throws IOException {
+    private void createSpeedTest(int runs, int creations, int reads, Map<String, String> replacements) {
         System.gc();
         for (int r = 0; r < runs; r++) {
             Random random = new Random(87);

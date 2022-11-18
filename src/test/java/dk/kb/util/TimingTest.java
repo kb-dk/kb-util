@@ -22,38 +22,32 @@
  */
 package dk.kb.util;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import static org.junit.Assert.*;
-
-public class TimingTest extends TestCase {
+public class TimingTest {
 
     public void testTrivial() throws InterruptedException {
         Timing timing = new Timing("foo");
         Thread.sleep(50);
 
         long ms = timing.getMS();
-        assertTrue("Timing info should be >= sleep time (50ms) but was " + ms, ms >= 50);
+        assertTrue(ms >= 50,
+                   "Timing info should be >= sleep time (50ms) but was " + ms);
 
         long ns = timing.getNS();
-        assertTrue("Timing info should be >= sleep time (50*1000000ns) but was " + ns, ns >= 50*1000000);
+        assertTrue(ns >= 50*1000000,
+                   "Timing info should be >= sleep time (50*1000000ns) but was " + ns);
     }
 
     public void testSub() throws InterruptedException {
         Timing timing = new Timing("foo");
         Thread.sleep(50);
         Timing subA = timing.getChild("sub_a", null, "blob");
-        assertEquals("Adding 30 ms should return 30 ms", 30, subA.addMS(30));
-        assertEquals("Adding 10 ms extra should return 40 ms", 40, subA.addMS(10));
+        assertEquals(30, subA.addMS(30),
+                     "Adding 30 ms should return 30 ms");
+        assertEquals(40, subA.addMS(10),
+                     "Adding 10 ms extra should return 40 ms");
         timing.getChild("sub_b", "#87");
         timing.getChild("sub_c").addNS(3*1000000);
         timing.getChild("sub_d").getChild("sub_d_a");

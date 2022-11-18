@@ -47,7 +47,7 @@ public class MutablePair<L,R> {
             return false;
         }
 
-        MutablePair pair = (MutablePair) o;
+        MutablePair<?, ?> pair = (MutablePair<?, ?>) o;
 
         if (left != null ? !left.equals(pair.left) : pair.left != null) {
             return false;

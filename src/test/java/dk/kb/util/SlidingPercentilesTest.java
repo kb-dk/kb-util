@@ -23,9 +23,14 @@
 package dk.kb.util;
 
 
+import dk.kb.util.string.Strings;
+
 import java.util.Random;
 
-public class SlidingPercentilesTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
+public class SlidingPercentilesTest {
 
     public static final double FUZZY = 0.001; // For comparing doubles
     public static final Random random = new Random();
@@ -58,8 +63,8 @@ public class SlidingPercentilesTest extends TestCase {
                 sum += rNum;
                 slider.add(rNum);
             }
-            assertEquals("The percentile average should match explicit average in run " + r,
-                         sum * 1.0 / COUNT, slider.getAverage());
+            assertEquals(sum * 1.0 / COUNT, slider.getAverage(),
+                         "The percentile average should match explicit average in run " + r);
         }
     }
 
@@ -79,8 +84,8 @@ public class SlidingPercentilesTest extends TestCase {
                 slider.add(rNum);
                 delayed.add(rNum);
             }
-            assertEquals("The median for delayed and non-delayed should be equal",
-                         delayed.getMedian(), slider.getMedian());
+            assertEquals(delayed.getMedian(), slider.getMedian(),
+                         "The median for delayed and non-delayed should be equal");
         }
     }
 

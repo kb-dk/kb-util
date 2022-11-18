@@ -19,7 +19,7 @@
  */
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.Strings;
+import dk.kb.util.string.Strings;
 
 import java.io.IOException;
 import java.io.Reader;

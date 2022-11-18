@@ -23,6 +23,9 @@
 package dk.kb.util;
 
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * Created by IntelliJ IDEA.
  * User: mikkel
@@ -30,15 +33,7 @@ package dk.kb.util;
  * Time: 4:47:40 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ProfilerTest extends TestCase {
-
-    public void setUp() throws Exception {
-
-    }
-
-    public void tearDown() throws Exception {
-
-    }
+public class ProfilerTest {
 
     public void testPausing() throws Exception {
         Profiler profiler = new Profiler();
@@ -49,22 +44,21 @@ public class ProfilerTest extends TestCase {
         profiler.beat();
         profiler.pause();
         long spend = profiler.getSpendMilliseconds();
-        assertTrue("The spend time should be around 250ms",
-                   spend >= 250 && spend < 400); // A bit of a hack
+        assertTrue(spend >= 250 && spend < 400,
+                   "The spend time should be around 250ms"); // A bit of a hack
         double bps = profiler.getBps();
         Thread.sleep(200);
-        assertEquals("After sleping, the spend time should be the same as "
-                     + "before", spend, profiler.getSpendMilliseconds());
-        assertEquals("After sleping, the bps should be the same as before",
-                     bps, profiler.getBps());
+        assertEquals(spend, profiler.getSpendMilliseconds(),
+                     "After sleping, the spend time should be the same as before");
+        assertEquals(bps, profiler.getBps(),
+                     "After sleping, the bps should be the same as before");
         profiler.unpause();
         double spendUnpaused = profiler.getSpendMilliseconds();
-        assertTrue("After unpausing, spend time should be nearly unchanged",
-                   Math.abs(spend - spendUnpaused) < 50);
+        assertTrue(Math.abs(spend - spendUnpaused) < 50,
+                   "After unpausing, spend time should be nearly unchanged");
         Thread.sleep(50);
-        assertTrue("After sleeping after unpaused, spend time should increase",
-                   Math.abs(spendUnpaused - profiler.getSpendMilliseconds())
-                   >= 50);
+        assertTrue(Math.abs(spendUnpaused - profiler.getSpendMilliseconds()) >= 50,
+                   "After sleeping after unpaused, spend time should increase");
     }
 
 }

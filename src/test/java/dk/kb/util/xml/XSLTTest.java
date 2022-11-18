@@ -19,17 +19,13 @@
  */
 package dk.kb.util.xml;
 
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Profiler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import dk.kb.util.Profiler;
+import dk.kb.util.Resolver;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
@@ -37,62 +33,54 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class XSLTTest {
-    private static Log log = LogFactory.getLog(XSLTTest.class);
-
-
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-
-    }
+    private static Logger log = LoggerFactory.getLogger(XSLTTest.class);
 
     @Test
     public void testSimpletransformation() throws TransformerException, IOException {
         URL xslt1 = getURL("data/xml/trivial_transform1.xslt");
-        String input = Files.loadString(new File(getURL("data/xml/trivial_input.xml").getFile()));
-        String expected1 = Files.loadString(new File(getURL("data/xml/expected1.xml").getFile()));
+        
+        String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
+        String expected1 = Resolver.resolveUTF8String("data/xml/expected1.xml");
         String result = XSLT.transform(xslt1, input);
-        assertEquals("Sample 1 should transform correctly",
-                     trim(expected1), trim(result));
+        assertEquals(trim(expected1), trim(result),
+                     "Sample 1 should transform correctly");
 
         URL xslt2 = getURL("data/xml/trivial_transform2.xslt");
-        String expected2 = Files.loadString(new File(getURL("data/xml/expected2.xml").getFile()));
+        String expected2 = Resolver.resolveUTF8String("data/xml/expected2.xml");
         result = XSLT.transform(xslt2, input);
-        assertEquals("Sample 2 should transform correctly",
-                     trim(expected2), trim(result));
+        assertEquals(trim(expected2), trim(result),
+                     "Sample 2 should transform correctly");
     }
 
     @Test
     public void testPoolTest() throws TransformerException, IOException {
         XSLT.TransformerPool pool = new XSLT.TransformerPool(5);
-        String input = Files.loadString(new File(getURL("data/xml/trivial_input.xml").getFile()));
+        String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
         {
             URL xslt1 = getURL("data/xml/trivial_transform1.xslt");
-            String expected1 = Files.loadString(new File(getURL("data/xml/expected1.xml").getFile()));
+            String expected1 = Resolver.resolveUTF8String("data/xml/expected1.xml");
             String result = pool.transform(xslt1, input, false);
-            assertEquals("Sample 1 should transform correctly",
-                         trim(expected1), trim(result));
+            assertEquals(trim(expected1), trim(result),
+                         "Sample 1 should transform correctly");
         }
 
         {
             URL xslt2 = getURL("data/xml/trivial_transform2.xslt");
-            String expected2 = Files.loadString(new File(getURL("data/xml/expected2.xml").getFile()));
+            String expected2 = Resolver.resolveUTF8String("data/xml/expected2.xml");
             String result = pool.transform(xslt2, input, false);
-            assertEquals("Sample 2 should transform correctly",
-                         trim(expected2), trim(result));
+            assertEquals(trim(expected2), trim(result),
+                         "Sample 2 should transform correctly");
         }
     }
 
@@ -106,10 +94,10 @@ public class XSLTTest {
         Properties properties = new Properties();
         properties.put("keyword", "foo");
         URL xslt1 = getURL("data/xml/parameter_transform.xslt");
-        String input = Files.loadString(new File(getURL("data/xml/trivial_input.xml").getFile()));
-        String expected1 = Files.loadString(new File(getURL("data/xml/parameter_expected.xml").getFile()));
-        assertEquals("Parameter should transform correctly",
-                     trim(expected1), trim(XSLT.transform(xslt1, input, properties)));
+        String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
+        String expected1 = Resolver.resolveUTF8String("data/xml/parameter_expected.xml");
+        assertEquals(trim(expected1), trim(XSLT.transform(xslt1, input, properties)),
+                     "Parameter should transform correctly");
 
     }
     @Test
@@ -132,13 +120,12 @@ public class XSLTTest {
         transformationCount.set(0);
         fullStop = false;
 
-        String input = Files.loadString(new File(getURL("data/xml/trivial_input.xml").getFile()));
+        String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
         List<URL> xslts = new ArrayList<URL>(TESTS);
         List<String> expected = new ArrayList<String>(TESTS);
         for (int i = 1; i <= TESTS; i++) {
             xslts.add(getURL("data/xml/trivial_transform" + i + ".xslt"));
-            expected.add(Files.loadString(new File(getURL(
-                    "data/xml/expected" + i + ".xml").getFile())));
+            expected.add(Resolver.resolveUTF8String("data/xml/expected" + i + ".xml"));
         }
         // Make and start threads
         //noinspection MismatchedQueryAndUpdateOfCollection
@@ -157,10 +144,10 @@ public class XSLTTest {
             thread.join();
         }
         log.debug("Finished " + transformationCount.get() + " transformations");
-        assertEquals(String.format(
-                "The amount of transformations should be threadCount * runs "
-                + "(%d * %d)", threadCount, runs),
-                     threadCount * runs, transformationCount.get());
+        assertEquals(threadCount * runs, transformationCount.get(),
+                     String.format(Locale.ROOT,
+                                   "The amount of transformations should be threadCount * runs (%d * %d)", 
+                                   threadCount, runs));
     }
 
     private static AtomicInteger transformationCount = new AtomicInteger();
@@ -242,29 +229,28 @@ public class XSLTTest {
     @Test
     public void testFaultyRemoveNamespace() throws Exception {
         URL xslt = XSLTTest.getURL("data/xml/namespace_transform.xslt");
-        String input = Files.loadString(new File(XSLTTest.getURL("data/xml/namespace_input.xml").getFile()));
-        String expected = Files.loadString(new File(XSLTTest.getURL(
-                "data/xml/namespace_expected_faulty.xml").getFile()));
+        String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
+        String expected = Resolver.resolveUTF8String(
+                "data/xml/namespace_expected_faulty.xml");
         assertEquals("Fault namespaces should give faulty output",
                      trim(expected), trim(XSLT.transform(xslt, input)));
     }
     @Test
     public void testCorrectRemoveNamespace() throws Exception {
         URL xslt = XSLTTest.getURL("data/xml/namespace_transform.xslt");
-        String input = Files.loadString(new File(XSLTTest.getURL("data/xml/namespace_input.xml").getFile()));
-        String expected = Files.loadString(new File(XSLTTest.getURL(
-                "data/xml/namespace_expected_correct.xml").getFile()));
+        String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
+        String expected = Resolver.resolveUTF8String(
+                "data/xml/namespace_expected_correct.xml");
         assertEquals("Fault namespaces should give faulty output",
                      trim(expected), trim(XSLT.transform(xslt, input, true)));
     }
 
-    @Test
-    @Ignore
+    // disabled@Test
     public void testNoNamespaceSpeed() throws Exception {
         int OUTER = 10;
         int RUNS = 5000;
         URL xslt = XSLTTest.getURL("data/xml/namespace_transform.xslt");
-        String input = Files.loadString(new File(XSLTTest.getURL("data/xml/namespace_input.xml").getFile()));
+        String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
 
         Profiler profiler = new Profiler(RUNS);
         for (int outer = 0; outer < OUTER; outer++) {
@@ -309,12 +295,11 @@ public class XSLTTest {
                                + " namespace-keeping transformation/second\n");
         }
     }
-    @Test
-    @Ignore
+    //Disabled @Test
     public void tsestBurnNoNamespace() throws Exception {
         int RUNS = 50000;
         URL xslt = XSLTTest.getURL("data/xml/namespace_transform.xslt");
-        String input = Files.loadString(new File(XSLTTest.getURL("data/xml/namespace_input.xml").getFile()));
+        String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
 
         Profiler profiler = new Profiler(RUNS);
         for (int i = 0; i < RUNS; i++) {
@@ -325,8 +310,8 @@ public class XSLTTest {
     }
 
     /*public void testNamespaceRemove() throws Exception {
-        String input = Files.loadString(new File(XSLTTest.getURL(
-                "data/xml/namespace_input.xml").getFile()));
+        String input = Resolver.resolveUTF8String(
+                "data/xml/namespace_input.xml");
         System.out.println(XSLT.removeNamespaces(
                 new StringBufferInputStream(input)).toString("utf-8"));
     }*/

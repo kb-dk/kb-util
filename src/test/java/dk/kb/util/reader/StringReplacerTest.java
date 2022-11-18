@@ -1,8 +1,6 @@
 package dk.kb.util.reader;
 
-import dk.statsbiblioteket.util.Strings;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import dk.kb.util.string.Strings;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -11,43 +9,28 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * ReplaceReader Tester.
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class StringReplacerTest extends TestCase {
-    public StringReplacerTest(String name) {
-        super(name);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public static Test suite() {
-        return new TestSuite(StringReplacerTest.class);
-    }
+public class StringReplacerTest {
 
     public void testSimpleReplacement() throws IOException {
         Map<String, String> map = new HashMap<String, String>(10);
         map.put("a", "foo");
         map.put("b", "bar");
-        assertEquals("Simple replacement should work",
-                     "mfoonyfooffool bar", getReplaced(map, "manyafal b"));
+        assertEquals("mfoonyfooffool bar", getReplaced(map, "manyafal b"),
+                     "Simple replacement should work");
     }
 
     public void testTrivialReplacement() throws IOException {
         Map<String, String> map = new HashMap<String, String>(10);
         map.put("a", "foo");
         map.put("b", "bar");
-        assertEquals("Trivial replacement should work",
-                     "foo", getReplaced(map, "a"));
+        assertEquals("foo", getReplaced(map, "a"),
+                     "Trivial replacement should work");
     }
 
     public static final String JAVASCRIPT =
@@ -61,8 +44,8 @@ public class StringReplacerTest extends TestCase {
     public void testComplex() throws Exception {
         Map<String, String> rules = new HashMap<String, String>(10);
         rules.put(JAVASCRIPT, "");
-        assertEquals("Complex replacement should work",
-                     "foo", getReplaced(rules, JAVASCRIPT + "foo"));
+        assertEquals("foo", getReplaced(rules, JAVASCRIPT + "foo"),
+                     "Complex replacement should work");
     }
 
     public void testLongTargetOnStream() throws Exception {
@@ -75,7 +58,8 @@ public class StringReplacerTest extends TestCase {
         while ((c = replacedReader.read()) != -1) {
             out.write(c);
         }
-        assertEquals("Target should be removed", "foo", out.toString());
+        assertEquals("foo", out.toString(),
+                     "Target should be removed");
 
     }
 
@@ -83,8 +67,8 @@ public class StringReplacerTest extends TestCase {
         Map<String, String> map = new HashMap<String, String>(10);
         map.put("a", "foo");
         map.put("aa", "bar");
-        assertEquals("Priority should work for foo and bar",
-                     "barfoo", getReplaced(map, "aaa"));
+        assertEquals("barfoo", getReplaced(map, "aaa"),
+                     "Priority should work for foo and bar");
     }
 
     public void testPriority2() throws IOException {
@@ -92,8 +76,8 @@ public class StringReplacerTest extends TestCase {
         map.put("a", "foo");
         map.put("aa", "bar");
         map.put("aaa", "zoo");
-        assertEquals("Zoo-priority should work",
-                     "zoo", getReplaced(map, "aaa"));
+        assertEquals("zoo", getReplaced(map, "aaa"),
+                     "Zoo-priority should work");
     }
 
     public void testMisc() throws IOException {
@@ -102,20 +86,20 @@ public class StringReplacerTest extends TestCase {
         map.put("aa", "bar");
         map.put("aaa", "zoo");
         //noinspection DuplicateStringLiteralInspection
-        assertEquals("None-test should work",
-                     "ffreege", getReplaced(map, "ffreege"));
+        assertEquals("ffreege", getReplaced(map, "ffreege"),
+                     "None-test should work");
 
         map.put("baa", "zap");
-        assertEquals("Mix-test should work",
-                     "barzapfoo", getReplaced(map, "aabaaa"));
+        assertEquals("barzapfoo", getReplaced(map, "aabaaa"),
+                     "Mix-test should work");
 
-        assertEquals("no-input-test should work",
-                     "", getReplaced(map, ""));
+        assertEquals("", getReplaced(map, ""),
+                     "no-input-test should work");
 
         map.clear();
         //noinspection DuplicateStringLiteralInspection
-        assertEquals("No-rules-test should work",
-                     "klamm", getReplaced(map, "klamm"));
+        assertEquals("klamm", getReplaced(map, "klamm"),
+                     "No-rules-test should work");
 
     }
 
@@ -127,16 +111,16 @@ public class StringReplacerTest extends TestCase {
             for (int j = 0; j < i; j++) {
                 sw.append(Integer.toString(j % 10));
             }
-            assertEquals("Input of length " + i + " should work",
-                         sw.toString(), getReplaced(map, sw.toString()));
+            assertEquals(sw.toString(), getReplaced(map, sw.toString()),
+                         "Input of length " + i + " should work");
         }
     }
 
     public void testBufferSizePlusOne() throws Exception {
         Map<String, String> map = new HashMap<String, String>(10);
         map.put("a", "foo");
-        assertEquals("Input of length 11 should work",
-                     "12345678901", getReplaced(map, "12345678901"));
+        assertEquals("12345678901", getReplaced(map, "12345678901"),
+                     "Input of length 11 should work");
     }
 
     private String getReplaced(Map<String, String> map, String source)

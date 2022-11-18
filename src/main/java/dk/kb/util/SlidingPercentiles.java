@@ -1,6 +1,6 @@
 package dk.kb.util;
 
-import dk.statsbiblioteket.util.reader.CircularIntBuffer;
+import dk.kb.util.reader.CircularIntBuffer;
 
 import java.util.Arrays;
 
