@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project default="all" name="sbutil" basedir=".">
+<project default="all" name="sbutil" basedir="">
 
     <property name="project.name" value="sbutil"/>
     <property name="project.version.variant" value=""/>
@@ -262,10 +262,10 @@
             <fileset dir="${build.dir}" includes="dk/**/*"/>
             <fileset dir="${build.dir}" includes="com/**/*"/>
             <fileset dir="${config.dir}" includes="log4j.xml"/>
-            <fileset dir="${basedir}" file="${xstream.license}"/>
-            <fileset dir="${basedir}" file="${commons.cli.license}"/>
-            <fileset dir="${basedir}" file="${commons.logging.license}"/>
-            <fileset dir="${basedir}" file="${log4j.license}"/>
+            <fileset dir="/data" file="${xstream.license}"/>
+            <fileset dir="/data" file="${commons.cli.license}"/>
+            <fileset dir="/data" file="${commons.logging.license}"/>
+            <fileset dir="/data" file="${log4j.license}"/>
         </copy>
         <delete dir="${qa-scan.dir}/META-INF"/>
 
