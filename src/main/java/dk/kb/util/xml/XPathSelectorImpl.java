@@ -1,20 +1,22 @@
 package dk.kb.util.xml;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 public class XPathSelectorImpl implements XPathSelector {
 
-    private static final Log log = LogFactory.getLog(XPathSelector.class);
+    private static final Logger log = LoggerFactory.getLogger(XPathSelector.class);
 
     /**
      * Importatnt: All access to the xpathCompiler should be synchronized on it
@@ -92,6 +94,15 @@ public class XPathSelectorImpl implements XPathSelector {
         //        The local expression cache helps, but anyway...
         return (String) selectObject(node, xpath, XPathConstants.STRING);
     }
+
+    @Override
+    public List<String> selectStringList(Node dom, String xpath) {
+        return XpathUtils.nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET))
+                  .stream()
+                  .map(node -> node.getNodeValue())
+                  .collect(Collectors.toList());
+    }
+
 
     @Override
     public String selectString(Node node, String xpath) {

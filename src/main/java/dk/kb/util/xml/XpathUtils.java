@@ -160,8 +160,8 @@ public class XpathUtils {
         }
         
         @Override
-        public List<Node> selectNodeList(Node dom, String xpath) {
-            return nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET));
+        public NodeList selectNodeList(Node dom, String xpath) {
+            return (NodeList) nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET));
         }
         
         @Override

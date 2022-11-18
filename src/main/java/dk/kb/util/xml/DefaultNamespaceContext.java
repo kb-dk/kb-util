@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;

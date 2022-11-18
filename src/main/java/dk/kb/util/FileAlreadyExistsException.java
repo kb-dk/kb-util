@@ -22,18 +22,13 @@
  */
 package dk.kb.util;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.io.File;
 import java.io.IOException;
-
 
 /**
  * This exception is thrown when a method would overwrite
  * an existing file.
  */
-@QAInfo(state = QAInfo.State.QA_NEEDED,
-        level = QAInfo.Level.NORMAL)
 public class FileAlreadyExistsException extends IOException {
 
     private String filename;

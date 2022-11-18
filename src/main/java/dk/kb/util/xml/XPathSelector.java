@@ -1,6 +1,7 @@
 package dk.kb.util.xml;
 
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.List;
 
@@ -118,10 +119,10 @@ public interface XPathSelector {
      * @param xpath the xpath for the Node list.
      * @return the NodeList requested or an empty NodeList if unattainable
      */
-    public List<Node> selectNodeList(Node node, String xpath);
+    NodeList selectNodeList(Node node, String xpath);
     
     List<String> selectStringList(Node dom, String xpath);
-    
+
     /**
      * Select the Node with the given XPath.
      *
