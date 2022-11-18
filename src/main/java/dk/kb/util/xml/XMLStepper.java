@@ -21,6 +21,7 @@ import dk.kb.util.string.Strings;
 
 import javax.xml.stream.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -77,7 +78,7 @@ public class XMLStepper {
                         fail = !reduceStack(tagStack, currentTag);
                     }
                     if (fail) {
-                        throw new IllegalStateException(String.format(
+                        throw new IllegalStateException(String.format(Locale.ROOT, 
                                 "Encountered end tag '%s' where '%s' from the stack %s were expected",
                                 currentTag, tagStack.get(tagStack.size() - 1), Strings.join(tagStack, ", ")));
                     }
@@ -90,7 +91,7 @@ public class XMLStepper {
             try {
                 xml.next();
             } catch (XMLStreamException e) {
-                throw new XMLStreamException(String.format(
+                throw new XMLStreamException(String.format(Locale.ROOT, 
                         "XMLStreamException with lenient=%b, stack=[%s], type=%s, content='%s'",
                         lenient, Strings.join(tagStack), XMLUtil.eventID2String(xml.getEventType()),
                         xml.getEventType() == XMLStreamReader.CHARACTERS ? xml.getText() : "N/A"),
@@ -189,7 +190,7 @@ public class XMLStepper {
         out.writeStartElement("a");
         pipeXML(in, out, failOnError, onlyInner);
         out.flush();
-        String xml = os.toString();
+        String xml = os.toString(StandardCharsets.UTF_8);
         // TODO: How can this ever be less than 3? A search for 'foo' against summon has this problem in the test gui
         return xml.length() < 3 ? "" : xml.substring(3); // We remove the start <a> from the String
     }
@@ -217,7 +218,7 @@ public class XMLStepper {
                     throw new IOException("Unable to construct XML reader", e);
                 }
                 try {
-                    xmlOut = xmlOutFactory.createXMLStreamWriter(new OutputStreamWriter(out, "utf-8"));
+                    xmlOut = xmlOutFactory.createXMLStreamWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
                 } catch (XMLStreamException e) {
                     throw new IOException("Unable to construct XML reader", e);
                 }
@@ -387,7 +388,7 @@ public class XMLStepper {
                             break;
                         case called_next: // callback handled the element so we do not pipe the END_ELEMENT
                             if (XMLStreamReader.END_ELEMENT != in.getEventType()) {
-                                throw new IllegalStateException(String.format(
+                                throw new IllegalStateException(String.format(Locale.ROOT, 
                                         "Callback for %s returned calles_next, but did not position the XML stream at "
                                         + "END_ELEMENT. Current eventType is %s",
                                         Strings.join(elementStack, ", "),
@@ -416,7 +417,7 @@ public class XMLStepper {
                     }
                     String element = in.getLocalName();
                     if (!element.equals(elementStack.get(elementStack.size()-1))) {
-                        throw new IllegalStateException(String.format(
+                        throw new IllegalStateException(String.format(Locale.ROOT, 
                                 "Encountered end tag '%s' where '%s' from the stack %s were expected",
                                 element, elementStack.get(elementStack.size()-1), Strings.join(elementStack, ", ")));
                     }
@@ -1074,7 +1075,7 @@ public class XMLStepper {
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(xml));
         limitXML(in, out, limits, countPatterns, onlyCheckElementPaths, discardNonMatched);
-        return os.toString();
+        return os.toString(StandardCharsets.UTF_8);
     }
 
     /**

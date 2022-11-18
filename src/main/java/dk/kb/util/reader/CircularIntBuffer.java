@@ -25,6 +25,7 @@ package dk.kb.util.reader;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 
 /**
@@ -300,14 +301,12 @@ public class CircularIntBuffer implements Iterable<Integer> {
     public CircularIntBuffer subSequence(int start, int end) {
         if (end < start) {
             throw new IllegalArgumentException(String.format(
-                    "Ending point, %s, is before starting point, %s, for subsequence",
+                    Locale.ROOT, "Ending point, %s, is before starting point, %s, for subsequence",
                     end, start));
         } else if (start < 0) {
-            throw new IllegalArgumentException(
-                    "Starting point for subSequence is negative: " + start);
+            throw new IllegalArgumentException("Starting point for subSequence is negative: " + start);
         } else if (end > length()) {
-            throw new ArrayIndexOutOfBoundsException(
-                    "Ending point of subSequence is past buffer end: " + end);
+            throw new ArrayIndexOutOfBoundsException("Ending point of subSequence is past buffer end: " + end);
         }
 
         CircularIntBuffer child = new CircularIntBuffer(length(), getMaximumCapacity());

@@ -1,6 +1,7 @@
 package dk.kb.util.xml;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -33,6 +34,7 @@ public class XPathSelectorImplTest {
         assertNotNull(dom);
     }
 
+    @Test
     public void testSelectInteger() {
         Integer i = selector.selectInteger(dom, "asdfg");
         assertEquals(null, i);
@@ -44,6 +46,7 @@ public class XPathSelectorImplTest {
         assertEquals(27, i.intValue());
     }
 
+    @Test
     public void testSelectDouble() {
         Double d = selector.selectDouble(dom, "asdfg");
         assertEquals(null, d);
@@ -55,6 +58,7 @@ public class XPathSelectorImplTest {
         assertEquals(1.1234, d);
     }
 
+    @Test
     public void testSelectBoolean() {
         Boolean b = selector.selectBoolean(dom, "asdfg");
         assertEquals(Boolean.FALSE, b);
@@ -88,6 +92,7 @@ public class XPathSelectorImplTest {
         assertEquals(Boolean.FALSE, b);
     }
 
+    @Test
     public void testSelectString() {
         String s = selector.selectString(dom, "asdfg");
         assertEquals("", s);
@@ -105,6 +110,7 @@ public class XPathSelectorImplTest {
         assertEquals("foobar", s);
     }
 
+    @Test
     public void testSelectNode() {
         Node n = selector.selectNode(dom, "asdfg");
         assertEquals(null, n);
@@ -113,6 +119,7 @@ public class XPathSelectorImplTest {
         assertSame(dom.getFirstChild(), n);
     }
 
+    @Test
     public void testSelectNodeList() {
         NodeList l = selector.selectNodeList(dom, "asdfg");
         assertEquals(0, l.getLength());
@@ -124,6 +131,7 @@ public class XPathSelectorImplTest {
         assertEquals(8, l.getLength());
     }
 
+    @Test
     public void testNamespaceSwitch() {
         Double d;
 

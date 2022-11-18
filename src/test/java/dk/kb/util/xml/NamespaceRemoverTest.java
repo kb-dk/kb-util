@@ -24,6 +24,7 @@ import dk.kb.util.reader.CircularCharBuffer;
 import dk.kb.util.string.Strings;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -60,8 +61,8 @@ public class NamespaceRemoverTest {
     }
 
     public void testCleanFile() throws Exception {
-        Reader in = new InputStreamReader(new FileInputStream(new File(
-                XSLTTest.getURL("data/xml/namespace_input.xml").getFile())));
+        Reader in = new InputStreamReader(new FileInputStream(
+                XSLTTest.getURL("data/xml/namespace_input.xml").getFile()), StandardCharsets.UTF_8);
         String expected = Files.loadString(new File(
                 XSLTTest.getURL("data/xml/namespace_removed.xml").getFile()));
         Reader sanitized = new NamespaceRemover(in);
@@ -71,8 +72,8 @@ public class NamespaceRemoverTest {
     }
 
     public void testSpecificProblem() throws Exception {
-        Reader in = new InputStreamReader(new FileInputStream(new File(
-                XSLTTest.getURL("data/xml/specific_problem.xml").getFile())));
+        Reader in = new InputStreamReader(new FileInputStream(
+                XSLTTest.getURL("data/xml/specific_problem.xml").getFile()), StandardCharsets.UTF_8);
         Reader sanitized = new NamespaceRemover(in);
         String actual = Strings.flush(sanitized);
         System.out.println(actual);

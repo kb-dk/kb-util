@@ -23,6 +23,7 @@
 package dk.kb.util.string;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -279,7 +280,7 @@ public class Strings {
      * @throws IOException if failing to read from {@code in}
      */
     public static String flush(InputStream in) throws IOException {
-        return flush(new InputStreamReader(in));
+        return flush(new InputStreamReader(in, StandardCharsets.UTF_8));
     }
 
     /**
@@ -315,7 +316,7 @@ public class Strings {
      * @throws RuntimeException if failing to read from {@code in}
      */
     public static String flushLocal(InputStream in) {
-        return flushLocal(new InputStreamReader(in));
+        return flushLocal(new InputStreamReader(in, StandardCharsets.UTF_8));
     }
 
     /**

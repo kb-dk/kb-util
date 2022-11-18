@@ -2,6 +2,7 @@ package dk.kb.util.xml;
 
 import dk.kb.util.string.Strings;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -46,6 +47,7 @@ public class DOMSelectTest {
         assertNotNull(dom);
     }
 
+    @Test
     public void testSelectInteger() {
         Integer i = selectInteger(dom, "asdfg");
         assertEquals(null, i);
@@ -57,6 +59,7 @@ public class DOMSelectTest {
         assertEquals(27, i.intValue());
     }
 
+    @Test
     public void testSelectDouble() {
         Double d = selectDouble(dom, "asdfg");
         assertEquals(null, d);
@@ -68,6 +71,7 @@ public class DOMSelectTest {
         assertEquals(1.1234, d);
     }
 
+    @Test
     public void testSelectBoolean() {
         Boolean b = selectBoolean(dom, "asdfg");
         assertEquals(Boolean.FALSE, b);
@@ -82,6 +86,7 @@ public class DOMSelectTest {
         assertEquals(Boolean.TRUE, b);
     }
 
+    @Test
     public void testSelectString() {
         String s = selectString(dom, "asdfg");
         assertEquals("", s);
@@ -99,6 +104,7 @@ public class DOMSelectTest {
         assertEquals("foobar", s);
     }
 
+    @Test
     public void testSelectNode() {
         Node n = selectNode(dom, "asdfg");
         assertEquals(null, n);
@@ -107,6 +113,7 @@ public class DOMSelectTest {
         assertSame(dom.getFirstChild(), n);
     }
 
+    @Test
     public void testSelectNodeList() {
         NodeList l = selectNodeList(dom, "asdfg");
         assertEquals(0, l.getLength());
@@ -183,10 +190,12 @@ public class DOMSelectTest {
     }
 
     // TODO not stable, reason should be found.
+    @Test
     public void testThreadsBlowCache() throws Exception {
         threadTest(true);
     }
 
+    @Test
     public void testThreadsWithCache() throws Exception {
         threadTest(false);
     }

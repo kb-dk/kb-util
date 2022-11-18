@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -359,7 +360,7 @@ public class XMLStepperTest {
             reduced = XMLStepper.limitXML(SAMPLE, limits, false, false, false);
             profiler.beat();
         }
-        log.info(String.format(
+        log.info(String.format(Locale.ROOT, 
                 "Reduced %d blocks @ %dKB to %dKB at %.1f reductions/sec",
                 RUNS, SAMPLE.length() / 1024, reduced.length() / 1024, profiler.getBps(false)));
         assertTrue(reduced.contains("<datafield tag=\"LOC\""),
@@ -396,7 +397,7 @@ public class XMLStepperTest {
             reduced = limiter.limit(SAMPLE);
             profiler.beat();
         }
-        log.info(String.format(
+        log.info(String.format(Locale.ROOT, 
                 "Reduced %d blocks @ %dKB to %dKB at %.1f reductions/sec",
                 RUNS, SAMPLE.length() / 1024, reduced.length() / 1024, profiler.getBps(false)));
         assertTrue(reduced.contains("<datafield tag=\"LOC\""),
@@ -472,7 +473,7 @@ public class XMLStepperTest {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         XMLStepper.limitXML(in, out, lims, countPatterns, onlyElementMatch, discardNonMatched);
-        assertEquals(expected, os.toString(),
+        assertEquals(expected, os.toString(StandardCharsets.UTF_8),
                      "The input should be reduced properly for limits " + Strings.join(limits));
         assertLimitConvenience(input, expected, countPatterns, onlyElementMatch, discardNonMatched, limits);
         assertLimitPersistent(input, expected, countPatterns, onlyElementMatch, discardNonMatched, limits);
@@ -540,7 +541,7 @@ public class XMLStepperTest {
             out.writeStartElement("foo");
             out.writeEndElement();
             out.flush();
-            return "<foo />".equals(os.toString());
+            return "<foo />".equals(os.toString(StandardCharsets.UTF_8));
         } catch (XMLStreamException e) {
             throw new RuntimeException("Unable to determine if XMLStreamWriter collapses empty elements", e);
         }
@@ -563,7 +564,7 @@ public class XMLStepperTest {
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(SAMPLE));
         XMLStepper.pipeXML(in, out, false);
-        assertEquals(SAMPLE, os.toString(),
+        assertEquals(SAMPLE, os.toString(StandardCharsets.UTF_8),
                      "Piped stream should match input stream");
     }
 

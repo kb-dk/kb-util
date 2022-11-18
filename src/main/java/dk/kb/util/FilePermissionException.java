@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +9,7 @@ import java.io.IOException;
  */
 public class FilePermissionException extends IOException {
 
-    private String filename;
+    private final String filename;
 
     /**
      * Create an new instance of a FilePermissionException, for a given file
@@ -19,8 +19,7 @@ public class FilePermissionException extends IOException {
      *                 rights
      * @param required The required, but missing permission
      */
-    public FilePermissionException(String filename,
-                                   Files.Permission required) {
+    public FilePermissionException(String filename, Files.Permission required) {
         super("Insufficient permissions for file '" + filename + "'. File is not " + required);
         this.filename = filename;
     }

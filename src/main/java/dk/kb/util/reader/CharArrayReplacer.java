@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -84,8 +85,8 @@ public class CharArrayReplacer extends ReplaceReader {
             char[] destination = entry.getValue().toCharArray();
             if (target.length != 1) {
                 throw new IllegalArgumentException(String.format(
-                        "The rule '" + entry.getKey() + "' => " + entry.getValue()
-                        + "' was not single char to char array"));
+                        Locale.ROOT, "The rule '" + entry.getKey() + "' => " + entry.getValue()
+                                     + "' was not single char to char array"));
             }
             this.rules[target[0]] = destination;
         }

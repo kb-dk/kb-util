@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.io.IOException;
  */
 public class InvalidFileTypeException extends IOException {
 
-    private String filename;
+    private final String filename;
 
     /**
      * Create an new instance of a FileAlreadyExistsException, referencing a given file

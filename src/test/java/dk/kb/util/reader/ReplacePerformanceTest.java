@@ -347,7 +347,7 @@ public class ReplacePerformanceTest {
                                 0.01, reads, random);
                 profiler.beat();
             }
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT, 
                     "Dry-run created %d sources at %f sources/sec",
                     creations, profiler.getBps(false)));
 
@@ -361,7 +361,7 @@ public class ReplacePerformanceTest {
                 ReplaceFactory.getReplacer(source, replacements);
                 profiler.beat();
             }
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT, 
                     "Created %d replacers from scratch at %f creations/sec",
                     creations, profiler.getBps(false)));
 
@@ -376,7 +376,7 @@ public class ReplacePerformanceTest {
                 factory.getReplacer(source);
                 profiler.beat();
             }
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT, 
                     "Created %d replacers with clone at %f creations/sec",
                     creations, profiler.getBps(false)));
         }

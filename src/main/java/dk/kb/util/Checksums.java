@@ -23,6 +23,7 @@
 package dk.kb.util;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -33,10 +34,10 @@ public class Checksums {
     /**
      * Calculate the checksum of a given {@link InputStream}.
      * The stream is guaranteed to be closed after ended operation.
-     * If you need a  String version of the digest
-     * use {@link Bytes#toHex(byte[])}.
+     * If you need a  String version of the digest use {@link Bytes#toHex(byte[])}.
      *
-     * @param algorithm the algorithm to use to compute the digest. Possbile values can be found in the <a href="http://java.sun.com/j2se/1.5.0/docs/guide/security/CryptoSpec.html">Java CryptoSpec</a>.
+     * @param algorithm the algorithm to use to compute the digest.
+     *                  Possible values can be found in the <a href="http://java.sun.com/j2se/1.5.0/docs/guide/security/CryptoSpec.html">Java CryptoSpec</a>.
      * @param in        the stream to digest
      * @return the computed digest in a byte array
      * @throws IOException              if there is an error reading the input stream
@@ -85,7 +86,7 @@ public class Checksums {
      * @throws NoSuchAlgorithmException if the algorithm was unknown.
      */
     public static byte[] digest(String algorithm, String in) throws NoSuchAlgorithmException {
-        return digest(algorithm, in.getBytes());
+        return digest(algorithm, in.getBytes(StandardCharsets.UTF_8));
     }
 
     /**

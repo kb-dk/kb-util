@@ -25,6 +25,7 @@ package dk.kb.util;
 
 import dk.kb.util.string.Strings;
 
+import java.util.Locale;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -110,8 +111,8 @@ public class SlidingPercentilesTest {
             delayedTime += System.nanoTime();
 
             System.out.println(String.format(
-                    "Run %2d/%d with %d insertions took %3dms at %5dns/insertion for plain and" +
-                    " %3dms at %5dns/insertion for delayed",
+                    Locale.ROOT, "Run %2d/%d with %d insertions took %3dms at %5dns/insertion for plain and" +
+                                 " %3dms at %5dns/insertion for delayed",
                     i+1, RUNS, COUNT, contTime/1000000, contTime/COUNT, delayedTime/1000000, delayedTime/COUNT));
         }
     }
@@ -146,7 +147,7 @@ public class SlidingPercentilesTest {
             && expected > slider.getPercentile(percentile) - FUZZY) {
             return;
         }
-        fail(String.format("The percentile %f for input %s should be %f but was %f",
+        fail(String.format(Locale.ROOT, "The percentile %f for input %s should be %f but was %f",
                            percentile, Strings.join(input), expected, slider.getPercentile(percentile)));
     }
 

@@ -145,7 +145,7 @@ public class XSLTTest {
         }
         log.debug("Finished " + transformationCount.get() + " transformations");
         assertEquals(threadCount * runs, transformationCount.get(),
-                     String.format(Locale.ROOT,
+                     String.format(Locale.ROOT, 
                                    "The amount of transformations should be threadCount * runs (%d * %d)", 
                                    threadCount, runs));
     }

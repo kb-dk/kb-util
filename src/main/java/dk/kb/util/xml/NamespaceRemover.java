@@ -27,6 +27,7 @@ import dk.kb.util.string.Strings;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.CharBuffer;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -260,7 +261,7 @@ public class NamespaceRemover extends ReplaceReader {
                     break;
                 }
                 default:
-                    throw new IllegalStateException(String.format("Mode %s is unknown", mode));
+                    throw new IllegalStateException(String.format(Locale.ROOT, "Mode %s is unknown", mode));
             }
         }
     }

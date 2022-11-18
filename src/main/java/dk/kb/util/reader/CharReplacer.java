@@ -25,6 +25,7 @@ package dk.kb.util.reader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -63,7 +64,7 @@ public class CharReplacer extends ReplaceReader {
             char[] target = entry.getKey().toCharArray();
             char[] destination = entry.getValue().toCharArray();
             if (target.length != 1 || destination.length != 1) {
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "The rule '" + entry.getKey() + "' => '"
                         + entry.getValue() + "' was not single char to single char. The input had length "
                         + entry.getKey().length()));

@@ -13,6 +13,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Thread safe implementation of XPathSelector. This implementation allows for
@@ -80,12 +81,11 @@ public class SynchronousXPathSelector extends XPathSelectorImpl {
             }
         } catch (NullPointerException e) {
             log.debug(String.format(
-                    "NullPointerException when extracting XPath '%s' on " +
-                    "element type %s. Returning null",
+                    Locale.ROOT, "NullPointerException when extracting XPath '%s' on element type %s. Returning null",
                     xpath, returnType.getLocalPart()), e);
         } catch (XPathExpressionException e) {
             log.warn(String.format(
-                    "Error in XPath expression '%s' when selecting %s: %s",
+                    Locale.ROOT, "Error in XPath expression '%s' when selecting %s: %s",
                     xpath, returnType.getLocalPart(), e.getMessage()), e);
         }
 

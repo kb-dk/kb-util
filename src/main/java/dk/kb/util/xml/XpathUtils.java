@@ -186,12 +186,12 @@ public class XpathUtils {
                 
                 retval = exp.evaluate(dom, returnType);
             } catch (NullPointerException e) {
-                log.debug(String.format(Locale.ROOT,
+                log.debug(String.format(Locale.ROOT, 
                                         "NullPointerException when extracting XPath '%s' on " +
                                         "element type %s. Returning null",
                                         xpath, returnType.getLocalPart()), e);
             } catch (XPathExpressionException e) {
-                log.warn(String.format(Locale.ROOT,
+                log.warn(String.format(Locale.ROOT, 
                                        "Error in XPath expression '%s' when selecting %s: %s",
                                        xpath, returnType.getLocalPart(), e.getMessage()), e);
             }

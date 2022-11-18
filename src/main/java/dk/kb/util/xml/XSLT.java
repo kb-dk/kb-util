@@ -30,7 +30,9 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -92,14 +94,16 @@ public class XSLT {
             transformer.setErrorListener(getErrorListener());
         } catch (TransformerException e) {
             throw new TransformerException(String.format(
-                    "Unable to instantiate Transformer, a system configuration error for XSLT at '%s'", xslt), e);
+                    Locale.ROOT, "Unable to instantiate Transformer, a system configuration error for XSLT at '%s'", xslt), e);
         } catch (MalformedURLException e) {
-            throw new TransformerException(String.format("The URL to the XSLT is not a valid URL: '%s'", xslt), e);
+            throw new TransformerException(String.format(
+                    Locale.ROOT, "The URL to the XSLT is not a valid URL: '%s'", xslt), e);
         } catch (IOException e) {
-            throw new TransformerException(String.format("Unable to open the XSLT resource due to IOException '%s'",
-                                                         xslt), e);
+            throw new TransformerException(String.format(
+                    Locale.ROOT, "Unable to open the XSLT resource due to IOException '%s'", xslt), e);
         } catch (Exception e) {
-            throw new TransformerException(String.format("Unable to open the XSLT resource '%s'", xslt), e);
+            throw new TransformerException(String.format(
+                    Locale.ROOT, "Unable to open the XSLT resource '%s'", xslt), e);
         } finally {
             try {
                 if (in != null) {
@@ -211,7 +215,7 @@ public class XSLT {
                 for (Object entryObject : parameters.entrySet()) {
                     Map.Entry entry = (Map.Entry) entryObject;
                     if (entry.getKey() == null || entry.getValue() == null) {
-                        log.warn(String.format("Skipping assignment of key/value pair '%s/%s' to Transformer " +
+                        log.warn(String.format(Locale.ROOT, "Skipping assignment of key/value pair '%s/%s' to Transformer " +
                                                "as null is not an acceptable value",
                                                entry.getKey(), entry.getValue()));
                     }
@@ -442,8 +446,8 @@ public class XSLT {
         if (!ignoreXMLNamespaces) {
             transform(xslt, new ByteArrayInputStream(in), out, parameters);
         } else {
-            Writer writer = new OutputStreamWriter(out);
-            Reader reader = new NamespaceRemover(new InputStreamReader(new ByteArrayInputStream(in)));
+            Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+            Reader reader = new NamespaceRemover(new InputStreamReader(new ByteArrayInputStream(in), StandardCharsets.UTF_8));
             transform(getLocalTransformer(xslt, parameters), reader, writer);
         }
         return out;
@@ -489,8 +493,8 @@ public class XSLT {
         if (!ignoreXMLNamespaces) {
             transform(getLocalTransformer(xslt, parameters), in, out);
         } else {
-            Writer writer = new OutputStreamWriter(out);
-            Reader reader = new NamespaceRemover(new InputStreamReader(in));
+            Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+            Reader reader = new NamespaceRemover(new InputStreamReader(in, StandardCharsets.UTF_8));
             transform(getLocalTransformer(xslt, parameters), reader, writer);
         }
         return out;

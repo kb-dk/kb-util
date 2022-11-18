@@ -2,6 +2,7 @@ package dk.kb.util.reader;
 
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -207,7 +208,7 @@ public class VerbatimMatcherTest {
             return;
         }
         CollectingMatcher matcher = new CollectingMatcher();
-        BufferedReader in = new BufferedReader(new FileReader(INPUT.toFile()));
+        BufferedReader in = new BufferedReader(new FileReader(INPUT.toFile(), StandardCharsets.UTF_8));
         String line;
         int count = 0;
         while ((line = in.readLine()) != null) {

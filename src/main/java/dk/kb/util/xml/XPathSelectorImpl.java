@@ -9,6 +9,7 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.*;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -140,12 +141,11 @@ public class XPathSelectorImpl implements XPathSelector {
             retval = exp.evaluate(dom, returnType);
         } catch (NullPointerException e) {
             log.debug(String.format(
-                    "NullPointerException when extracting XPath '%s' on " +
-                    "element type %s. Returning null",
+                    Locale.ROOT, "NullPointerException when extracting XPath '%s' on element type %s. Returning null",
                     xpath, returnType.getLocalPart()), e);
         } catch (XPathExpressionException e) {
             log.warn(String.format(
-                    "Error in XPath expression '%s' when selecting %s: %s",
+                    Locale.ROOT, "Error in XPath expression '%s' when selecting %s: %s",
                     xpath, returnType.getLocalPart(), e.getMessage()), e);
         }
 

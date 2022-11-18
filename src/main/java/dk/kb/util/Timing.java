@@ -489,7 +489,7 @@ public class Timing {
                     sb.append("last").append(lastNS.get()).append("ns");
                     break;
                 case utilization:
-                    sb.append(String.format("util=%.1f%%", 100.0*getNS()/(System.nanoTime()-objectCreation)));
+                    sb.append(String.format(Locale.ROOT, "util=%.1f%%", 100.0*getNS()/(System.nanoTime()-objectCreation)));
                     break;
                 default: throw new UnsupportedOperationException("The stat '" + stat + "' is not supported yet");
             }

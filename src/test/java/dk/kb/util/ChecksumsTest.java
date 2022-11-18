@@ -22,9 +22,12 @@
  */
 package dk.kb.util;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,7 +71,7 @@ public class ChecksumsTest {
     private void createTestFile() throws Exception {
         File f = new File(testFile1);
         f.getParentFile().mkdirs();
-        PrintWriter p = new PrintWriter(new FileOutputStream(f), true);
+        PrintWriter p = new PrintWriter(new FileOutputStream(f), true, StandardCharsets.UTF_8);
         p.print(testString1);
         p.flush();
         p.close();
@@ -85,7 +88,8 @@ public class ChecksumsTest {
      *
      * @throws Exception
      */
-    public void testSha1String() throws Exception {
+    @Test
+    public void testSha1String() {
         byte[] b = Checksums.sha1(testString1);
         validateChecksum(b);
 
@@ -93,7 +97,8 @@ public class ChecksumsTest {
         assertFalse(Arrays.equals(b, bb));
     }
 
-    public void testMd5String() throws Exception {
+    @Test
+    public void testMd5String()  {
         byte[] b = Checksums.md5(testString1);
         validateChecksum(b);
 
@@ -106,9 +111,9 @@ public class ChecksumsTest {
      * Furthermore check that two different strings doesn't give the same
      * digest.
      *
-     * @throws Exception
      */
-    public void testSha1File() throws Exception {
+    @Test
+    public void testSha1File() {
         byte[] b = Checksums.sha1(inputFile1);
         validateChecksum(b);
 
@@ -121,12 +126,14 @@ public class ChecksumsTest {
      *
      * @throws Exception
      */
+    @Test
     public void testSha1StringFileSanity() throws Exception {
         byte[] b = Checksums.sha1(testString1);
         byte[] bb = Checksums.sha1(new File(testFile1));
         assertTrue(Arrays.equals(b, bb));
     }
 
+    @Test
     public void testMd5StringFileSanity() throws Exception {
         byte[] b = Checksums.sha1(testString1);
         byte[] bb = Checksums.sha1(new File(testFile1));

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.CharBuffer;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 
 /**
@@ -423,7 +424,7 @@ public class CircularCharBuffer implements CharSequence, Iterable<Character> {
     @Override
     public CircularCharBuffer subSequence(int start, int end) {
         if (end < start) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT, 
                     "Ending point, %s, is before starting point, %s, for subsequence",
                     end, start));
         } else if (start < 0) {
