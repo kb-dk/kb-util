@@ -20,19 +20,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
+package dk.kb.util;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Utility methods for handling streams
  */
-@QAInfo(state = QAInfo.State.QA_NEEDED,
-        level = QAInfo.Level.NORMAL)
 public class Streams {
 
     @Deprecated
@@ -100,7 +97,7 @@ public class Streams {
         InputStream in = url.openStream();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream(1000);
         pipe(in, bytes);
-        return bytes.toString("utf-8");
+        return bytes.toString(StandardCharsets.UTF_8);
     }
 
 

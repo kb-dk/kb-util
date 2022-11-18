@@ -20,18 +20,21 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Random;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  *
  */
-public class StreamsTest extends TestCase {
+public class StreamsTest {
 
     private byte[] getByteArray(int length) {
         Random random = new Random();
@@ -40,6 +43,7 @@ public class StreamsTest extends TestCase {
         return result;
     }
 
+    @Test
     public void testPipe() throws Exception {
         int INSIZE = 200;
         byte[] inbytes = getByteArray(INSIZE);
@@ -47,17 +51,20 @@ public class StreamsTest extends TestCase {
         ByteArrayOutputStream out = new ByteArrayOutputStream(500);
         Streams.pipe(in, out);
         byte[] outbytes = out.toByteArray();
-        assertEquals("Input and output streams should be the same size",
-                     inbytes.length, outbytes.length);
+        assertEquals(inbytes.length, outbytes.length,
+                     "Input and output streams should be the same size");
         for (int i = 0; i < INSIZE; i++) {
-            assertEquals("The content at position " + i
-                         + " should be equal. In was " + inbytes[i]
-                         + " out was " + outbytes[i], inbytes[i], outbytes[i]);
+            assertEquals(inbytes[i], outbytes[i],
+                         "The content at position " + i + " should be equal. " +
+                         "In was " + inbytes[i] + " out was " + outbytes[i]);
         }
     }
 
+
+    @Test
     public void testGetResource() throws Exception {
         String myCode = Streams.getUTF8Resource("log4j.xml");
-        assertTrue("Something should be loaded", myCode.length() > 0);
+        assertTrue(myCode.length() > 0,
+                   "Something should be loaded");
     }
 }

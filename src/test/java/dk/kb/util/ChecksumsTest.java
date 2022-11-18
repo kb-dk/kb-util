@@ -20,14 +20,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
-
-import junit.framework.TestCase;
+package dk.kb.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,7 +36,7 @@ import java.util.Arrays;
  * Time: 12:33:09 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ChecksumsTest extends TestCase {
+public class ChecksumsTest {
 
     String inputDir; // build dir for the sbutil installation is used for test input
     String inputFile1; // test input file
