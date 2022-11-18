@@ -17,13 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.reader.CharSequenceReader;
-import dk.statsbiblioteket.util.reader.CircularCharBuffer;
-import dk.statsbiblioteket.util.reader.ReplaceReader;
+import dk.kb.util.reader.CharSequenceReader;
+import dk.kb.util.reader.CircularCharBuffer;
+import dk.kb.util.reader.ReplaceReader;
+import dk.kb.util.string.Strings;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -47,9 +46,6 @@ import java.util.regex.Pattern;
  *
  * The reader is not thread-safe.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
 public class NamespaceRemover extends ReplaceReader {
 //    private static Log log = LogFactory.getLog(NamespaceRemover.class);
 

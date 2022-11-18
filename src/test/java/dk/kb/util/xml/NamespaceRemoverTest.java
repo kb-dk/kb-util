@@ -17,32 +17,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.reader.CircularCharBuffer;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import dk.kb.util.reader.CircularCharBuffer;
+import dk.kb.util.string.Strings;
 
 import java.io.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class NamespaceRemoverTest extends TestCase {
-    public NamespaceRemoverTest(String name) {
-        super(name);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
+public class NamespaceRemoverTest {
 
     public void testRemoveNamespaceInformation() throws Exception {
         String[][] TESTS = new String[][]{
@@ -68,13 +53,9 @@ public class NamespaceRemoverTest extends TestCase {
         for (String[] test : TESTS) {
             CircularCharBuffer out = new CircularCharBuffer(100, 100);
             remover.removeNamespace(test[1], out);
-            assertEquals("The input '" + test[1] + " should process correctly",
-                         test[0], out.toString());
+            assertEquals(test[0], out.toString(),
+                         "The input '" + test[1] + " should process correctly");
         }
-    }
-
-    public static Test suite() {
-        return new TestSuite(NamespaceRemoverTest.class);
     }
 
     public void testCleanFile() throws Exception {
@@ -84,7 +65,8 @@ public class NamespaceRemoverTest extends TestCase {
                 XSLTTest.getURL("data/xml/namespace_removed.xml").getFile()));
         Reader sanitized = new NamespaceRemover(in);
         String actual = Strings.flush(sanitized);
-        assertEquals("Namespaces should be removed", expected, actual);
+        assertEquals(expected, actual,
+                     "Namespaces should be removed");
     }
 
     public void testSpecificProblem() throws Exception {
@@ -107,7 +89,6 @@ public class NamespaceRemoverTest extends TestCase {
         String orig2 = "<bazoo:baroo/>";
         NamespaceRemover ns = new NamespaceRemover(new StringReader(orig1));
         assertEquals("<bar/>", Strings.flushLocal(ns));
-        assertEquals("<baroo/>", Strings.flushLocal(
-                ns.setSource(new StringReader(orig2))));
+        assertEquals("<baroo/>", Strings.flushLocal(ns.setSource(new StringReader(orig2))));
     }
 }
