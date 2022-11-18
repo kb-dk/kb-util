@@ -1,7 +1,7 @@
-package dk.statsbiblioteket.util.xml;
+package dk.kb.util.xml;
 
-import dk.statsbiblioteket.util.Strings;
-import junit.framework.TestCase;
+import dk.kb.util.string.Strings;
+import org.junit.jupiter.api.BeforeEach;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -11,12 +11,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import static dk.statsbiblioteket.util.xml.DOM.*;
+import static dk.kb.util.xml.DOM.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test cases for the {@code DOM.select*} methods
  */
-public class DOMSelectTest extends TestCase {
+public class DOMSelectTest {
 
     static final String SIMPLE_XML =
             DOM.XML_HEADER +
@@ -38,7 +39,7 @@ public class DOMSelectTest extends TestCase {
 
     Document dom;
 
-    @Override
+    @BeforeEach
     public void setUp() {
         clearXPathCache();
         dom = stringToDOM(SIMPLE_XML);

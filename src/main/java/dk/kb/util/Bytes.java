@@ -1,16 +1,10 @@
-package dk.statsbiblioteket.util;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
+package dk.kb.util;
 
 import java.io.IOException;
 
 /**
  * Utillity class for working with bytes, bytearrays, and strings.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
-        author = "kfc, mke",
-        reviewers = {"abr, mke"})
 public class Bytes {
     /**
      * The hexadecimal characters in numeric order from {@code 0-f}

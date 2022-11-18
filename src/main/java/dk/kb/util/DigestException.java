@@ -20,9 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
+package dk.kb.util;
 
 /**
  * A {@link RuntimeException} thrown when there is unexpected errors
@@ -36,8 +34,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * <a href="http://java.sun.com/j2se/1.5.0/docs/guide/security/CryptoSpec.html">Java CryptoSpec</a>. Fx
  * {@code MD5} and {@code SHA-1}.
  */
-@QAInfo(state = QAInfo.State.QA_NEEDED,
-        level = QAInfo.Level.NORMAL)
 public class DigestException extends RuntimeException {
 
     public DigestException(String message) {

@@ -1,6 +1,6 @@
-package dk.statsbiblioteket.util;
+package dk.kb.util;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.util.BytesTest
@@ -8,7 +8,7 @@ import junit.framework.TestCase;
  * @author mke
  * @since Sep 24, 2009
  */
-public class BytesTest extends TestCase {
+public class BytesTest  {
 
     public void testToHexOnMD5Digest() {
         // Contains pairs of inputString followed by the output
