@@ -232,8 +232,8 @@ public class XSLTTest {
         String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
         String expected = Resolver.resolveUTF8String(
                 "data/xml/namespace_expected_faulty.xml");
-        assertEquals("Fault namespaces should give faulty output",
-                     trim(expected), trim(XSLT.transform(xslt, input)));
+        assertEquals(trim(expected), trim(XSLT.transform(xslt, input)),
+                     "Fault namespaces should give faulty output");
     }
     @Test
     public void testCorrectRemoveNamespace() throws Exception {
@@ -241,8 +241,8 @@ public class XSLTTest {
         String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
         String expected = Resolver.resolveUTF8String(
                 "data/xml/namespace_expected_correct.xml");
-        assertEquals("Fault namespaces should give faulty output",
-                     trim(expected), trim(XSLT.transform(xslt, input, true)));
+        assertEquals(trim(expected), trim(XSLT.transform(xslt, input, true)),
+                     "Fault namespaces should give faulty output");
     }
 
     // disabled@Test
