@@ -225,9 +225,9 @@ public class ReplacerTest {
         for (int i = 0; i < RUNS; i++) {
             String input = ReplacePerformanceTest.randomWord(
                     random, 0, MAX_CHARS);
-            assertEquals("Replacement for '" + input + " should work",
-                         BaselineReplacerTest.getReplacedBaseline(rules, input),
-                         transformer.transform(input));
+            assertEquals(BaselineReplacerTest.getReplacedBaseline(rules, input),
+                         transformer.transform(input),
+                         "Replacement for '" + input + " should work");
         }
         log.info("Finished " + 100 + " runs with " + rules.size()
                  + " rules and max chars " + MAX_CHARS + " for " + transformer

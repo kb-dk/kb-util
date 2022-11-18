@@ -68,8 +68,7 @@ public class Checksums {
      * @return the computed digest in a byte array.
      * @throws NoSuchAlgorithmException if the algorithm requested in {@code algorithm} isn't known to the jvm.
      */
-    public static byte[] digest(String algorithm, byte[] in)
-            throws NoSuchAlgorithmException {
+    public static byte[] digest(String algorithm, byte[] in) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance(algorithm);
         md.update(in);
         return md.digest();

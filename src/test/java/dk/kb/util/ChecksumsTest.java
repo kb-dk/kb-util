@@ -22,6 +22,8 @@
  */
 package dk.kb.util;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -41,16 +43,17 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ChecksumsTest {
 
-    String inputDir; // build dir for the sbutil installation is used for test input
-    String inputFile1; // test input file
-    String inputFile2; // test input file
-    String tmpDir; // tmp dir for the sbutil installation
-    String testFile1; // test output file
+    static String inputDir; // build dir for the sbutil installation is used for test input
+    static String inputFile1; // test input file
+    static String inputFile2; // test input file
+    static String tmpDir; // tmp dir for the sbutil installation
+    static String testFile1; // test output file
 
-    String testString1;
-    String testString2;
+    static String testString1;
+    static String testString2;
 
-    public void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         inputDir = System.getProperty("user.dir") + File.separator + "classes";
         inputFile1 = System.getProperty("user.dir") + File.separator + "README";
         inputFile2 = System.getProperty("user.dir") + File.separator + "MAINTAINERS";
@@ -63,22 +66,24 @@ public class ChecksumsTest {
         createTestFile();
     }
 
+    @AfterAll
+    static void tearDown() {
+        new File(testFile1).delete();
+    }
+
+
     private void validateChecksum(byte[] b) {
         assertNotNull(b);
         assertTrue(b.length >= 1);
     }
 
-    private void createTestFile() throws Exception {
+    static void createTestFile() throws Exception {
         File f = new File(testFile1);
         f.getParentFile().mkdirs();
         PrintWriter p = new PrintWriter(new FileOutputStream(f), true, StandardCharsets.UTF_8);
         p.print(testString1);
         p.flush();
         p.close();
-    }
-
-    public void tearDown() {
-        new File(testFile1).delete();
     }
 
     /**

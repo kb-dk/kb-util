@@ -63,8 +63,7 @@ public class StreamsTest {
 
     @Test
     public void testGetResource() throws Exception {
-        String myCode = Streams.getUTF8Resource("log4j.xml");
-        assertTrue(myCode.length() > 0,
-                   "Something should be loaded");
+        String myCode = Streams.getUTF8Resource("dots.yml");
+        assertTrue(myCode.length() > 0, "Something should be loaded");
     }
 }
