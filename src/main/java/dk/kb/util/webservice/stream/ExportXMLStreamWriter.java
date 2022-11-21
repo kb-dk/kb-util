@@ -101,8 +101,6 @@ public class ExportXMLStreamWriter extends ExportWriter {
             write(xmlMapper.writeValueAsString(annotatedObject));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("JsonProcessingException attempting to write " + annotatedObject, e);
-        } catch (IOException e) {
-            throw new RuntimeException("IOException attempting to write " + annotatedObject, e);
         }
     }
 

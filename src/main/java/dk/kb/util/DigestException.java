@@ -35,6 +35,7 @@ package dk.kb.util;
  * {@code MD5} and {@code SHA-1}.
  */
 public class DigestException extends RuntimeException {
+    static final long serialVersionUID = 7818375828146091237L;
 
     public DigestException(String message) {
         super(message);

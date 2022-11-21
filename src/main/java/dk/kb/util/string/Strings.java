@@ -87,7 +87,7 @@ public class Strings {
      * @return A string representation of the collection. If the collection is empty the empty string will be returned.
      * @throws NullPointerException if the collection or delimiter is null.
      */
-    public static String join(Collection c) {
+    public static <T> String join(Collection<T> c) {
        return join(c, ", ", Long.MAX_VALUE);
     }
 
@@ -100,7 +100,7 @@ public class Strings {
      * @return A string representation of the collection. If the collection is empty the empty string will be returned.
      * @throws NullPointerException if the collection or delimiter is null.
      */
-    public static String join(Collection c, long max) {
+    public static <T> String join(Collection<T> c, long max) {
        return join(c, ", ", max);
     }
 
@@ -115,7 +115,7 @@ public class Strings {
      * @return A string representation of the collection. If the collection is empty the empty string will be returned.
      * @throws NullPointerException if the collection or delimiter is null.
      */
-    public static String join(Collection c, String delimiter) {
+    public static <T> String join(Collection<T> c, String delimiter) {
        return join(c, delimiter, Long.MAX_VALUE);
     }
 
@@ -133,7 +133,7 @@ public class Strings {
      *         is empty the empty string will be returned.
      * @throws NullPointerException if the collection or delimiter is null.
      */
-    public static String join(Collection c, String delimiter, long max) {
+    public static <T> String join(Collection<T> c, String delimiter, long max) {
         if (c == null) {
             throw new NullPointerException("Collection argument is null");
         } else if (delimiter == null) {

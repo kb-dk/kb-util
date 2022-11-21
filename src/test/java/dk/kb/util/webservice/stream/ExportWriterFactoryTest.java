@@ -41,6 +41,8 @@ class ExportWriterFactoryTest {
     /**
      * This unit test demonstrates the use of Mockito to avoid heavy simulation of the webservice environment.
      */
+    // The unused suppression is for the ExportWriter where construction should fail
+    @SuppressWarnings("unused")
     @Tag("fast")
     @DisplayName("Mockito based test for ExportWriterFactory with jsonl")
     @Test
@@ -67,9 +69,10 @@ class ExportWriterFactoryTest {
                 new MediaType("application", "x-ndjson"));
         when(headers.getAcceptableMediaTypes()).thenReturn(mimes);
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-             ExportWriter writer = ExportWriterFactory.wrap(
-                    out, response, headers, "json", null, false, null)) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ExportWriter writer = ExportWriterFactory.wrap(
+                    out, response, headers, "json", null, false, null)
             fail("Accepted json even though the Mockito setup should only accept jsonl");
         } catch (IllegalArgumentException e) {
             // Expected as we asked for json and not jsonl
@@ -79,7 +82,7 @@ class ExportWriterFactoryTest {
              ExportWriter writer = ExportWriterFactory.wrap(
                      out, response, headers, null, ExportWriterFactory.FORMAT.jsonl, false, null)) {
             getBooks(2).forEach(writer::write);
-            writer.close();
+            writer.flush();
             assertEquals("{\"id\":\"0\",\"title\":\"book #0\"}\n" +
                          "{\"id\":\"1\",\"title\":\"book #1\"}\n",
                          out.toString(StandardCharsets.UTF_8));
@@ -101,7 +104,7 @@ class ExportWriterFactoryTest {
              ExportWriter writer = ExportWriterFactory.wrap(
                      out, response, headers, "csv", null, false, null)) {
             getBooks(2).forEach(writer::write);
-            writer.close();
+            writer.flush();
             assertEquals("\"id\",\"title\",\"pages\"\n" +
                          "\"0\",\"book #0\",\n" +
                          "\"1\",\"book #1\",\n",
@@ -186,7 +189,7 @@ class ExportWriterFactoryTest {
              ExportWriter writer = ExportWriterFactory.wrap(
                      out, response, headers, format, ExportWriterFactory.FORMAT.jsonl, false, "books")) {
             getBooks(books).forEach(writer::write);
-            writer.close();
+            writer.flush();
             assertEquals(expected, out.toString(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();

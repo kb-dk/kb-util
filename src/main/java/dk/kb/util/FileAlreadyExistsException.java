@@ -30,6 +30,7 @@ import java.io.IOException;
  * an existing file.
  */
 public class FileAlreadyExistsException extends IOException {
+    static final long serialVersionUID = 7818375828146091234L;
 
     private String filename;
 

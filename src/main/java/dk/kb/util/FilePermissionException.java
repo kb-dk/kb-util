@@ -8,6 +8,7 @@ import java.io.IOException;
  * permissions rights to work when the required permissions are not present.
  */
 public class FilePermissionException extends IOException {
+    static final long serialVersionUID = 7818375828146091236L;
 
     private final String filename;
 

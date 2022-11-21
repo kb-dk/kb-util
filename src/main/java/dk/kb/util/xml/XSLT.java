@@ -34,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -125,8 +126,7 @@ public class XSLT {
         if (ERRORLISTENER == null) {
             ERRORLISTENER = new ErrorListener() {
                 @Override
-                public void warning(TransformerException exception)
-                        throws TransformerException {
+                public void warning(TransformerException exception) {
                     warnlog.debug("A transformer warning occured", exception);
                 }
 
@@ -149,12 +149,13 @@ public class XSLT {
     private static ThreadLocal<Map<String, Transformer>> localMapCache = createLocalMapCache();
 
     private static ThreadLocal<Map<String, Transformer>> createLocalMapCache() {
-        return new ThreadLocal<Map<String, Transformer>>() {
-            private AtomicInteger counter = new AtomicInteger(0);
+        return new ThreadLocal<>() {
+            private final AtomicInteger counter = new AtomicInteger(0);
+
             @Override
             protected Map<String, Transformer> initialValue() {
-                log.trace("Creating ThreadLocal localMapCache #" + counter);
-                return new HashMap<String, Transformer>();
+                log.trace("Creating ThreadLocal localMapCache #" + counter.incrementAndGet());
+                return new HashMap<>();
             }
         };
     }
@@ -188,7 +189,7 @@ public class XSLT {
      * @return a Transformer using the given XSLT.
      * @throws TransformerException if the Transformer could not be constructed.
      */
-    public static Transformer getLocalTransformer(URL xslt, Map parameters) throws TransformerException {
+    public static Transformer getLocalTransformer(URL xslt, Map<Object, Object> parameters) throws TransformerException {
         if (xslt == null) {
             throw new NullPointerException("The xslt was null");
         }
@@ -208,18 +209,18 @@ public class XSLT {
      * @param parameters key-value pairs for parameters to assign.
      * @return the given transformer, with the given parameters assigned.
      */
-    public static Transformer assignParameters(Transformer transformer, Map parameters) {
+    public static <K, V> Transformer assignParameters(Transformer transformer, Map<K, V> parameters) {
         try {
             transformer.clearParameters(); // Is this safe? Any defaults lost?
             if (parameters != null) {
-                for (Object entryObject : parameters.entrySet()) {
-                    Map.Entry entry = (Map.Entry) entryObject;
+                for (Map.Entry<K, V> entry : parameters.entrySet()) {
                     if (entry.getKey() == null || entry.getValue() == null) {
-                        log.warn(String.format(Locale.ROOT, "Skipping assignment of key/value pair '%s/%s' to Transformer " +
-                                               "as null is not an acceptable value",
-                                               entry.getKey(), entry.getValue()));
+                        log.warn(String.format(
+                                Locale.ROOT, "Skipping assignment of key/value pair '%s/%s' to Transformer " +
+                                             "as null is not an acceptable value",
+                                entry.getKey(), entry.getValue()));
                     }
-                    transformer.setParameter((String) entry.getKey(), entry.getValue());
+                    transformer.setParameter(Objects.toString(entry.getKey()), entry.getValue());
                 }
             }
         } catch (Exception e) {
@@ -285,7 +286,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static String transform(URL xslt, String in, Map parameters) throws TransformerException {
+    public static String transform(URL xslt, String in, Map<Object, Object> parameters) throws TransformerException {
         return transform(xslt, in, parameters, false);
     }
 
@@ -304,7 +305,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static String transform(URL xslt, String in, Map parameters, boolean ignoreXMLNamespaces)
+    public static String transform(URL xslt, String in, Map<Object, Object> parameters, boolean ignoreXMLNamespaces)
             throws TransformerException {
         StringWriter sw = new StringWriter();
         if (!ignoreXMLNamespaces) {
@@ -377,7 +378,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static String transform(URL xslt, Reader in, Map parameters) throws TransformerException {
+    public static String transform(URL xslt, Reader in, Map<Object, Object> parameters) throws TransformerException {
         return transform(xslt, in, parameters, false);
     }
 
@@ -395,7 +396,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static String transform(URL xslt, Reader in, Map parameters, boolean ignoreXMLNamespaces)
+    public static String transform(URL xslt, Reader in, Map<Object, Object> parameters, boolean ignoreXMLNamespaces)
             throws TransformerException {
         StringWriter sw = new StringWriter();
         if (!ignoreXMLNamespaces) {
@@ -418,7 +419,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static ByteArrayOutputStream transform(URL xslt, byte[] in, Map parameters) throws TransformerException {
+    public static ByteArrayOutputStream transform(URL xslt, byte[] in, Map<Object, Object> parameters) throws TransformerException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         transform(xslt, new ByteArrayInputStream(in), out, parameters);
         return out;
@@ -440,7 +441,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static ByteArrayOutputStream transform(URL xslt, byte[] in, Map parameters, boolean ignoreXMLNamespaces)
+    public static ByteArrayOutputStream transform(URL xslt, byte[] in, Map<Object, Object> parameters, boolean ignoreXMLNamespaces)
             throws TransformerException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         if (!ignoreXMLNamespaces) {
@@ -465,7 +466,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static ByteArrayOutputStream transform(URL xslt, InputStream in, Map parameters)
+    public static ByteArrayOutputStream transform(URL xslt, InputStream in, Map<Object, Object> parameters)
             throws TransformerException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         transform(getLocalTransformer(xslt, parameters), in, out);
@@ -487,7 +488,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static ByteArrayOutputStream transform(URL xslt, InputStream in, Map parameters,
+    public static ByteArrayOutputStream transform(URL xslt, InputStream in, Map<Object, Object> parameters,
                                                   boolean ignoreXMLNamespaces) throws TransformerException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         if (!ignoreXMLNamespaces) {
@@ -512,7 +513,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static ByteArrayOutputStream transform(URL xslt, Document dom, Map parameters) throws TransformerException {
+    public static ByteArrayOutputStream transform(URL xslt, Document dom, Map<Object, Object> parameters) throws TransformerException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         transform(getLocalTransformer(xslt, parameters), dom, out);
         return out;
@@ -529,7 +530,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static void transform(URL xslt, InputStream in, OutputStream out, Map parameters)
+    public static void transform(URL xslt, InputStream in, OutputStream out, Map<Object, Object> parameters)
             throws TransformerException {
         transform(getLocalTransformer(xslt, parameters), in, out);
     }
@@ -545,7 +546,7 @@ public class XSLT {
      * @throws TransformerException if the transformation failed.
      * @see TransformerPool for an alternative with a fixed limit on the number of created Transformers.
      */
-    public static void transform(URL xslt, Reader in, Writer out, Map parameters) throws TransformerException {
+    public static void transform(URL xslt, Reader in, Writer out, Map<Object, Object> parameters) throws TransformerException {
         transform(getLocalTransformer(xslt, parameters), in, out);
     }
 
@@ -630,7 +631,7 @@ public class XSLT {
      * and others is unviable, such as doing heavy XSLT in Tomcat from potentially hundreds of unique Threads.
      */
     public static class TransformerPool {
-        private final Map<URL, TransformerCache> pool = new HashMap<URL, TransformerCache>();
+        private final Map<URL, TransformerCache> pool = new HashMap<>();
         private final int cacheSize;
         private final TransformerFactory factory;
 
@@ -789,7 +790,7 @@ public class XSLT {
             log.info("Creating TransformerCache with " + cacheSize + " entries for XSLT '" + xslt + "'");
             this.factory = factory;
             this.xslt = xslt;
-            transformers = new ArrayBlockingQueue<Transformer>(cacheSize);
+            transformers = new ArrayBlockingQueue<>(cacheSize);
             if (!noFill) {
                 fillWithTransformers();
             }
@@ -800,9 +801,9 @@ public class XSLT {
             final int cacheSize = transformers.remainingCapacity();
             for (int i = 0 ; i < cacheSize ; i++) {
                 try {
-                    long createTime = -System.nanoTime();
+                    //long createTime = -System.nanoTime();
                     transformers.put(createTransformer(xslt));
-                    createTime += System.nanoTime();
+                    //createTime += System.nanoTime();
                     //log.trace("Created Transformer for " + xslt + " in " + createTime/1000000 + "ms");
                 } catch (InterruptedException e) {
                     throw new IllegalStateException("Interrupted while initializing cache of size " + cacheSize, e);

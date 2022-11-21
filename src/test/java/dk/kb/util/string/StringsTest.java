@@ -46,11 +46,11 @@ public class StringsTest {
         Throwable t = new Exception("This is my test exception");
         String trace = Strings.getStackTrace(t);
         assertNotNull(trace);
-        assertTrue(!"".equals(trace));
+        assertNotEquals("", trace);
     }
     @Test
     public void testJoinSimple() {
-        assertEquals("abe", Strings.join(Arrays.asList("abe"), "."));
+        assertEquals("abe", Strings.join(List.of("abe"), "."));
         assertEquals("abe.foo", Strings.join(Arrays.asList("abe", "foo"), "."));
 
         assertEquals("abe", Strings.join(new String[]{"abe"}, "."));
@@ -60,8 +60,9 @@ public class StringsTest {
     public void testJoinExtended() {
         assertEquals("abe, ged, ...", Strings.join(Arrays.asList("abe", "ged", "so"), ", ", 2));
     }
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
-    public void testJoinNulls() throws Exception {
+    public void testJoinNulls() {
         List<Object> l = new ArrayList<Object>();
 
         try {
@@ -84,8 +85,9 @@ public class StringsTest {
         l.add("bar");
         System.out.println(Strings.join(l, ":"));
     }
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
-    public void testJoinEmptyList() throws Exception {
+    public void testJoinEmptyList() {
         String s = Strings.join(new ArrayList(), ":");
         assertEquals("", s);
 
@@ -93,7 +95,7 @@ public class StringsTest {
         assertEquals("", s);
     }
     @Test
-    public void testKnownCases() throws Exception {
+    public void testKnownCases() {
         List<Object> l = new ArrayList<Object>();
         l.add("foo");
         l.add("bar");

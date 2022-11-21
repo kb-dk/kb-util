@@ -9,6 +9,7 @@ import java.io.IOException;
  * a regular file.
  */
 public class InvalidFileTypeException extends IOException {
+    static final long serialVersionUID = 7818375828146091235L;
 
     private final String filename;
 
