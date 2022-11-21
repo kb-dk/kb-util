@@ -4,10 +4,8 @@ import dk.kb.util.Resolver;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.chrono.ChronoLocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

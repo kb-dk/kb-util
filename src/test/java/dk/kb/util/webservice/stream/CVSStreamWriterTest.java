@@ -47,7 +47,7 @@ class CVSStreamWriterTest {
         try (CharArrayWriter stringW = new CharArrayWriter();
              CSVStreamWriter csvW = new CSVStreamWriter(stringW)) {
             getBooks(count).forEach(csvW::write);
-            csvW.close();
+            csvW.flush();
             return stringW.toString();
         }
     }

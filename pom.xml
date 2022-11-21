@@ -78,6 +78,10 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
+                <!-- This will give warnings until
+                https://github.com/mojohaus/license-maven-plugin/issues/403
+                https://github.com/mojohaus/license-maven-plugin/pull/408
+                is fixed. -->
                 <version>2.0.0</version>
                 <executions>
                     <execution>
@@ -119,6 +123,13 @@
             <version>2.0.2</version>
         </dependency>
 
+        <!-- Needed fsupressing ForbiddenAPI where needed -->
+        <!-- https://mvnrepository.com/artifact/de.thetaphi/forbiddenapis -->
+        <dependency>
+            <groupId>de.thetaphi</groupId>
+            <artifactId>forbiddenapis</artifactId>
+            <version>2.7</version>
+        </dependency>
 
         <!--Included utilities-->
         <!--Not all of these are used, but you would want to use them, so include them here-->

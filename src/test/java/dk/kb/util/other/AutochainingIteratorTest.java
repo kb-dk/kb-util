@@ -1,6 +1,5 @@
 package dk.kb.util.other;
 
-import ch.qos.logback.core.status.Status;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class AutochainingIteratorTest {
     
