@@ -72,17 +72,17 @@ class ExportWriterFactoryTest {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ExportWriter writer = ExportWriterFactory.wrap(
-                    out, response, headers, "json", null, false, null)
+                    out, response, headers, "json", null, false, null);
             fail("Accepted json even though the Mockito setup should only accept jsonl");
         } catch (IllegalArgumentException e) {
             // Expected as we asked for json and not jsonl
         }
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
              ExportWriter writer = ExportWriterFactory.wrap(
-                     out, response, headers, null, ExportWriterFactory.FORMAT.jsonl, false, null)) {
+                     out, response, headers, null, ExportWriterFactory.FORMAT.jsonl, false, null);
             getBooks(2).forEach(writer::write);
-            writer.flush();
+            writer.close();
             assertEquals("{\"id\":\"0\",\"title\":\"book #0\"}\n" +
                          "{\"id\":\"1\",\"title\":\"book #1\"}\n",
                          out.toString(StandardCharsets.UTF_8));
@@ -100,11 +100,11 @@ class ExportWriterFactoryTest {
         List<MediaType> mimes = Collections.singletonList(new MediaType("text", "csv"));
         when(headers.getAcceptableMediaTypes()).thenReturn(mimes);
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
              ExportWriter writer = ExportWriterFactory.wrap(
-                     out, response, headers, "csv", null, false, null)) {
+                     out, response, headers, "csv", null, false, null);
             getBooks(2).forEach(writer::write);
-            writer.flush();
+            writer.close();
             assertEquals("\"id\",\"title\",\"pages\"\n" +
                          "\"0\",\"book #0\",\n" +
                          "\"1\",\"book #1\",\n",
@@ -185,11 +185,11 @@ class ExportWriterFactoryTest {
             when(headers.getAcceptableMediaTypes()).thenReturn(mimes);
         }
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-             ExportWriter writer = ExportWriterFactory.wrap(
-                     out, response, headers, format, ExportWriterFactory.FORMAT.jsonl, false, "books")) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ExportWriter writer = ExportWriterFactory.wrap(
+                    out, response, headers, format, ExportWriterFactory.FORMAT.jsonl, false, "books");
             getBooks(books).forEach(writer::write);
-            writer.flush();
+            writer.close(); // Muct be called to write closing element
             assertEquals(expected, out.toString(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
