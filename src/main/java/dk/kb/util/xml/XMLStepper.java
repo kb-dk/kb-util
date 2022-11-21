@@ -23,6 +23,7 @@ import javax.xml.stream.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -647,6 +648,45 @@ public class XMLStepper {
         });
 
         return matches;
+    }
+
+    /**
+     * Skips to the next position in the XML matching the given fakeXPath.
+     * If the fakeXPath cannot be matched, the xml stream will be depleted and false will be returned.
+     * @param xml       the XML to iterate for the given fakeXPath.
+     * @param fakeXPath a {@link FakeXPath}, as described in the class javaDoc.
+     * @return true if the fakeXPath was matched, else false. If false, the xml will be depleted.
+     * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     */
+    public static boolean skipToFakeXPath(XMLStreamReader xml, final String fakeXPath)
+            throws XMLStreamException {
+        FakeXPath xpath = new FakeXPath(fakeXPath);
+        AtomicBoolean matched = new AtomicBoolean(false);
+        iterateTags(xml, new Callback() {
+            @Override
+            public PROCESS_ACTION elementStart2(XMLStreamReader xml, List<String> tags, String current) {
+                if (xpath.matches(xml, tags)) { // We have a match
+                    matched.set(true);
+                    return PROCESS_ACTION.requests_stop_success;
+                }
+                return PROCESS_ACTION.no_action;
+            }
+        });
+
+        return matched.get();
+    }
+
+    /**
+     * Skips to the next position in the XML matching the given fakeXPath.
+     * If the fakeXPath cannot be matched, the xml stream will be depleted and null will be returned.
+     * @param xml       the XML to iterate for the given fakeXPath.
+     * @param fakeXPath a {@link FakeXPath}, as described in the class javaDoc.
+     * @return an XMLStreamReader positioned at the given fakeXPath or null if there were no match.
+     * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     */
+    public static XMLStreamReader skipToFakeXPath(String xml, final String fakeXPath) throws XMLStreamException {
+        XMLStreamReader xmlReader = xmlFactory.createXMLStreamReader(new StringReader(xml));
+        return skipToFakeXPath(xmlReader, fakeXPath) ? xmlReader : null;
     }
 
     /**

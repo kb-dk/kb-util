@@ -17,6 +17,7 @@ package dk.kb.util.xml;
 
 import dk.kb.util.Profiler;
 import dk.kb.util.string.Strings;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,16 @@ public class XMLStepperTest {
     }
     private XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
 
+    @Test
+    public void testGetSubXMLFromPath() throws XMLStreamException {
+        final String EXPECTED = "<bar xmlns=\"http://www.example.com/bar_ns/\"><nam:subsub xmlns:nam=\"http://example.com/subsub_ns\">content1<!-- Sub comment --></nam:subsub><!-- Comment --></bar>";
+        XMLStreamReader xmlReader = XMLStepper.skipToFakeXPath(SAMPLE, "foo/bar");
+        assertNotNull(xmlReader, "Skipping to 'foo/bar' should work");
+        String subXML = XMLStepper.getSubXML(xmlReader, true);
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+    }
+
+    @Test
     public void testFakeXPath() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
@@ -61,6 +72,7 @@ public class XMLStepperTest {
         assertXPaths(BIG_XML, tests, 2);
     }
 
+    @Test
     public void testFakeXPathStar() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
@@ -73,6 +85,7 @@ public class XMLStepperTest {
         assertXPathShorthand(BIG_XML, tests);
     }
 
+    @Test
     public void testFakeXPathPredicated() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
@@ -85,6 +98,7 @@ public class XMLStepperTest {
         assertXPathShorthand(BIG_XML, tests);
     }
 
+    @Test
     public void testFakeXPathAnywhere() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
@@ -98,6 +112,7 @@ public class XMLStepperTest {
         assertXPathShorthand(BIG_XML, tests);
     }
 
+    @Test
     public void testFakeXPathShorthand() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
@@ -130,6 +145,7 @@ public class XMLStepperTest {
         }
     }
 
+    @Test
     public void testFakeXPathEarlyTermination() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
@@ -139,6 +155,7 @@ public class XMLStepperTest {
         assertXPaths(BIG_XML, tests, 1);
     }
 
+    @Test
     public void testFakeXPathMulti() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
@@ -176,6 +193,7 @@ public class XMLStepperTest {
         }
     }
 
+    @Test
     public void testSpaceRemoval() throws IOException, XMLStreamException {
         String INPUT = Strings.flush(Thread.currentThread().getContextClassLoader().getResourceAsStream(
                 "replacement_input.xml"));
@@ -197,6 +215,7 @@ public class XMLStepperTest {
                      "The text content replaced XML should be as expected");
     }
 
+    @Test
     public void testSpaceRemovalStreaming() throws IOException, XMLStreamException {
         InputStream INPUT = Thread.currentThread().getContextClassLoader().getResourceAsStream("replacement_input.xml");
         String EXPECTED = Strings.flush(Thread.currentThread().getContextClassLoader().getResourceAsStream(
@@ -221,6 +240,7 @@ public class XMLStepperTest {
                      "The text content replaced XML should be as expected");
     }
 
+    @Test
     public void testIsWellformed() {
         final String[] FINE = new String[]{
                 "<foo xmlns=\"http://www.example.com/foo_ns/\"><bar>simple bar</bar></foo>",
@@ -242,6 +262,7 @@ public class XMLStepperTest {
         }
     }
 
+    @Test
     public void testMultipleInner() throws XMLStreamException {
         final String XML = "<foo><bar><zoo>z1</zoo><zoo>z2</zoo></bar></foo>";
         for (final Boolean step: new boolean[]{Boolean.FALSE, Boolean.TRUE}) {
@@ -273,6 +294,7 @@ public class XMLStepperTest {
 
     }
 
+    @Test
     public void testLenient() throws XMLStreamException {
         final String[][] TESTS = new String[][]{
                 new String[]{"<foo><bar><zoo>Hello</zoo></bar></foo>", "zoo", "bar"},
@@ -309,6 +331,7 @@ public class XMLStepperTest {
     private final static String LIMIT_BARS =
             "<foo><bar zoo=\"true\"></bar><bar zoo=\"true\"></bar><bar zoo=\"false\"></bar><baz></baz></foo>";
 
+    @Test
     public void testLimitXMLSimple() throws XMLStreamException {
         assertLimit(LIMIT_BARS, "<foo><baz /></foo>", false, true, false,
                     "/foo/bar", 0);
@@ -318,6 +341,7 @@ public class XMLStepperTest {
                     "/foo/bar", 2);
     }
 
+    @Test
     public void testLimitPositiveList() throws XMLStreamException {
         assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /></foo>", false, true, true,
                     "/foo$", -1, "/foo/bar", 1);
@@ -325,6 +349,7 @@ public class XMLStepperTest {
                     "/foo$", -1, "/foo/baz", 1);
     }
 
+    @Test
     public void testLimitXMLAttribute() throws XMLStreamException {
         assertLimit(LIMIT_BARS, "<foo><bar zoo=\"false\" /><baz /></foo>", false, false, false,
                     "/foo/bar#zoo=true", 0);
@@ -332,6 +357,7 @@ public class XMLStepperTest {
                     "/foo/bar#zoo=true", 1);
     }
 
+    @Test
     public void testLimitXMLAttributeNamespace() throws XMLStreamException {
         final String NS =
                 "<n:foo xmlns:n=\"sjfk\" xmlns=\"myDefault\"><bar n:zoo=\"true\"></bar><bar zoo=\"true\"></bar>"
@@ -340,6 +366,7 @@ public class XMLStepperTest {
                     false, false, false, "/foo/bar#zoo=true", 0);
     }
 
+    @Test
     public void testLimitCountPatterns() throws XMLStreamException {
         assertLimit(LIMIT_BARS,
                     "<foo><bar zoo=\"true\"></bar><bar zoo=\"true\"></bar><baz></baz></foo>", true, true, false,
@@ -347,6 +374,7 @@ public class XMLStepperTest {
     }
 
     // Limits on specific field with specific tag
+    @Test
     public void testLimitPerformance() throws IOException, XMLStreamException {
         final String SAMPLE = getSample(9423);
         final int RUNS = 10;
@@ -367,6 +395,7 @@ public class XMLStepperTest {
                    "The reduced XML should contain datafields after the skipped ones");
     }
 
+    @Test
     public void testLimitException() throws XMLStreamException {
         Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
         lims.put(Pattern.compile("/foo/bar"), 1);
@@ -382,6 +411,7 @@ public class XMLStepperTest {
     }
 
     // Limits in all datafields, counting on unique datafield#tag=value
+    @Test
     public void testLimitPerformanceCountPatterns() throws IOException, XMLStreamException {
         final String SAMPLE = getSample(9423);
         final int RUNS = 10;
@@ -511,6 +541,7 @@ public class XMLStepperTest {
     }
 
     // Sanity check for traversal of sub
+    @Test
     public void testIterateTags() throws Exception {
         XMLStreamReader xml = xmlFactory.createXMLStreamReader(new StringReader(SAMPLE));
         assertTrue(XMLStepper.findTagStart(xml, "bar"),
@@ -547,6 +578,7 @@ public class XMLStepperTest {
         }
     }
 
+    @Test
     public void testPipePositionOnIgnoredFail() throws XMLStreamException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
@@ -559,6 +591,7 @@ public class XMLStepperTest {
                                           + XMLUtil.eventID2String(in.getEventType()));
     }
 
+    @Test
     public void testPipe() throws XMLStreamException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
@@ -568,6 +601,7 @@ public class XMLStepperTest {
                      "Piped stream should match input stream");
     }
 
+    @Test
     public void testGetSubXML_DoubleContent() throws XMLStreamException {
         final String XML = "<field><content foo=\"bar\"/><content foo=\"zoo\"/></field>";
         final String EXPECTED = "<content foo=\"bar\"></content><content foo=\"zoo\"></content>";
@@ -579,6 +613,7 @@ public class XMLStepperTest {
                      "The output should contain the inner XML");
     }
 
+    @Test
     public void testGetSubXML_NoOuter() throws XMLStreamException {
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(OUTER_FULL));
         assertTrue(XMLStepper.findTagStart(in, "foo"),
@@ -588,6 +623,7 @@ public class XMLStepperTest {
                      "The output should contain the inner XML");
     }
 
+    @Test
     public void testGetSubXML_Outer() throws XMLStreamException {
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(OUTER_FULL));
         assertTrue(XMLStepper.findTagStart(in, "foo"),
@@ -597,6 +633,7 @@ public class XMLStepperTest {
                      "The output should contain the inner XML");
     }
 
+    @Test
     public void testPipeComments() throws XMLStreamException {
         final String EXPECTED =
                 "<bar xmlns=\"http://www.example.com/bar_ns/\">"
@@ -608,6 +645,7 @@ public class XMLStepperTest {
         assertPipe(EXPECTED, in);
     }
 
+    @Test
     public void testExtract() throws XMLStreamException {
         final String EXPECTED =
                 "<bar xmlns=\"http://www.example.com/bar_ns/\">"
