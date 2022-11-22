@@ -235,7 +235,7 @@ public class XMLStepperTest {
 
         String actual = Strings.flush(actualS);
         // TODO: Figure out why the streaming version keeps the header, while the direct one doesn't
-        actual = actual.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "").trim();
+        actual = actual.replace("<?xml version='1.0' encoding='UTF-8'?>", "").trim();
         assertEquals(EXPECTED, actual,
                      "The text content replaced XML should be as expected");
     }
@@ -362,14 +362,14 @@ public class XMLStepperTest {
         final String NS =
                 "<n:foo xmlns:n=\"sjfk\" xmlns=\"myDefault\"><bar n:zoo=\"true\"></bar><bar zoo=\"true\"></bar>"
                 + "<bar zoo=\"false\"></bar><baz></baz></n:foo>";
-        assertLimit(NS, "<n:foo xmlns:n=\"sjfk\" xmlns=\"myDefault\"><bar zoo=\"false\"></bar><baz></baz></n:foo>",
+        assertLimit(NS, "<n:foo xmlns:n=\"sjfk\" xmlns=\"myDefault\"><bar zoo=\"false\"/><baz/></n:foo>",
                     false, false, false, "/foo/bar#zoo=true", 0);
     }
 
     @Test
     public void testLimitCountPatterns() throws XMLStreamException {
         assertLimit(LIMIT_BARS,
-                    "<foo><bar zoo=\"true\"></bar><bar zoo=\"true\"></bar><baz></baz></foo>", true, true, false,
+                    "<foo><bar zoo=\"true\"/><bar zoo=\"true\"/><baz/></foo>", true, true, false,
                     ".*", 2);
     }
 
@@ -495,7 +495,8 @@ public class XMLStepperTest {
         if (!isCollapsing) {
             expected = expected.replaceAll("<([^> ]+)([^>]*) />", "<$1$2></$1>");
         }
-        Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
+        expected = expected.replaceAll(" />", "/>"); // <foo bar="zoo" /> -> <foo bar="zoo"/>
+        Map<Pattern, Integer> lims = new HashMap<>();
         for (int i = 0 ; i < limits.length ; i+=2) {
             lims.put(Pattern.compile((String) limits[i]), (Integer) limits[i + 1]);
         }
@@ -572,7 +573,8 @@ public class XMLStepperTest {
             out.writeStartElement("foo");
             out.writeEndElement();
             out.flush();
-            return "<foo />".equals(os.toString(StandardCharsets.UTF_8));
+            String xml = os.toString(StandardCharsets.UTF_8);
+            return "<foo />".equals(xml) || "<foo/>".equals(xml);
         } catch (XMLStreamException e) {
             throw new RuntimeException("Unable to determine if XMLStreamWriter collapses empty elements", e);
         }
@@ -604,7 +606,7 @@ public class XMLStepperTest {
     @Test
     public void testGetSubXML_DoubleContent() throws XMLStreamException {
         final String XML = "<field><content foo=\"bar\"/><content foo=\"zoo\"/></field>";
-        final String EXPECTED = "<content foo=\"bar\"></content><content foo=\"zoo\"></content>";
+        final String EXPECTED = "<content foo=\"bar\"/><content foo=\"zoo\"/>";
 
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(XML));
         in.next();
