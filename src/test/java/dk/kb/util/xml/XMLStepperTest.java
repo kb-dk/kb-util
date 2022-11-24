@@ -39,6 +39,12 @@ public class XMLStepperTest {
             + "<!-- Comment --></bar>\n"
             + "<bar><subsub>content2</subsub></bar></foo>";
 
+    private static final String SAMPLE_ATTRIBUTE =
+            "<foo><bar xmlns=\"http://www.example.com/bar_ns/\">"
+            + "<nam:subsub xmlns:nam=\"http://example.com/subsub_ns\">content1<!-- Sub comment --></nam:subsub>"
+            + "<!-- Comment --></bar>\n"
+            + "<bar this=\"isit\"><subsub>content2</subsub></bar></foo>";
+
     private static final String DERIVED_NAMESPACE =
             "<foo xmlns=\"http://www.example.com/foo_ns/\"><bar>simple bar</bar></foo>";
 
@@ -56,11 +62,49 @@ public class XMLStepperTest {
     @Test
     public void testGetSubXMLFromPath() throws XMLStreamException {
         final String EXPECTED = "<bar xmlns=\"http://www.example.com/bar_ns/\"><nam:subsub xmlns:nam=\"http://example.com/subsub_ns\">content1<!-- Sub comment --></nam:subsub><!-- Comment --></bar>";
-        XMLStreamReader xmlReader = XMLStepper.skipToFakeXPath(SAMPLE, "foo/bar");
+        XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE, "foo/bar");
         assertNotNull(xmlReader, "Skipping to 'foo/bar' should work");
         String subXML = XMLStepper.getSubXML(xmlReader, true);
         assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
     }
+
+    @Test
+    public void testGetSubXMLFromPathWithAttribute() throws XMLStreamException {
+        final String EXPECTED = "<bar this=\"isit\"><subsub>content2</subsub></bar>";
+        final String XPATH = "foo/bar[@this='isit']";
+        XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
+        assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
+        String subXML = XMLStepper.getSubXML(xmlReader, true);
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+    }
+
+    @Test
+    public void testGetSubXMLFromPathWithAttribute2() throws XMLStreamException {
+        final String EXPECTED = "<subsub>content2</subsub>";
+        final String XPATH = "foo/bar[@this='isit']/subsub";
+        XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
+        assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
+        String subXML = XMLStepper.getSubXML(xmlReader, true);
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+    }
+
+    @Test
+    public void testGetSubXMLLocationIndependent() throws XMLStreamException {
+        final String EXPECTED = "<bar this=\"isit\"><subsub>content2</subsub></bar>";
+        final String XPATH = "//bar[@this='isit']";
+        XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
+        assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
+        String subXML = XMLStepper.getSubXML(xmlReader, true);
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+    }
+
+    @Test
+    public void testFakeXPathParse() throws XMLStreamException {
+        final String XPATH = "foo/bar[@this='isit']/subsub";
+        XMLStepper.FakeXPath xPath = new XMLStepper.FakeXPath(XPATH);
+        assertEquals(XPATH, xPath.toString(), "Parsed fakeXPath should match input");
+    }
+
 
     @Test
     public void testFakeXPath() throws XMLStreamException {
