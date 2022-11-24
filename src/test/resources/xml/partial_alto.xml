@@ -1,0 +1,13 @@
+<dobundle:digitalObjectBundle xmlns:dobundle="http://doms.example.com/types/digitalobjectbundle/default/0/1/#">
+    <foxml:digitalObject xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PID="uuid:7206e433-48d1-4c2a-af3f-4239ef1b62cc" VERSION="1.1" xsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
+        <foxml:datastream CONTROL_GROUP="M" ID="ALTO" STATE="A" VERSIONABLE="true">
+            <foxml:datastreamVersion ALT_IDS="B4000/0173B.alto.xml" CREATED="2016-04-09T20:27:54.248Z" ID="ALTO.0" LABEL="" MIMETYPE="text/xml" SIZE="259901">
+                <foxml:xmlContent>
+                    <alto xmlns="http://www.loc.gov/standards/alto/ns-v2#" xsi:schemaLocation="http://example.com">
+                        <softwareCreator>FakeCreator</softwareCreator>
+                    </alto>
+                </foxml:xmlContent>
+            </foxml:datastreamVersion>
+        </foxml:datastream>
+    </foxml:digitalObject>
+</dobundle:digitalObjectBundle>

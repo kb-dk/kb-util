@@ -32,6 +32,19 @@ import java.util.regex.Pattern;
  * Helper class for stream oriented processing of XML.
  */
 public class XMLStepper {
+
+    private static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+    private static final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
+    static {
+        xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
+        // No resolving of external DTDs
+        xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+
+        // Need to repair namespaces for piping of subset of XML
+        // https://stackoverflow.com/questions/38970894/xmlstreamexception-the-namespace-uri-has-not-been-bound-to-a-prefix-ibm-jre
+        xmlOutFactory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, Boolean.TRUE);
+    }
+
     /**
      * Iterates through the start tags in the stream until the current sub tree in the DOM is depleted
      * Leaves the cursor after END_ELEMENT.
@@ -150,8 +163,6 @@ public class XMLStepper {
         }
         return true;
     }
-
-    private static final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
 
     /**
      * Equivalent to {@link #pipeXML(javax.xml.stream.XMLStreamReader, javax.xml.stream.XMLStreamWriter, boolean)} but
@@ -309,7 +320,7 @@ public class XMLStepper {
      */
     public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError, boolean onlyInner)
             throws XMLStreamException {
-        pipeXML(in, out, failOnError, onlyInner, null);
+        pipeXML(in, out, !failOnError, onlyInner, null);
     }
 
     public static boolean pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean ignoreErrors, boolean onlyInner,
@@ -487,12 +498,6 @@ public class XMLStepper {
         }
     }
 
-    private static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
-    static {
-        xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
-        // No resolving of external DTDs
-        xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-    }
     /**
      * Steps through the provided XML and returns the text content of the first element with the given tag.
      * @param xml the XML to extract text from.

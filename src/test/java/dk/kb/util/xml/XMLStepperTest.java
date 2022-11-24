@@ -14,8 +14,8 @@
  */
 package dk.kb.util.xml;
 
-
 import dk.kb.util.Profiler;
+import dk.kb.util.Resolver;
 import dk.kb.util.string.Strings;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class XMLStepperTest {
-    private static Logger log = LoggerFactory.getLogger(XMLStepperTest.class);
+    private static final Logger log = LoggerFactory.getLogger(XMLStepperTest.class);
 
     private static final String SAMPLE =
             "<foo><bar xmlns=\"http://www.example.com/bar_ns/\">"
@@ -109,6 +109,18 @@ public class XMLStepperTest {
         } catch (Exception e) {
             // Expected
         }
+    }
+
+    @Test
+    public void testPartialALTO() throws XMLStreamException, IOException {
+        final String FEDORA = Resolver.resolveUTF8String("xml/partial_alto.xml");
+        final String XPATH = "digitalObjectBundle/digitalObject/datastream[@ID='ALTO']/datastreamVersion/xmlContent/alto";
+
+        XMLStreamReader xmlALTOReader = XMLStepper.jumpToNextFakeXPath(FEDORA, XPATH);
+        assertNotNull(xmlALTOReader, "ALTO block should be findable with path '" + XPATH + "'");
+        String alto = XMLStepper.getSubXML(xmlALTOReader, true);
+        assertNotNull(alto, "Extracted ALTO should not be null");
+        System.out.println(alto);
     }
 
     @Test
