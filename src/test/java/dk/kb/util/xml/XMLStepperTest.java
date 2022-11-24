@@ -99,6 +99,19 @@ public class XMLStepperTest {
     }
 
     @Test
+    public void testGetSubXMLLocationIndependentFail() throws XMLStreamException {
+        final String EXPECTED = "<subsub>content2</subsub>";
+        final String XPATH = "//bar[@this='isit']/subsub";
+        try {
+            XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
+            fail("Using path '" + XPATH + "' should fail early as predicates for XPaths starting with '//' are " +
+                 "only supported for the last element");
+        } catch (Exception e) {
+            // Expected
+        }
+    }
+
+    @Test
     public void testFakeXPathParse() throws XMLStreamException {
         final String XPATH = "foo/bar[@this='isit']/subsub";
         XMLStepper.FakeXPath xPath = new XMLStepper.FakeXPath(XPATH);

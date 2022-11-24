@@ -755,6 +755,17 @@ public class XMLStepper {
                                                        "' from full expression '" + fakeXPath + "'", e);
                 }
             }
+
+            // Check for unsupported XPaths
+            if (locationIndependent) {
+                for (int i = 0 ; i < path.length-1 ; i++) { // -1 as the last element supports predicates
+                    if (path[i].hasPredicate) {
+                        throw new UnsupportedOperationException(
+                                "Currently only the last path element supports attributes. Got elements " +
+                                Arrays.toString(path));
+                    }
+                }
+            }
             // TODO: If locationIndependent, check for attribute-matcher and fail early
         }
 
