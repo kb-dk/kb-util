@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
+- Support for positioning an XMLStreamReader at a given XPath, so that the path-matching sub-XML can be processed or extracted
 
 ## [1.4.11](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.11)
 ### Added

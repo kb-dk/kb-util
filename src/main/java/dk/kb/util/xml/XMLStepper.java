@@ -23,6 +23,7 @@ import javax.xml.stream.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +32,19 @@ import java.util.regex.Pattern;
  * Helper class for stream oriented processing of XML.
  */
 public class XMLStepper {
+
+    private static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+    private static final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
+    static {
+        xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
+        // No resolving of external DTDs
+        xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+
+        // Need to repair namespaces for piping of subset of XML
+        // https://stackoverflow.com/questions/38970894/xmlstreamexception-the-namespace-uri-has-not-been-bound-to-a-prefix-ibm-jre
+        xmlOutFactory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, Boolean.TRUE);
+    }
+
     /**
      * Iterates through the start tags in the stream until the current sub tree in the DOM is depleted
      * Leaves the cursor after END_ELEMENT.
@@ -149,8 +163,6 @@ public class XMLStepper {
         }
         return true;
     }
-
-    private static final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
 
     /**
      * Equivalent to {@link #pipeXML(javax.xml.stream.XMLStreamReader, javax.xml.stream.XMLStreamWriter, boolean)} but
@@ -308,7 +320,7 @@ public class XMLStepper {
      */
     public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError, boolean onlyInner)
             throws XMLStreamException {
-        pipeXML(in, out, failOnError, onlyInner, null);
+        pipeXML(in, out, !failOnError, onlyInner, null);
     }
 
     public static boolean pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean ignoreErrors, boolean onlyInner,
@@ -486,12 +498,6 @@ public class XMLStepper {
         }
     }
 
-    private static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
-    static {
-        xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
-        // No resolving of external DTDs
-        xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-    }
     /**
      * Steps through the provided XML and returns the text content of the first element with the given tag.
      * @param xml the XML to extract text from.
@@ -650,10 +656,49 @@ public class XMLStepper {
     }
 
     /**
+     * Skips to the next position in the XML matching the given fakeXPath.
+     * If the fakeXPath cannot be matched, the xml stream will be depleted and false will be returned.
+     * @param xml       the XML to iterate for the given fakeXPath.
+     * @param fakeXPath a {@link FakeXPath}, as described in the class javaDoc.
+     * @return true if the fakeXPath was matched, else false. If false, the xml will be depleted.
+     * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     */
+    public static boolean jumpToNextFakeXPath(XMLStreamReader xml, final String fakeXPath)
+            throws XMLStreamException {
+        FakeXPath xpath = new FakeXPath(fakeXPath);
+        AtomicBoolean matched = new AtomicBoolean(false);
+        iterateTags(xml, new Callback() {
+            @Override
+            public PROCESS_ACTION elementStart2(XMLStreamReader xml, List<String> tags, String current) {
+                if (xpath.matches(xml, tags)) { // We have a match
+                    matched.set(true);
+                    return PROCESS_ACTION.requests_stop_success;
+                }
+                return PROCESS_ACTION.no_action;
+            }
+        });
+
+        return matched.get();
+    }
+
+    /**
+     * Skips to the next position in the XML matching the given fakeXPath.
+     * If the fakeXPath cannot be matched, the xml stream will be depleted and null will be returned.
+     * @param xml       the XML to iterate for the given fakeXPath.
+     * @param fakeXPath a {@link FakeXPath}, as described in the class javaDoc.
+     * @return an XMLStreamReader positioned at the given fakeXPath or null if there were no match.
+     * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     */
+    public static XMLStreamReader jumpToNextFakeXPath(String xml, final String fakeXPath) throws XMLStreamException {
+        XMLStreamReader xmlReader = xmlFactory.createXMLStreamReader(new StringReader(xml));
+        return jumpToNextFakeXPath(xmlReader, fakeXPath) ? xmlReader : null;
+    }
+
+    /**
      * Subset of XPath @{url https://www.w3schools.com/xml/xpath_syntax.asp}.
      * Parsing always start from the root of the document, so @{code foo} and {@code /foo} are equal.
      * For the same reason, {@code ..} is not supported.
-     * {@code //} is supported.
+     * {@code //} is supported, but not in combination with attributes on any element besides the last one.
      *
      * Predicate support:
      * {@code foo[@bar]}: The element foo with the attribute bar.
@@ -671,12 +716,13 @@ public class XMLStepper {
     // TODO: foo/[@bar=zoo]/*
     // TODO: foo matches foo/bar . Trailing /?
     // https://www.w3schools.com/xml/xpath_syntax.asp
-    private static class FakeXPath {
+    static class FakeXPath {
         private final String xpathString;
 
         private final boolean locationIndependent;
         private final PathElement[] path;
         private final PathElement extraction;
+        private final List<Boolean> matchTracker = new ArrayList<>();
 
         public FakeXPath(String fakeXPath) {
             if (fakeXPath.startsWith("//")) {
@@ -714,12 +760,48 @@ public class XMLStepper {
                                                        "' from full expression '" + fakeXPath + "'", e);
                 }
             }
+
+            // Check for unsupported XPaths
+            if (locationIndependent) {
+                for (int i = 0 ; i < path.length-1 ; i++) { // -1 as the last element supports predicates
+                    if (path[i].hasPredicate) {
+                        throw new UnsupportedOperationException(
+                                "Currently only the last path element supports attributes. Got elements " +
+                                Arrays.toString(path));
+                    }
+                }
+            }
+            // TODO: If locationIndependent, check for attribute-matcher and fail early
         }
 
         public boolean matches(XMLStreamReader xml, List<String> tags) {
-            if (locationIndependent && path.length < tags.size()) {
+            if (locationIndependent) {
+                return matchesLocationIndependent(xml, tags);
+            }
+            // Adjust tracker to match tag-chain size
+            while(matchTracker.size() > tags.size()) {
+                matchTracker.remove(matchTracker.size()-1);
+            }
+            while(matchTracker.size() < tags.size()) {
+                matchTracker.add(false);
+            }
+            if (path.length < tags.size()) {
+                return false;
+            }
+
+            // Update tracker
+            final int current = tags.size()-1;
+            matchTracker.set(current, path[current].matches(xml, tags.get(current)));
+            // Check for match
+            if (path.length != tags.size()) {
+                return false;
+            }
+            return !matchTracker.contains(Boolean.FALSE);
+        }
+        public boolean matchesLocationIndependent(XMLStreamReader xml, List<String> tags) {
+            if (path.length < tags.size()) {
                 int offset = tags.size() - path.length;
-                return matches(xml, tags.subList(offset, tags.size()));
+                return matchesLocationIndependent(xml, tags.subList(offset, tags.size()));
             }
             if (path.length != tags.size()) {
                 return false;
@@ -738,6 +820,10 @@ public class XMLStepper {
 
         public String getFakeXPathString() {
             return xpathString;
+        }
+
+        public String toString() {
+            return Strings.join(List.of(path), "/");
         }
 
         public static class PathElement {
@@ -832,6 +918,22 @@ public class XMLStepper {
                 }
                 xml.next(); // Hmm... Could we avoid this?
                 return attributeValue;
+            }
+
+            @Override
+            public String toString() {
+                if (isAttribute) {
+                    return "@" + key;
+                }
+                String val = key;
+                if (hasPredicate) {
+                    val += "[@" + predicateAttributeName;
+                    if (predicateAttributeValue != null) {
+                        val += "='" + predicateAttributeValue + "'";
+                    }
+                    val += "]";
+                }
+                return val;
             }
         }
     }
