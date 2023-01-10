@@ -1191,9 +1191,12 @@ public class YAML extends LinkedHashMap<String, Object> {
     static String substitute(String s) {
         synchronized (YAML.class) {
             if (substitutors == null) {
-                substitutors = new ArrayList<>(2);
-                substitutors.add(StringSubstitutor.createInterpolator()); // General prefix based
-                substitutors.add(new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()));
+                substitutors = List.of(
+                        // General prefix based
+                        StringSubstitutor.createInterpolator(),
+                        // Default to system property lookup
+                        new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()).
+                                setEnableUndefinedVariableException(true));
             }
         }
         for (StringSubstitutor substitutor: substitutors) {
