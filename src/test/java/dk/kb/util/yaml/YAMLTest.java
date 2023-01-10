@@ -1,6 +1,7 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
+import org.apache.commons.collections4.functors.ExceptionPredicate;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -160,8 +161,12 @@ class YAMLTest {
     @Test
     public void testNonResolvableExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolate(true);
-        assertEquals("${cannot.be.resolved}", yaml.getString("test.somestring"),
-                     "Requesting a non-resolvable system property should return the original string");
+        try {
+            yaml.getString("test.somestring"); // Contains ${cannot.be.resolved}
+            fail("Requesting a non-resolvable system property should fail");
+        } catch (Exception e) {
+            // Expected
+        }
     }
 
     @Test
@@ -210,6 +215,28 @@ class YAMLTest {
     }
     
     @Test
+    public void testExtrapolatedExceptionImplicit() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        try {
+            yaml.getString("exceptionimplicit");
+            fail("Requesting a property with expansion of implicit sys:, where the expansion could not be fullfilled, should throw an Exception");
+        } catch (Exception e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testExtrapolatedExceptionExplicitEnv() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        try {
+            yaml.getString("exceptionenv");
+            fail("Requesting a property with expansion of explicit env:, where the expansion could not be fullfilled, should throw an Exception");
+        } catch (Exception e) {
+            // Expected
+        }
+    }
+
+    @Test
     public void testExtrapolatedFallback() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         String actual = yaml.getString("fallback");
@@ -252,11 +279,6 @@ class YAMLTest {
     public void testExtrapolatedEnv() throws IOException {
         assertExtrapolated("envuser", System.getProperty("user.name"),
                      "Looking up an environment variable should work (assuming env:USERNAME == sys:user.name)");
-    }
-
-    @Test
-    public void testNonExpansion() throws IOException {
-        assertExtrapolated("nonexpand", "${raw}", "Escaping expansion characters should provide the non-expanded source value");
     }
 
     @Test
