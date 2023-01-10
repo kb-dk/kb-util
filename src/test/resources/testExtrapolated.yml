@@ -5,7 +5,22 @@ test:
   somedouble: ${java.class.version}
   somebool: true
   fallback: ${nonexisting.property:-mydefault}
+  envfallback: ${sys:NOT_DEFINED:-envdefault}
+  nestedfallback: ${nonexisting:-${user.home:-dontreach}}
+
+  # Unfortunately nested fallback does not work with prefix, so nestedfallbacksyssys results in "dontreach"
+  nestedfallbacksyssys: ${sys:nonexisting:-${sys:user.home:-dontreach}}
+
+  # Unfortunately nested fallback does not work with prefix, so env-resolving does not work for secondary lookup
+  mixedfallbacksysenv: ${nonexisting:-${env:USERNAME:-dontreach}}
+
+  # This works as the prefix-requiring environment lookup is first in the chain
+  mixedfallbackenvsys: ${env:NONEXISTING:-${user.name:-dontreach}}
+
+  nestedfallbackfail: ${nonexisting:-${also.nonexisting:-reach}}
   sysuser: ${sys:user.name}
+  envuser: ${env:USERNAME}
+  nonexpand: $${raw}
   nested:
     sublevel2string: ${user.name}
   arrayofstrings:
