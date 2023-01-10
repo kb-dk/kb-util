@@ -80,6 +80,11 @@ import java.util.stream.Collectors;
  * Note: Besides system environment, it is possible to use other substitutions, such as environment variables using
  * the syntax {@code ${env:USERNAME}}. See the JavaDoc for {@link StringSubstitutor} for examples. Where possible,
  * use system environment as that is the least unstable across platforms.
+ *
+ * Note 2: Nested fallbacks is somewhat possible, but works poorly with prefixed lookups. As {@code sys:} is implicit
+ * a working "provide the value either as system properties or environment variables" definition can be written as
+ * {@code ${env:USERNAME:-${user.name:-igiveup}}} where switching {@code env:USERNAME} and {@code user.name} will not
+ * work.
  */
 public class YAML extends LinkedHashMap<String, Object> {
 

@@ -218,11 +218,51 @@ class YAMLTest {
     }
 
     @Test
-    public void testExtrapolatedExplicit() throws IOException {
+    public void testExtrapolatedEnvFallback() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        String actual = yaml.getString("sysuser");
-        assertEquals(System.getProperty("user.name"), actual,
-                     "Looking up an explicit system property should work");
+        String actual = yaml.getString("envfallback");
+        assertEquals("envdefault", actual,
+                     "Looking up a non-existing environment variable with fallback should return the fallback");
+    }
+
+    @Test
+    public void testExtrapolatedNestedFallbackHit() throws IOException {
+        final String home = System.getProperties().getProperty("user.home");
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        String actual = yaml.getString("nestedfallback");
+        assertEquals(home, actual,
+                     "Looking up a non-existing environment variable with fallback to an existing environment variable should return the value of the secondary environment variable");
+    }
+
+    @Test
+    public void testExtrapolatedNestedFallbackFail() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        String actual = yaml.getString("nestedfallbackfail");
+        assertEquals("reach", actual,
+                     "Looking up a non-existing environment variable with nonexisting fallback resolve  should return the fallback's fallback");
+    }
+
+    @Test
+    public void testExtrapolatedExplicit() throws IOException {
+        assertExtrapolated("sysuser", System.getProperty("user.name"),
+                           "Looking up a sys:-prefixed system property should work");
+    }
+
+    @Test
+    public void testExtrapolatedEnv() throws IOException {
+        assertExtrapolated("envuser", System.getProperty("user.name"),
+                     "Looking up an environment variable should work (assuming env:USERNAME == sys:user.name)");
+    }
+
+    @Test
+    public void testNonExpansion() throws IOException {
+        assertExtrapolated("nonexpand", "${raw}", "Escaping expansion characters should provide the non-expanded source value");
+    }
+
+    @Test
+    public void testExtrapolatedMixedFallbackEnvSys() throws IOException {
+        assertExtrapolated("mixedfallbackenvsys", System.getProperty("user.name"),
+                     "Nested fallback should work across env/sys");
     }
 
     @Test
@@ -458,4 +498,12 @@ class YAMLTest {
                      "Dotted list-key with index test.'sub.list'.[0]");
     }
 
+
+    /* Helpers below */
+
+    private void assertExtrapolated(String path, String expected, String message) throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        String actual = yaml.getString(path);
+        assertEquals(expected, actual, message);
+    }
 }
