@@ -126,7 +126,7 @@ public abstract class ImplBase {
      * Intended for exceptions and debugging.
      * @return current endpoint and parameters, as well as accept-header.
      */
-    private String getCallDetails() {
+    public String getCallDetails() {
         String method = httpServletRequest.getMethod(); // GET, DELETE...
         String context = httpServletRequest.getContextPath(); // java-webapp
         String mapping = httpServletRequest.getHttpServletMapping().getMatchValue(); // v1
