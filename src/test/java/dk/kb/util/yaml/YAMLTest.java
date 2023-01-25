@@ -219,7 +219,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         try {
             yaml.getString("exceptionimplicit");
-            fail("Requesting a property with expansion of implicit sys:, where the expansion could not be fullfilled, should throw an Exception");
+            fail("Requesting a property with expansion of implicit sys:, where the expansion could not be fulfilled, should throw an Exception");
         } catch (Exception e) {
             // Expected
         }
@@ -230,7 +230,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         try {
             yaml.getString("exceptionenv");
-            fail("Requesting a property with expansion of explicit env:, where the expansion could not be fullfilled, should throw an Exception");
+            fail("Requesting a property with expansion of explicit env:, where the expansion could not be fulfilled, should throw an Exception");
         } catch (Exception e) {
             // Expected
         }
