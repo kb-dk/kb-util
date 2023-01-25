@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
+## [1.4.12](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.12)
+### Added
+
 - Support for positioning an XMLStreamReader at a given XPath, so that the path-matching sub-XML can be processed or extracted
 - Exception throwing on unfulfillable expansion in YAML configs
 
