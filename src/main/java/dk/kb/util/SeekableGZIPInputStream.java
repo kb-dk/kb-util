@@ -33,10 +33,15 @@ public class SeekableGZIPInputStream extends InputStream {
     private static final Logger log = LoggerFactory.getLogger(SeekableGZIPInputStream.class);
 
     private final RandomAccessFile raf;
+    private final int gzipBufferSize;
     private RandomAccessFileInputStream rafis;
     private GZIPInputStream gis = null;
 
     public SeekableGZIPInputStream(File gzipFile) throws IOException {
+        this(gzipFile, -1);
+    }
+
+    public SeekableGZIPInputStream(File gzipFile, int gzipBufferSize) throws IOException {
         if (!gzipFile.exists()) {
             throw new FileNotFoundException("Unable to locate '" + gzipFile + "'");
         }
@@ -44,6 +49,7 @@ public class SeekableGZIPInputStream extends InputStream {
             throw new IOException("Cannot read '" + gzipFile + "'");
         }
         raf = new RandomAccessFile(gzipFile, "r");
+        this.gzipBufferSize = gzipBufferSize;
     }
 
     /**
@@ -91,7 +97,9 @@ public class SeekableGZIPInputStream extends InputStream {
     private void ensureStream() throws IOException {
         if (gis == null) {
             rafis = new RandomAccessFileInputStream(raf, false);
-            gis = new GZIPInputStream(rafis);
+            gis = gzipBufferSize == -1 ?
+                    new GZIPInputStream(rafis) :
+                    new GZIPInputStream(rafis, gzipBufferSize);
         }
     }
 
