@@ -53,7 +53,9 @@ public class SeekableGZIPInputStream extends InputStream {
     }
 
     /**
-     * Seek to the given position.
+     * Seek to the given position in the GZIP compressed file.
+     * Seeking in the decompressed content of the file is not supported.
+     * <p>
      * The bytes at the given position must be the beginning of a valid GZIP-block.
      * @param pos the position in the file, measured in bytes.
      * @throws IOException if -1 is given or an IO error occurred.
