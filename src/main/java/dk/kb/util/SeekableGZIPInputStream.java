@@ -92,9 +92,17 @@ public class SeekableGZIPInputStream extends InputStream {
         return gis.read(b, off, len);
     }
 
+    @Override
+    public void close() throws IOException {
+        if (gis != null) {
+            gis = null;
+        }
+        raf.close();
+    }
+
     /**
-     * If a GZIPInputStream is available it is constructed from the current position in the underlying
-     * {@link RandomAccessFile}. If already available nothing is done.
+     * If a GZIPInputStream is not already created, it is constructed from the current position in the
+     * underlying {@link RandomAccessFile}. If already available nothing is done.
      */
     private void ensureStream() throws IOException {
         if (gis == null) {
