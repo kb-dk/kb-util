@@ -1,5 +1,6 @@
 package dk.kb.util;
 
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,8 @@ class SeekableGZIPInputStreamTest {
 
     @Test
     void testBasicGZIP() throws IOException {
-        InputStream gis = new GZIPInputStream(Resolver.resolveURL("multi.gz").openStream());
+        InputStream gis = new GzipCompressorInputStream(
+                Resolver.resolveURL("multi.gz").openStream(), false);
         assertEquals("Foo", IOUtils.toString(gis, StandardCharsets.UTF_8),
                 "Reading until EOF should return only the first gzip block");
     }
@@ -48,12 +50,15 @@ class SeekableGZIPInputStreamTest {
         try (SeekableGZIPInputStream szip = new SeekableGZIPInputStream(
                 Resolver.getPathFromClasspath("multi.gz").toFile())) {
             assertEquals("Foo", read(szip, 3), "First block should be directly readable");
-            szip.seek(24);
+            szip.seek(23);
             assertEquals("Hello World!", read(szip, 12), "Second block should be readable after seek");
-            szip.seek(57);
+            szip.seek(55);
             assertEquals("bar", read(szip, 3), "Third block should be readable after seek");
         }
     }
+
+    // TODO: Add test for getting position in the uncompressed file
+    // TODO: Add test for uncompressing subsequent blocks without explicit seeks
 
     @Test
     void testFullFirstRead() throws IOException {
@@ -68,7 +73,7 @@ class SeekableGZIPInputStreamTest {
     void testFullSecondRead() throws IOException {
         try (SeekableGZIPInputStream szip = new SeekableGZIPInputStream(
                 Resolver.getPathFromClasspath("multi.gz").toFile())) {
-            szip.seek(24);
+            szip.seek(23);
             assertEquals("Hello World!", IOUtils.toString(szip, StandardCharsets.UTF_8),
                     "Reading until EOF should return current gzip block");
         }
@@ -82,7 +87,7 @@ class SeekableGZIPInputStreamTest {
      */
     private String read(InputStream stream, int length) throws IOException {
         byte[] buffer = new byte[length];
-        assertEquals(length, stream.read(buffer), "The expecte number of bytes should be read");
+        assertEquals(length, stream.read(buffer), "The expected number of bytes should be read");
         return new String(buffer, StandardCharsets.UTF_8);
     }
 }
