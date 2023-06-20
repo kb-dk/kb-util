@@ -14,6 +14,7 @@
  */
 package dk.kb.util;
 
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.input.RandomAccessFileInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +34,10 @@ public class SeekableGZIPInputStream extends InputStream {
     private static final Logger log = LoggerFactory.getLogger(SeekableGZIPInputStream.class);
 
     private final RandomAccessFile raf;
-    private final int gzipBufferSize;
     private RandomAccessFileInputStream rafis;
-    private GZIPInputStream gis = null;
+    private GzipCompressorInputStream gis = null;
 
     public SeekableGZIPInputStream(File gzipFile) throws IOException {
-        this(gzipFile, -1);
-    }
-
-    public SeekableGZIPInputStream(File gzipFile, int gzipBufferSize) throws IOException {
         if (!gzipFile.exists()) {
             throw new FileNotFoundException("Unable to locate '" + gzipFile + "'");
         }
@@ -49,7 +45,6 @@ public class SeekableGZIPInputStream extends InputStream {
             throw new IOException("Cannot read '" + gzipFile + "'");
         }
         raf = new RandomAccessFile(gzipFile, "r");
-        this.gzipBufferSize = gzipBufferSize;
     }
 
     /**
@@ -107,9 +102,7 @@ public class SeekableGZIPInputStream extends InputStream {
     private void ensureStream() throws IOException {
         if (gis == null) {
             rafis = new RandomAccessFileInputStream(raf, false);
-            gis = gzipBufferSize == -1 ?
-                    new GZIPInputStream(rafis) :
-                    new GZIPInputStream(rafis, gzipBufferSize);
+            gis = new GzipCompressorInputStream(rafis, false);
         }
     }
 
