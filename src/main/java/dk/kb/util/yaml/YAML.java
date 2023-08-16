@@ -572,10 +572,14 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
     
     /**
-     * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either -
-     * YAML-key for direct traversal, e.g. "foo" or "foo.bar" - YAML-key[index] for a specific element in a list, e.g.
-     * "foo.[2]" or "foo.[2].bar" - YAML-key.[last] for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"
-     * Sample path: {@code foo.bar}
+     * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either
+     * <ul>
+     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
+     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
+     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
+     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
+     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
+     *  </ul> 
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      * <p>
      * Returns this object if the path is empty
