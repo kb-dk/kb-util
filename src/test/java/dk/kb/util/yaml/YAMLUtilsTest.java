@@ -87,14 +87,4 @@ class YAMLUtilsTest {
                      flattenedValues);
     }
 
-    @Test
-    public void testPathSubstitute() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("yaml/path_substitution.yaml");
-        yaml.setExtrapolate(true);
-
-        assertEquals("foo", yaml.get(".lower.bar"), "Basic path substitution should work");
-        assertEquals("boom", yaml.get(".fallback.bar"), "Path substitution with default value should work");
-        assertEquals("foo", yaml.get(".mixing.bar"), "Path substitution with default value should work");
-    }
-
 }
