@@ -539,4 +539,22 @@ class YAMLTest {
         assertEquals("foo", yaml.get(".mixing.bar"), "Path substitution with default value should work");
     }
 
+    @Test
+    public void testConditionalIndex() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("boom", yaml.get("conditionalmap.[default=true].foo"));
+    }
+
+    @Test
+    public void testReverseConditionalIndex() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("bar", yaml.get("conditionalmap.[default!=true].foo"));
+    }
+
+    @Test
+    public void testConditionalIndexFlat() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("boom", yaml.get("conditionalflat.[default=true].foo"));
+    }
+
 }
