@@ -1,0 +1,14 @@
+upper:
+  sub1: foo
+
+middle:
+  zoo: ${user.home}
+
+lower:
+  bar: "${path:upper.sub1}"
+
+fallback:
+  bar: "${path:upper.nothere:-boom}"
+
+mixing:
+  bar: "${env:NONEXISTING:-${path:upper.sub1}}"

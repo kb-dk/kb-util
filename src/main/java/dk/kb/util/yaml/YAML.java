@@ -16,6 +16,7 @@ package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
 import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.text.lookup.StringLookup;
 import org.apache.commons.text.lookup.StringLookupFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1188,20 +1190,62 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param s the String to substitute.
      * @return s substituted.
      */
-    static String substitute(String s) {
+    String substitute(String s) {
         synchronized (YAML.class) {
             if (substitutors == null) {
                 substitutors = List.of(
                         // General prefix based
                         StringSubstitutor.createInterpolator(),
                         // Default to system property lookup
-                        new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()).
-                                setEnableUndefinedVariableException(true));
+                        new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()),
+                        PathSubstitutor.createInterpolator(this).setEnableUndefinedVariableException(true));
             }
         }
         for (StringSubstitutor substitutor: substitutors) {
             s = substitutor.replace(s);
         }
         return s;
+    }
+
+    /**
+     * Substitutor that takes paths in the current YAML.
+     * See {@link PathLookup} for details on syntax and use.
+     */
+    private static class PathSubstitutor {
+        /**
+         * Create a path based substitutor backed by the given YAML.
+         * @param yaml the YAML used for resolving paths.
+         * @return a path substitutor.
+         */
+        public static StringSubstitutor createInterpolator(YAML yaml) {
+            return new StringSubstitutor(new PathLookup(yaml)).
+                    setVariablePrefix("${path"); // Default suffix is '}'
+        }
+    }
+
+    /**
+     * A path based StringLookup that operates on a given YAML.
+     * The path is used directly with {@link YAML#get(Object)}.
+     */
+    private static class PathLookup implements StringLookup {
+        private final YAML yaml;
+
+        /**
+         * @param yaml the YAML used for resolving paths.
+         */
+        public PathLookup(YAML yaml) {
+            this.yaml = yaml;
+        }
+
+        @Override
+        public String lookup(String key) {
+            // For some reason keys starts with the delimiter character ':'
+            key = key.substring(1);
+            try {
+                return yaml.get(key).toString();
+            } catch (NotFoundException e) {
+                return null; // The framework will handle it if action needs to be taken
+            }
+        }
     }
 }
