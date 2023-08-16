@@ -33,14 +33,7 @@ import java.net.MalformedURLException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -96,9 +89,10 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
+    private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
 
     private boolean extrapolateSystemProperties = false;
-    private static List<StringSubstitutor> substitutors = null;
+    private List<StringSubstitutor> substitutors = null;
     
     /**
      * Creates an empty YAML.
@@ -586,7 +580,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Returns this object if the path is empty
      *
-     * @param pathO path for the Object.
+     * @param path path for the Object.
      * @return the Object. Will never return null, will rather throw exceptions
      * @throws NotFoundException    if the path cannot be found
      * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
@@ -596,7 +590,11 @@ public class YAML extends LinkedHashMap<String, Object> {
     @SuppressWarnings("unchecked")
     @Override
     @NotNull
-    public Object get(Object pathO) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
+        return get(path, this);
+    }
+    // The real implementation of get(path), made flexible so that the entry YAML can be specified
+    private Object get(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
@@ -605,7 +603,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             path = path.substring(1);
         }
         List<String> pathElements = splitPath(path);
-        YAML current = this;
+        YAML current = yaml;
         for (int i = 0; i < pathElements.size(); i++) {
             String fullPathElement = pathElements.get(i);
             Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
@@ -628,32 +626,13 @@ public class YAML extends LinkedHashMap<String, Object> {
                 throw new NotFoundException(
                         "Unable to request " + i + "'th sub-element: '" + pathKey + "'", path);
             }
-            
-            if (arrayElementIndex != null) { // foo.bar.[2]
-                final Collection<Object> subCollection;
-                if (sub instanceof List) {
-                    subCollection = (List<Object>) sub;
-                } else if (sub instanceof Map) {
-                    subCollection = ((Map<String,Object>) sub).values();
-                } else {
-                    throw new InvalidTypeException(String.format(
-                            Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
-                            fullPathElement, pathKey, sub.getClass().getSimpleName()), path);
-        
-                }
-    
-                int index = "last".equals(arrayElementIndex) ?
-                                    subCollection.size() - 1 :
-                                    Integer.parseInt(arrayElementIndex);
-                if (index >= subCollection.size()) {
-                    throw new IndexOutOfBoundsException(String.format(
-                            Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
-                            index, subCollection.size(), fullPathElement, path));
-                }
-                sub = subCollection.stream().skip(index).findFirst().orElseThrow(
-                        () -> new RuntimeException("This should not happen..."));
+
+            // Handle array lookup
+
+            if (arrayElementIndex != null) { // foo.bar.[2] or foo.bar.[key=val]
+                sub = getArrayElement(sub, arrayElementIndex, pathKey, fullPathElement, path);
             }
-            
+
             if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
                 return extrapolate(sub);
             } //Otherwise, we require that it is a map so we can continue to query
@@ -669,7 +648,8 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
             if (!(sub instanceof Map)) {
                 throw new InvalidTypeException(
-                        "The " + i + "'th sub-element ('" + pathKey + "') was not a Map", path);
+                        "The " + i + "'th sub-element ('" + pathKey + "') was not a Map but a " +
+                                sub.getClass().getSimpleName(), path);
             }
             try { //Update current as the sub we have found
                 current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties);
@@ -679,6 +659,114 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
         }
         return current;
+    }
+
+    /**
+     * Extract an element in the given {@code collection}, where {@code arrayElementDesignation} specifies the element,
+     * either as direct index {@code 0, 1, 3...}, the keyword {@code last} or as conditional {@code key=value} or
+     * {@code key!=value}.
+     * <p>
+     * Conditional matching requires the elements in the {@code collection} to be maps, for looking up the key to match.
+     * The first element that satisfies the conditional is returned.
+     * @param collection a list or a map containing maps.
+     * @param arrayElementKey the key for looking up an element.
+     * @param pathKey the key for the {@code collection}. Used for error messages.
+     * @param fullPathElement extended version of the {@code pathKey}. Used for error messages.
+     * @param path the full path expression. Used for error messages.
+     * @return
+     */
+    private Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
+        final Collection<Object> subCollection;
+        if (collection instanceof List) {
+            subCollection = (List<Object>) collection;
+        } else if (collection instanceof Map) {
+            subCollection = ((Map<String,Object>) collection).values();
+        } else {
+            throw new InvalidTypeException(String.format(
+                    Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
+                    fullPathElement, pathKey, collection.getClass().getSimpleName()), path);
+
+        }
+
+        // Check for conditional: "foo.bar[zoo=baz]
+        Matcher arrayMatch = ARRAY_CONDITIONAL.matcher(arrayElementKey);
+        if (arrayMatch.matches()) {
+            String key = arrayMatch.group(1);
+            boolean mustMatch = arrayMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
+            String value = arrayMatch.group(3);
+            return subCollection.stream().
+                    map(element -> conditionalGet(element, key, value, mustMatch)).
+                    filter(Objects::nonNull).
+                    findFirst().
+                    orElseThrow(() -> new IndexOutOfBoundsException(String.format(
+                            Locale.ENGLISH,
+                            "The collection conditional %s %s %s could not be satisfied for path element %s in path %s",
+                            key, mustMatch ? "=" : "!=", value, fullPathElement, path))
+                    );
+        }
+
+        // Index based lookup
+        int index = "last".equals(arrayElementKey) ?
+                            subCollection.size() - 1 :
+                            Integer.parseInt(arrayElementKey);
+        if (index >= subCollection.size()) {
+            throw new IndexOutOfBoundsException(String.format(
+                    Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
+                    index, subCollection.size(), fullPathElement, path));
+        }
+        return subCollection.stream().skip(index).findFirst().orElseThrow(
+                () -> new RuntimeException("This should not happen..."));
+    }
+
+    /**
+     * Checks if the conditional is satisfied for the given element and if so returns it.
+     * If the element is not a map, an exception will be thrown.
+     * @param map the map to use for lookup.
+     * @param key the key to look up.
+     * @param value the value to match.
+     * @param mustMatch if true, the result of lookup for the key must match the value.
+     *                  If false, the result of a lookup for the key must not match the value.
+     * @return the element if the conditional is satisfied.
+     */
+    @SuppressWarnings("unchecked")
+    private Object conditionalGet(Object map, String key, String value, boolean mustMatch) {
+        if (!(map instanceof Map)) {
+            throw new IllegalArgumentException("Conditional index lookup requires sub-elements to be Maps, " +
+                    "but the current element was a " + map.getClass().getSimpleName());
+        }
+        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties);
+
+        // Check at the outer level for flat map style
+        Object keyValue;
+        try {
+            keyValue = subYAML.get(key);
+        } catch (NotFoundException e) {
+            keyValue = null;
+        }
+
+        if (keyValue == null) {
+            // Check at the inner level for nested map style (commonly used @ kb.dk)
+            keyValue = ((Map<String, Object>)map).values().stream().
+                    filter(element -> element instanceof Map).
+                    map(element -> (Map<?, ?>)element).
+                    filter(elementMap -> evaluateConditional(value, elementMap.get(key), mustMatch)).
+                    findFirst().
+                    orElse(null);
+
+            // Return nested map if one of its elements satisfies the condition
+            if (keyValue != null) {
+                return keyValue;
+            }
+        }
+
+        // Flat map style
+        return evaluateConditional(value, keyValue, mustMatch) ? subYAML : null;
+    }
+
+    private boolean evaluateConditional(String expected, Object value, boolean mustMatch) {
+        return mustMatch ?
+                value != null && value.toString().equals(expected) :
+                value == null || !value.toString().equals(expected);
     }
 
     private Object extrapolate(Object sub) {
@@ -1197,8 +1285,9 @@ public class YAML extends LinkedHashMap<String, Object> {
                         // General prefix based
                         StringSubstitutor.createInterpolator(),
                         // Default to system property lookup
-                        new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()),
-                        PathSubstitutor.createInterpolator(this).setEnableUndefinedVariableException(true));
+                        PathSubstitutor.createInterpolator(this),
+                        new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()).
+                                setEnableUndefinedVariableException(true));
             }
         }
         for (StringSubstitutor substitutor: substitutors) {

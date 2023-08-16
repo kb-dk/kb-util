@@ -4,3 +4,35 @@ test:
     - fooA1: barA1
       fooA2: barA2
     - fooB: barB
+
+conditionalmap:
+  - bucket1:
+      foo: bar
+      # Note: No default defined
+
+  - bucket2:
+      foo: zoo
+      default: false
+
+  - bucket3:
+      foo: boom
+      default: true
+
+  - bucket4:
+      foo: baz
+
+conditionalflat:
+  - bucket1:
+    foo: bar
+      # Note: No default defined
+
+  - bucket1:
+    foo: zoo
+    default: false
+
+  - bucket3:
+    foo: boom
+    default: true
+
+  - bucket4:
+    foo: baz
