@@ -557,4 +557,12 @@ class YAMLTest {
         assertEquals("boom", yaml.get("conditionalflat.[default=true].foo"));
     }
 
+    @Test
+    public void testConditionalPathSubstitute() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/path_substitution.yaml");
+        yaml.setExtrapolate(true);
+
+        assertEquals("kaboom", yaml.get(".sams.bar"), "Path substitution with conditional path should work");
+    }
+
 }
