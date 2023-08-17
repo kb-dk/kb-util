@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Path-substitution in YAML, allowing for YAML entries like `dburl: ${path:databases.primary.url}`
+- Conditionals in path in YAML, allowing for Java calls like `myYAML.get("databases.[default=true].url");`
+- Combining path substitution and conditional paths, allowing for YAML entries like `dburl: ${path:databases.[default=true].url}` 
 
 ## [1.4.12](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.12)
 ### Added
