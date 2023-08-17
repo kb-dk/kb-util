@@ -64,3 +64,8 @@ conditionalanonymousmaplist:
     default: true
   - name: bucket4
     foo: baz
+
+# For testing yaml.getSubMap
+nested:
+  inner:
+    foosubst: ${path:conditionalpropermap.[default=true].foo}
