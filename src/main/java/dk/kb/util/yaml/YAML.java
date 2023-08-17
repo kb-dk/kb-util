@@ -677,22 +677,21 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param pathKey the key for the {@code collection}. Used for error messages.
      * @param fullPathElement extended version of the {@code pathKey}. Used for error messages.
      * @param path the full path expression. Used for error messages.
-     * @return
+     * @return the first element in the collection that satisfies the given index or condition.
      */
     private Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
-        final Collection<Object> subCollection;
+        final Collection<?> subCollection;
         if (collection instanceof List) {
-            subCollection = (List<Object>) collection;
+            subCollection = (List<?>) collection;
         } else if (collection instanceof Map) {
-            subCollection = ((Map<String,Object>) collection).values();
+            subCollection = ((Map<?, ?>) collection).values();
         } else {
             throw new InvalidTypeException(String.format(
                     Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
                     fullPathElement, pathKey, collection.getClass().getSimpleName()), path);
-
         }
 
-        // Check for conditional: "foo.bar[zoo=baz]
+        // Check for & handle conditional: foo.bar[zoo=baz]
         Matcher arrayMatch = ARRAY_CONDITIONAL.matcher(arrayElementKey);
         if (arrayMatch.matches()) {
             String key = arrayMatch.group(1);
@@ -709,10 +708,16 @@ public class YAML extends LinkedHashMap<String, Object> {
                     );
         }
 
-        // Index based lookup
-        int index = "last".equals(arrayElementKey) ?
-                            subCollection.size() - 1 :
-                            Integer.parseInt(arrayElementKey);
+        // Index based lookup: foo.bar[3] or foo.bar[last]
+        int index;
+        try {
+            index = "last".equals(arrayElementKey) ?
+                    subCollection.size() - 1 :
+                    Integer.parseInt(arrayElementKey);
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException(
+                    "Expected integer, 'last' or conditional for array lookup but got '" + arrayElementKey + "'");
+        }
         if (index >= subCollection.size()) {
             throw new IndexOutOfBoundsException(String.format(
                     Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
