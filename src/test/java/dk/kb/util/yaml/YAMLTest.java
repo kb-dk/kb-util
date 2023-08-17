@@ -542,19 +542,49 @@ class YAMLTest {
     @Test
     public void testConditionalIndex() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
-        assertEquals("boom", yaml.get("conditionalmap.[default=true].foo"));
+        assertEquals("boom", yaml.get("conditionalpropermap.[default=true].foo"));
+    }
+
+    @Test
+    public void testNonConditionalMap() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("zoo", yaml.get("conditionalpropermap.bucket2.foo"));
+    }
+
+    @Test
+    public void testNonConditionalMapList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("zoo", yaml.get("conditionalmaplist[1].bucket2.foo"));
     }
 
     @Test
     public void testReverseConditionalIndex() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
-        assertEquals("bar", yaml.get("conditionalmap.[default!=true].foo"));
+        assertEquals("bar", yaml.get("conditionalpropermap.[default!=true].foo"));
     }
 
     @Test
-    public void testConditionalIndexFlat() throws IOException {
+    public void testConditionalIndexProper() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
-        assertEquals("boom", yaml.get("conditionalflat.[default=true].foo"));
+        assertEquals("boom", yaml.get("conditionalpropermap.[default=true].foo"));
+    }
+
+    @Test
+    public void testConditionalMapList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("boom", yaml.get("conditionalmaplist.[default=true].foo"));
+    }
+
+    @Test
+    public void testConditionalFlatMapList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("boom", yaml.get("conditionalflatmaplist.[default=true].foo"));
+    }
+
+    @Test
+    public void testConditionalAnonymousMapList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        assertEquals("boom", yaml.get("conditionalanonymousmaplist.[default=true].foo"));
     }
 
     @Test

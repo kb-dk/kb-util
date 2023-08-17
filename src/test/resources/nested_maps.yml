@@ -5,34 +5,62 @@ test:
       fooA2: barA2
     - fooB: barB
 
-conditionalmap:
+# Nested map structure
+# Very common way of stating strucctures in YAML
+conditionalpropermap:
+  bucket1:
+    foo: bar
+    # Note: No default defined
+  bucket2:
+    foo: zoo
+    default: false
+  bucket3:
+    foo: boom
+    default: true
+  bucket4:
+    foo: baz
+
+# List of maps containing submaps
+# Not a clean way of writing YAML, but it happens
+conditionalmaplist:
   - bucket1:
       foo: bar
       # Note: No default defined
-
   - bucket2:
       foo: zoo
       default: false
-
   - bucket3:
       foo: boom
       default: true
-
   - bucket4:
       foo: baz
 
-conditionalflat:
+# List of maps containing values
+# A bit cleaner than conditionalmaplist, but still a strange design
+conditionalflatmaplist:
   - bucket1:
     foo: bar
-      # Note: No default defined
-
-  - bucket1:
+    # Note: No default defined
+  - bucket2:
     foo: zoo
     default: false
-
   - bucket3:
     foo: boom
     default: true
-
   - bucket4:
+    foo: baz
+
+# List of maps containing values below, without map id as explicit key
+# A common & sane YAML construction
+conditionalanonymousmaplist:
+  - name: bucket1
+    foo: bar
+    # Note: No default defined
+  - name: bucket2
+    foo: zoo
+    default: false
+  - name: bucket3
+    foo: boom
+    default: true
+  - name: bucket4
     foo: baz

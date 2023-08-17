@@ -16,18 +16,19 @@ mixing:
 sams:
   bar: "${path:conditionalmap[default=true].foo}"
 
+# Proper map below
 conditionalmap:
-  - bucket1:
-      foo: bar
-      # Note: No default defined
+  bucket1:
+    foo: bar
+    # Note: No default defined
 
-  - bucket2:
-      foo: zoo
-      default: false
+  bucket2:
+    foo: zoo
+    default: false
 
-  - bucket3:
-      foo: kaboom
-      default: true
+  bucket3:
+    foo: kaboom
+    default: true
 
-  - bucket4:
-      foo: baz
+  bucket4:
+    foo: baz
