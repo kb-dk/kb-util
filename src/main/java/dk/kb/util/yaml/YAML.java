@@ -212,7 +212,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
         //       This is needed for path substitution
-        return new YAML(result, extrapolateSystemProperties, substitutors);
+        return new YAML(result, extrapolateSystemProperties, getSubstitutors());
     }
     
     /**
