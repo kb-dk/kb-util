@@ -209,8 +209,10 @@ public class YAML extends LinkedHashMap<String, Object> {
                     Map.Entry::getValue
             ));
         }
-        
-        return new YAML(result, extrapolateSystemProperties, substitutors);
+
+        // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
+        //       This is needed for path substitution
+        return new YAML(result, extrapolateSystemProperties, getSubstitutors());
     }
     
     /**
@@ -292,7 +294,9 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException(
                     "Exception casting '" + found + "' to List<Map<String, Object>>", path, e);
         }
-        return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties, substitutors)).collect(Collectors.toList());
+        // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
+        //       This is needed for path substitution
+        return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties, getSubstitutors())).collect(Collectors.toList());
     }
     
     /**
@@ -671,7 +675,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                                 sub.getClass().getSimpleName(), path);
             }
             try { //Update current as the sub we have found
-                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties, substitutors);
+                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties, getSubstitutors());
             } catch (ClassCastException e) {
                 throw new InvalidTypeException(
                         "Expected a Map<String, Object> for path but got ClassCastException", path, e);
@@ -758,7 +762,9 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new IllegalArgumentException("Conditional index lookup requires sub-elements to be Maps, " +
                     "but the current element was a " + map.getClass().getSimpleName());
         }
-        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties, substitutors);
+        // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
+        //       This is needed for path substitution
+        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties, getSubstitutors());
 
         // Check at the outer level for flat map style
         Object keyValue;
@@ -1186,6 +1192,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return the updated base YAML.
      */
     public static YAML merge(YAML base, YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
+        base.substitutors = null; // Clear existing substitutors. They will be re-created for the merged YAML
         return (YAML)mergeEntry("", base, extra, defaultMA, listMA);
     }
 
@@ -1303,6 +1310,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return s substituted.
      */
     synchronized String substitute(String s) {
+        for (StringSubstitutor substitutor: getSubstitutors()) {
+            s = substitutor.replace(s);
+        }
+        return s;
+    }
+
+    public List<StringSubstitutor> getSubstitutors() {
         if (substitutors == null) {
             substitutors = List.of(
                     // General prefix based
@@ -1312,10 +1326,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                     new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()).
                             setEnableUndefinedVariableException(true));
         }
-        for (StringSubstitutor substitutor: substitutors) {
-            s = substitutor.replace(s);
-        }
-        return s;
+        return substitutors;
     }
 
     /**

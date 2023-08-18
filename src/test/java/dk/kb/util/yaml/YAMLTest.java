@@ -596,11 +596,20 @@ class YAMLTest {
     }
 
     @Test
-    public void testSubMapPath() throws IOException {
+    public void testDirectPath() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
         yaml.setExtrapolate(true);
 
         assertEquals("boom", yaml.get("nested.inner.foosubst"), "Getting by full path should work");
+    }
+
+    @Test
+    public void testSubMapPath() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        yaml.setExtrapolate(true);
+
+        // It is important to test this WITHOUT performing the direct get request from testDirectPath first as
+        // that creates the substitutors
         assertEquals("boom", yaml.getSubMap("nested").get("inner.foosubst"), "Getting from submap should work");
     }
 }
