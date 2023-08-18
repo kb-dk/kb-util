@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+
+## [1.4.14](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.14)
 ### Bugfix
-- Path-substitution failed when using `YAML.getSubMap(...)` and requesting a key with a substitution using value.
+- Path-substitution still failed when using `YAML.getSubMap(...)` and requesting a key with a substitution using value.
 
 ## [1.4.13](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.13)
 ### Added
