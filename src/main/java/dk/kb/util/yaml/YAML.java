@@ -137,7 +137,22 @@ public class YAML extends LinkedHashMap<String, Object> {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
         this.putAll(map);
     }
-    
+
+    /**
+     * Creates a YAML wrapper around the given map.
+     * Changes to the map will be reflected in the YAML instance and vice versa.
+     *
+     * @param map a map presumable delivered by SnakeYAML.
+     * @param extrapolateSystemProperties should system properties be extrapolated in values
+     * @param substitutors explicit specification of substitutors. Typically used for creating submaps.
+     */
+    YAML(Map<String, Object> map, boolean extrapolateSystemProperties,
+                List<StringSubstitutor> substitutors) {
+        this.extrapolateSystemProperties = extrapolateSystemProperties;
+        this.putAll(map);
+        this.substitutors = substitutors;
+    }
+
     /**
      * Resolves the YAML sub map at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: {@code foo.bar}
@@ -195,7 +210,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             ));
         }
         
-        return new YAML(result, extrapolateSystemProperties);
+        return new YAML(result, extrapolateSystemProperties, substitutors);
     }
     
     /**
@@ -277,7 +292,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException(
                     "Exception casting '" + found + "' to List<Map<String, Object>>", path, e);
         }
-        return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties)).collect(Collectors.toList());
+        return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties, substitutors)).collect(Collectors.toList());
     }
     
     /**
@@ -656,7 +671,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                                 sub.getClass().getSimpleName(), path);
             }
             try { //Update current as the sub we have found
-                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties);
+                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties, substitutors);
             } catch (ClassCastException e) {
                 throw new InvalidTypeException(
                         "Expected a Map<String, Object> for path but got ClassCastException", path, e);
@@ -743,7 +758,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new IllegalArgumentException("Conditional index lookup requires sub-elements to be Maps, " +
                     "but the current element was a " + map.getClass().getSimpleName());
         }
-        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties);
+        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties, substitutors);
 
         // Check at the outer level for flat map style
         Object keyValue;
@@ -1287,17 +1302,15 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param s the String to substitute.
      * @return s substituted.
      */
-    String substitute(String s) {
-        synchronized (YAML.class) {
-            if (substitutors == null) {
-                substitutors = List.of(
-                        // General prefix based
-                        StringSubstitutor.createInterpolator(),
-                        // Default to system property lookup
-                        PathSubstitutor.createInterpolator(this),
-                        new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()).
-                                setEnableUndefinedVariableException(true));
-            }
+    synchronized String substitute(String s) {
+        if (substitutors == null) {
+            substitutors = List.of(
+                    // General prefix based
+                    StringSubstitutor.createInterpolator(),
+                    // Default to system property lookup
+                    PathSubstitutor.createInterpolator(this),
+                    new StringSubstitutor(StringLookupFactory.INSTANCE.systemPropertyStringLookup()).
+                            setEnableUndefinedVariableException(true));
         }
         for (StringSubstitutor substitutor: substitutors) {
             s = substitutor.replace(s);

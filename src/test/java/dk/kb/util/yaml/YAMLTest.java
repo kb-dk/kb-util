@@ -595,4 +595,12 @@ class YAMLTest {
         assertEquals("kaboom", yaml.get(".sams.bar"), "Path substitution with conditional path should work");
     }
 
+    @Test
+    public void testSubMapPath() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
+        yaml.setExtrapolate(true);
+
+        assertEquals("boom", yaml.get("nested.inner.foosubst"), "Getting by full path should work");
+        assertEquals("boom", yaml.getSubMap("nested").get("inner.foosubst"), "Getting from submap should work");
+    }
 }
