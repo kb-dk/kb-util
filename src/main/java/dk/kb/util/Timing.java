@@ -16,6 +16,7 @@ package dk.kb.util;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 /**
  * Structure for timing-instrumentation of other code. Intended for always-enabled use as all methods are
@@ -209,12 +210,19 @@ public class Timing {
      *     myTiming.stop();
      * </pre>
      * <p>
+     * A common pattern is to measure with a child-Timing:
+     * <pre>
+     *     parent.getChild("xslt").measure(() ->
+     *         collector.setResult(xsltProcessor.transform(myInput));
+     *     );
+     * </pre>
+     * <p>
      * If the {@code runnable} throws an Exception, the time used up to that Exception is still added, as well as
      * an increment of {@link #updateCount}.
      * @param runnable any runnable action.
      * @return this Timing for further chaining.
      */
-    public synchronized Timing measure(Runnable runnable) {
+    public Timing measure(Runnable runnable) {
         start();
         try {
             runnable.run();
@@ -225,19 +233,46 @@ public class Timing {
     }
 
     /**
+     * Perform 1 call to {@link Supplier#get()}, measuring the time and adding that to the current Timing before
+     * returning the result of the call. The supplier will be called exactly once.
+     * <p>
+     * This is equivalent to
+     * <pre>
+     *     myTiming.start();
+     *     myResult = supplier.get();
+     *     myTiming.stop();
+     * </pre>
+     * <p>
+     * A common pattern is to measure with a child-Timing:
+     * <pre>
+     *     myResult = parent.getChild("xslt").measure(() ->
+     *         xsltProcessor.transform(myInput);
+     *     );
+     * </pre>
+     * <p>
+     * If the {@code supplier} throws an Exception, the time used up to that Exception is still added, as well as
+     * an increment of {@link #updateCount}.
+     * @param supplier delivers the result.
+     * @return the result from activating the supplier.
+     */
+    public <T> T measure(Supplier<T> supplier) {
+        start();
+        try {
+            return supplier.get();
+        } finally {
+            stop();
+        }
+    }
+
+    /**
      * Not a high-performance method as the list is created on each call from a HashMap.
      * Note that children may have sub-children.
      * @return A list of all children. If there are no children, the empty list will be returned.
      */
     public List<Timing> getAllChildren() {
-        if (children == null || children.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<Timing> cList = new ArrayList<Timing>(children.size());
-        for (Map.Entry<String, Timing> child: children.entrySet()) {
-            cList.add(child.getValue());
-        }
-        return cList;
+        return children == null ?
+                Collections.emptyList() :
+                new ArrayList<>(children.values());
     }
 
     /**
