@@ -24,6 +24,8 @@ package dk.kb.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TimingTest {
@@ -86,5 +88,17 @@ public class TimingTest {
             assertFalse(child.toString().contains("util"),
                     "Simple stats for child should not contain utilization, even when parent showStat has changed");
         }
+    }
+
+    @Test
+    public void testMeasureRunnable() {
+        AtomicLong receiver = new AtomicLong();
+        new Timing("parent").measure(() -> receiver.set(87L));
+        assertEquals(87L, receiver.get());
+    }
+
+    @Test
+    public void testMeasureSupplier() {
+        assertEquals(87L, new Timing("parent").measure(() -> 87L));
     }
 }
