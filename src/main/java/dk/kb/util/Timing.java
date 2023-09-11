@@ -116,13 +116,22 @@ public class Timing {
         return showStats;
     }
 
-    public void setShowStats(STATS[] showStats) {
+    /**
+     * Specify the stats to show on {@code toString}.
+     * @param showStats the stats to show.
+     * @return this Timing for further chaining.
+     */
+    public Timing setShowStats(STATS[] showStats) {
         this.showStats = showStats == null ? MS_STATS : showStats;
+        return this;
     }
 
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * @param name child Timing designation. Typically a method name or a similar code-path description.
      * @return the re-used or newly created child.
      */
@@ -133,6 +142,9 @@ public class Timing {
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @return the re-used or newly created child.
@@ -144,6 +156,9 @@ public class Timing {
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created. It will use the default {@link #MS_STATS}.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
@@ -156,6 +171,9 @@ public class Timing {
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
@@ -177,6 +195,13 @@ public class Timing {
 
     /**
      * Perform 1 call to {@link Runnable#run()}, measuring the time and adding that to the current Timing.
+     * <p>
+     * This is equivalent to
+     * <pre>
+     *     myTiming.start();
+     *     runnable.run();
+     *     myTiming.stop();
+     * </pre>
      * <p>
      * If the {@code runnable} throws an Exception, the time used up to that Exception is still added, as well as
      * an increment of {@link #updateCount}.
@@ -218,13 +243,15 @@ public class Timing {
 
     /**
      * Resets start time to current nanoTime.
-     *
+     * <p>
      * Note: Start is automatically called during construction of this Timing instance.
-     *
+     * <p>
      * Note 2: The use of start() and {@link #stop()} is not thread-safe by nature.
+     * @return this Timing for further chaining.
      */
-    public void start() {
+    public Timing start() {
         lastStart = System.nanoTime();
+        return this;
     }
 
     /**
@@ -349,9 +376,11 @@ public class Timing {
      * Set the update count to the specific number.
      * Note that calling {@link #stop()} auto-increments the updateCount with 1.
      * @param updateCount the number of updated for the timing.
+     * @return this Timing for further chaining.
      */
-    public void setUpdates(int updateCount) {
+    public Timing setUpdates(int updateCount) {
         this.updateCount.set(updateCount);
+        return this;
     }
 
     /**
@@ -388,11 +417,12 @@ public class Timing {
         return count == 0 ? 0 : getNS()/count/1000000;
     }
 
-    public void clear() {
+    public Timing clear() {
         updateCount.set(0);
         lastNS.set(0);
         spendNS.set(0);
         start();
+        return this;
     }
 
     /**
