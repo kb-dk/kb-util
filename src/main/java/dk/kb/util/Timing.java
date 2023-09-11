@@ -35,6 +35,10 @@ public class Timing {
             STATS.name, STATS.subject, STATS.ms, STATS.updates, STATS.ms_updates, STATS.updates_s,
             STATS.min_ms, STATS.max_ms, STATS.utilization
     };
+    public static final STATS[] MS_STATS_SIMPLE = new STATS[]{
+            STATS.name, STATS.subject, STATS.ms, STATS.updates, STATS.ms_updates, STATS.updates_s,
+            STATS.max_ms
+    };
     public static final STATS[] NS_STATS = new STATS[]{
             STATS.name, STATS.subject, STATS.ns, STATS.updates, STATS.ns_updates, STATS.updates_s,
             STATS.min_ns, STATS.max_ns, STATS.utilization
@@ -43,7 +47,7 @@ public class Timing {
     private final String name;
     private final String subject;
     private final String unit;
-    private STATS[] showStats = MS_STATS;
+    private STATS[] showStats;
     private final long objectCreation = System.nanoTime();
 
     private long lastStart = System.nanoTime();
@@ -77,9 +81,7 @@ public class Timing {
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
      */
     public Timing(String name, String subject, String unit) {
-        this.name = name;
-        this.subject = subject;
-        this.unit = unit == null ? "upd" : unit;
+        this(name, subject, unit, MS_STATS);
     }
 
     /**
@@ -171,7 +173,24 @@ public class Timing {
             children.put(name, child);
         }
         return child;
+    }
 
+    /**
+     * Perform 1 call to {@link Runnable#run()}, measuring the time and adding that to the current Timing.
+     * <p>
+     * If the {@code runnable} throws an Exception, the time used up to that Exception is still added, as well as
+     * an increment of {@link #updateCount}.
+     * @param runnable any runnable action.
+     * @return this Timing for further chaining.
+     */
+    public synchronized Timing measure(Runnable runnable) {
+        start();
+        try {
+            runnable.run();
+        } finally {
+            stop();
+        }
+        return this;
     }
 
     /**
