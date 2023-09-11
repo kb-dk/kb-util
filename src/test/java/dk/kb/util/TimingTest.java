@@ -24,7 +24,14 @@ package dk.kb.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -88,6 +95,10 @@ public class TimingTest {
             assertFalse(child.toString().contains("util"),
                     "Simple stats for child should not contain utilization, even when parent showStat has changed");
         }
+        Function<Integer, Integer> myFunction = num -> num+1;
+        Function<Integer, Integer> measuredF = num -> parent.measure(() -> myFunction.apply(num));
+
+        Stream.of(1, 2, 3).map(measuredF).collect(Collectors.toList());
     }
 
     @Test
@@ -100,5 +111,41 @@ public class TimingTest {
     @Test
     public void testMeasureSupplier() {
         assertEquals(87L, new Timing("parent").measure(() -> 87L));
+    }
+
+    @Test
+    public void testWrapFunction() {
+        Timing myTimer = new Timing("timer");
+
+        Function<Integer, Integer> incrementer = num -> num+1;
+        Function<Integer, Integer> wrappedIncrementer = myTimer.wrap(incrementer);
+        int sum = Stream.of(1, 2, 3).map(wrappedIncrementer).mapToInt(Integer::intValue).sum();
+        assertEquals(9, sum, "Sum over incremented should match");
+        assertEquals(3, myTimer.getUpdates(), "Invocation count should match");
+        assertTrue(myTimer.getNS() > 0, "Invocation time should not be 0 ns");
+    }
+
+    @Test
+    public void testPredicate() {
+        Timing myTimer = new Timing("timer");
+
+        Predicate<Integer> isEven = num -> (num & 1) == 0;
+        Predicate<Integer> wrappedIsEven = myTimer.wrap(isEven);
+        int sum = Stream.of(1, 2, 3).filter(wrappedIsEven).mapToInt(Integer::intValue).sum();
+        assertEquals(2, sum, "Sum over isEven should match");
+        assertEquals(3, myTimer.getUpdates(), "Invocation count should match");
+        assertTrue(myTimer.getNS() > 0, "Invocation time should not be 0 ns");
+    }
+
+    @Test
+    public void testWrapConsumer() {
+        Timing myTimer = new Timing("timer");
+        List<Integer> myNumbers = new ArrayList<>();
+        Consumer<Integer> myConsumer = myNumbers::add;
+        Consumer<Integer> wrappedConsumer = myTimer.wrap(myConsumer);
+        Stream.of(1, 2, 3).forEach(wrappedConsumer);
+        assertEquals(3, myNumbers.size(), "Collected count shoudl match");
+        assertEquals(3, myTimer.getUpdates(), "Invocation count should match");
+        assertTrue(myTimer.getNS() > 0, "Invocation time should not be 0 ns");
     }
 }
