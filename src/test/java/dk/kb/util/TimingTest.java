@@ -22,8 +22,9 @@
  */
 package dk.kb.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TimingTest {
 
@@ -40,6 +41,7 @@ public class TimingTest {
                    "Timing info should be >= sleep time (50*1000000ns) but was " + ns);
     }
 
+    @Test
     public void testSub() throws InterruptedException {
         Timing timing = new Timing("foo");
         Thread.sleep(50);
@@ -55,5 +57,34 @@ public class TimingTest {
 
         Thread.sleep(10);
         System.out.println("Final output: " + timing);
+    }
+
+    @Test
+    public void testStats() {
+        Timing parent = new Timing("parent").setShowStats(Timing.MS_STATS_SIMPLE);
+        parent.measure(() -> {
+            if (System.currentTimeMillis() == 0) {
+                throw new RuntimeException("Impossible time");
+            }
+        });
+        Timing child = parent.getChild("child").measure(() -> {
+            if (System.currentTimeMillis() == 0) {
+                throw new RuntimeException("Impossible time");
+            }
+        });
+
+        {
+            assertFalse(parent.toString().contains("util"),
+                    "Simple stats for parent should not contain utilization");
+        }
+        {
+            parent.setShowStats(Timing.MS_STATS);
+            assertTrue(parent.toString().contains("util"),
+                    "Full stats should contain utilization after shange to showStats");
+        }
+        {
+            assertFalse(child.toString().contains("util"),
+                    "Simple stats for child should not contain utilization, even when parent showStat has changed");
+        }
     }
 }

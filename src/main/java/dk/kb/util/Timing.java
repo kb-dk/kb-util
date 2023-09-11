@@ -132,6 +132,8 @@ public class Timing {
      * <p>
      * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
      *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * <p>
+     * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
      * @param name child Timing designation. Typically a method name or a similar code-path description.
      * @return the re-used or newly created child.
      */
@@ -145,6 +147,8 @@ public class Timing {
      * <p>
      * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
      *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * <p>
+     * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @return the re-used or newly created child.
@@ -159,6 +163,8 @@ public class Timing {
      * <p>
      * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
      *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * <p>
+     * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
@@ -183,11 +189,11 @@ public class Timing {
     @SuppressWarnings("SameParameterValue")
     public synchronized Timing getChild(String name, String subject, String unit, STATS[] showStats) {
         if (children == null) {
-            children = new LinkedHashMap<String, Timing>();
+            children = new LinkedHashMap<>();
         }
         Timing child = children.get(name);
         if (child == null) {
-            child = new Timing(name, subject, unit, showStats);
+            child = new Timing(name, subject, unit, showStats == null ? this.showStats : showStats);
             children.put(name, child);
         }
         return child;
