@@ -16,6 +16,9 @@ package dk.kb.util;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -254,6 +257,7 @@ public class Timing {
      * an increment of {@link #updateCount}.
      * @param supplier delivers the result.
      * @return the result from activating the supplier.
+     * @see #wrap(Supplier)
      */
     public <T> T measure(Supplier<T> supplier) {
         start();
@@ -263,6 +267,78 @@ public class Timing {
             stop();
         }
     }
+
+    /**
+     * Wrap the provided {@link Runnable} lambda in the measure function.
+     * @param runnable any runnable to be measured.
+     * @return the runnable with the side effect of collecting statistics.
+     * @see #measure(Runnable)
+     */
+    public Runnable wrap(Runnable runnable) {
+        return () -> measure(runnable);
+    }
+
+    /**
+     * Wrap the provided {@link Supplier} lambda in the measure function.
+     * @param supplier any supplier to be measured.
+     * @return the supplier with the side effect of collecting statistics.
+     * @see #measure(Supplier) 
+     */
+    public <T> Supplier<T> wrap(Supplier<T> supplier) {
+        return () -> measure(supplier);
+    }
+
+    /**
+     * Wrap the provided function in the measure function for use with streaming.
+     * Example:
+     * <pre>
+     *     Function<Integer, String> myFunction = num -> Integer.toString(num);
+     *     Function<Integer, String> wrappedFunction = myTimer.wrap(myFunction);
+     *     return Stream.of(1, 2, 3).map(wrappedFunction).collect(Collectors.toList());
+     * </pre>
+     * will measure invocation time and count of {@code myFunction} during the streaming processing.
+     * @param function any function to be measured.
+     * @return the function with the side effect of collecting statistics.
+     */
+    public <S, T> Function<S, T> wrap(Function<S, T> function) {
+        return s -> measure(() -> function.apply(s));
+    }
+
+    /**
+     * Wrap the provided predicate in the measure function for use with streaming.
+     * Example:
+     * <pre>
+     *     Function<Integer> isEven = num -> (num & 1) == 0;
+     *     Function<Integer, String> wrappedPredicate = myTimer.wrap(mypredicate);
+     *     return Stream.of(1, 2, 3).filter(wrappedpredicate).collect(Collectors.toList());
+     * </pre>
+     * will measure invocation time and count of {@code myPredicate} during the streaming processing.
+     * @param predicate any predicate to be measured.
+     * @return the predicate with the side effect of collecting statistics.
+     */
+    public <T> Predicate<T> wrap(Predicate<T> predicate) {
+        return t -> measure(() -> predicate.test(t));
+    }
+
+    /**
+     * Wrap the provided Consumer in the measure function for use with streaming.
+     * Example:
+     * <pre>
+     *     List<Integer> myNumbers = new ArrayList<>();
+     *     Consumer<Integer> myConsumer = num -> myNumbers.add(num);
+     *     Consumer<Integer> wrappedConsumer = myTimer.wrap(myConsumer);
+     *     Stream.of(1, 2, 3).forEach(wrappedConsumer);
+     *     assertEquals(3, myNumbers.size());
+     * </pre>
+     * will measure invocation time and count of {@code myConsumer} during the streaming processing.
+     * @param Consumer any Consumer to be measured.
+     * @return the Consumer with the side effect of collecting statistics.
+     */
+    public <T> Consumer<T> wrap(Consumer<T> Consumer) {
+        return t -> measure(() -> Consumer.accept(t));
+    }
+
+    // No wrapping of collector as it is unclear what to do with count
 
     /**
      * Not a high-performance method as the list is created on each call from a HashMap.
