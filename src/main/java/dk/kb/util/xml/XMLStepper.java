@@ -27,6 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Helper class for stream oriented processing of XML.
@@ -266,9 +268,11 @@ public class XMLStepper {
      * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
      * The callback allows for selective replacement of texts inside of elements.
      * Leaves in positioned immediately after the END_ELEMENT matching the START_ELEMENT.
+     * <p>
+     * Note: The method does not repair namespaces automatically.
+     * To ensure namespaces are handled properly, set the {@link XMLOutputFactory#IS_REPAIRING_NAMESPACES} to true using
+     * {@link XMLOutputFactory#setProperty(String, Object)} before creating an {@link XMLStreamWriter}.
      *
-     * Note: The piper does not repair namespaces. If in uses namespaces defined previously in the XML and out does
-     * not have these definitions, they will not be transferred.
      * @param in must be positioned at START_ELEMENT and be coalescing.
      * @param out the destination for the traversed XML.
      * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
@@ -287,9 +291,10 @@ public class XMLStepper {
      * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
      * Used for copying snippets verbatim from one XML structure to another.
      * Leaves in positioned immediately after the END_ELEMENT matching the START_ELEMENT.
-     *
-     * Note: The piper does not repair namespaces. If in uses namespaces defined previously in the XML and out does
-     * not have these definitions, they will not be transferred.
+     * <p>
+     * Note: The method does not repair namespaces automatically.
+     * To ensure namespaces are handled properly, set the {@link XMLOutputFactory#IS_REPAIRING_NAMESPACES} to true using
+     * {@link XMLOutputFactory#setProperty(String, Object)} before creating an {@link XMLStreamWriter}.
      * @param in must be positioned at START_ELEMENT and be coalescing.
      * @param out the destination for the traversed XML.
      * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
@@ -299,14 +304,16 @@ public class XMLStepper {
     public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError) throws XMLStreamException {
         pipeXML(in, out, failOnError, false, null);
     }
+
     /**
      * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
      * Used for copying snippets verbatim from one XML structure to another.
      * Leaves in positioned immediately after the END_ELEMENT matching the START_ELEMENT.
-     *
-     * Note: The piper does not repair namespaces. If in uses namespaces defined previously in the XML and out does
-     * not have these definitions, they will not be transferred.
-     *
+     * <p>
+     * Note: The method does not repair namespaces automatically.
+     * To ensure namespaces are handled properly, set the {@link XMLOutputFactory#IS_REPAIRING_NAMESPACES} to true using
+     * {@link XMLOutputFactory#setProperty(String, Object)} before creating an {@link XMLStreamWriter}.
+     * <p>
      * Warning: Skipping the outer element is dangerous as the outer element can contain multiple inner elements.
      * If the destination (out) is empty and in contains multiple sub-elements, the piping will fail with an Exception
      * stating "Trying to output second root". In order to avoid that, the destination needs to have at least one
@@ -323,6 +330,31 @@ public class XMLStepper {
         pipeXML(in, out, !failOnError, onlyInner, null);
     }
 
+    /**
+     * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
+     * Used for copying snippets verbatim from one XML structure to another.
+     * Leaves in positioned immediately after the END_ELEMENT matching the START_ELEMENT.
+     * <p>
+     * Note: The method does not repair namespaces automatically.
+     * To ensure namespaces are handled properly, set the {@link XMLOutputFactory#IS_REPAIRING_NAMESPACES} to true using
+     * {@link XMLOutputFactory#setProperty(String, Object)} before creating an {@link XMLStreamWriter}.
+     * <p>
+     * Warning: Skipping the outer element is dangerous as the outer element can contain multiple inner elements.
+     * If the destination (out) is empty and in contains multiple sub-elements, the piping will fail with an Exception
+     * stating "Trying to output second root". In order to avoid that, the destination needs to have at least one
+     * open element.
+     * @param in must be positioned at START_ELEMENT and be coalescing.
+     * @param out the destination for the traversed XML.
+     * @param ignoreErrors if false, unrecognized elements will result in an UnsupportedOperationException.
+     *                     if true, unrecognized elements will be ignored.
+     * @param onlyInner    if true, the start- and end-tag of the current element are not piped to out.
+     * @param callback     will be called for all elementStarts. If {@link Callback#elementStart} returns true,
+     *                     piping will assume that the element has been processed and will skip it. In that case it is
+     *                     the responsibility of the callback to leave {@code in} at the END_ELEMENT corresponding to
+     *                     the START_ELEMENT.
+     * @return true if piping has finished.
+     * @throws XMLStreamException if in was faulty.
+     */
     public static boolean pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean ignoreErrors, boolean onlyInner,
                                    Callback callback) throws XMLStreamException {
         if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
@@ -1072,6 +1104,132 @@ public class XMLStepper {
                 xml.next();
             }
         }
+    }
+
+    /**
+     * Streaming parse + export of sub elements from XML in String serialized form.
+     * Example use case: Extracting records from a large OAI-PMH document.
+     * <p>
+     * The serializer repairs namespaces, i.e. if a namespace is defined in the OAI-PMH outer element but used in the
+     * embedded records, the serialized records will have the namespace defined and (hopefully) be valid XML.
+     * <p>
+     * Note: The given {@code xml} will NOT be automatically closed after use.
+     * @param xml an InputStream containing XML.
+     * @param subElement the element name to look for when locating sub element start, without namespace.
+     * @param addDeclaration if true, an XML declaration will be added at the top of each serialized sub element.
+     * @return a stream of serialized sub elements for the given {@code xml}.
+     * @see #serializeSubElements(Reader, String, boolean)
+     * @see #serializeSubElements(XMLStreamReader, String, boolean)
+     */
+    public static Stream<String> serializeSubElements(InputStream xml, String subElement, boolean addDeclaration) {
+        try {
+            return serializeSubElements(xmlFactory.createXMLStreamReader(xml), subElement, addDeclaration);
+        } catch (XMLStreamException e) {
+            throw new RuntimeException(
+                    "XMLStreamException creating XMLStreamReader for xml with subElement '" + subElement + "'");
+        }
+    }
+
+    /**
+     * Streaming parse + export of sub elements from XML in String serialized form.
+     * Example use case: Extracting records from a large OAI-PMH document.
+     * <p>
+     * The serializer repairs namespaces, i.e. if a namespace is defined in the OAI-PMH outer element but used in the
+     * embedded records, the serialized records will have the namespace defined and (hopefully) be valid XML.
+     * <p>
+     * Note: The given {@code xml} will NOT be automatically closed after use.
+     * @param xml a reader containing XML.
+     * @param subElement the element name to look for when locating sub element start, without namespace.
+     * @param addDeclaration if true, an XML declaration will be added at the top of each serialized sub element.
+     * @return a stream of serialized sub elements for the given {@code xml}.
+     * @see #serializeSubElements(InputStream, String, boolean)
+     * @see #serializeSubElements(XMLStreamReader, String, boolean)
+     */
+    public static Stream<String> serializeSubElements(Reader xml, String subElement, boolean addDeclaration) {
+        try {
+            return serializeSubElements(xmlFactory.createXMLStreamReader(xml), subElement, addDeclaration);
+        } catch (XMLStreamException e) {
+            throw new RuntimeException(
+                    "XMLStreamException creating XMLStreamReader for xml with subElement '" + subElement + "'");
+        }
+    }
+
+    /**
+     * Streaming parse + export of sub elements from XML in String serialized form.
+     * Example use case: Extracting records from a large OAI-PMH document.
+     * <p>
+     * The serializer repairs namespaces, i.e. if a namespace is defined in the OAI-PMH outer element but used in the
+     * embedded records, the serialized records will have the namespace defined and (hopefully) be valid XML.
+     * <p>
+     * The given {@code xml} will be fully iterated and closed after use.
+     * @param xml an XML stream, typically positioned at the beginning.
+     * @param subElement the element name to look for when locating sub element start, without namespace.
+     * @param addDeclaration if true, an XML declaration will be added at the top of each serialized sub element.
+     * @return a stream of serialized sub elements for the given {@code xml}.
+     * @see #serializeSubElements(InputStream, String, boolean)
+     * @see #serializeSubElements(Reader, String, boolean)
+     */
+    public static Stream<String> serializeSubElements(XMLStreamReader xml, String subElement, boolean addDeclaration) {
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        // Seek to first subElement
+        try {
+            if (!XMLStepper.findTagStart(xml, subElement)) {
+                return Stream.empty();
+            }
+        } catch (XMLStreamException e) {
+            throw new RuntimeException("XMLStreamException seeking start element '" + subElement + "'", e);
+        }
+
+        Iterator<String> iterator = new Iterator<>() {
+            boolean finished = false;
+            String next = null;
+
+            @Override
+            public boolean hasNext() {
+                if (finished) {
+                    return false;
+                }
+                if (next != null) {
+                    return true;
+                }
+
+                // Resolve next
+                try {
+                    if (!XMLStepper.findTagStart(xml, subElement)) {
+                        finished = true;
+                        xml.close();
+                        return false;
+                    }
+
+                    os.reset();
+                    XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
+                    if (addDeclaration) {
+                        out.writeStartDocument("utf-8", "1.0");
+                        out.writeCharacters("\n");
+                    }
+                    XMLStepper.pipeXML(xml, out, true, false);
+                    out.writeEndDocument(); // Very rule obeying here. Should always be a no-op
+                    out.flush();
+                    next = os.toString(StandardCharsets.UTF_8);
+                    return true;
+                } catch (XMLStreamException e) {
+                    finished = true;
+                    throw new RuntimeException("XMLStreamException while producing element '" + subElement + "'", e);
+                }
+            }
+
+            @Override
+            public String next() {
+                if (!hasNext()) {
+                    throw new IllegalStateException("next() called when hasNext() == false");
+                }
+                String result = next;
+                next = null;
+                return result;
+            }
+        };
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED), false);
     }
 
     public static void skipSubTree(XMLStreamReader xml) throws XMLStreamException {

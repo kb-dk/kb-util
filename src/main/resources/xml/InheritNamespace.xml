@@ -1,0 +1,20 @@
+<foo xmlns:inner="http://example.com/" xmlns="http://defaultnamespace.example.com/">
+
+    <!-- Inherits both inner & default namespace -->
+    <inner:record>
+        <inner:id>id1</inner:id>
+        <inherited>From default</inherited>
+    </inner:record>
+
+    <!-- Defines alt namespece which is the same as inner -->
+    <alt:record xmlns:alt="http://example.com/">
+        <inner:id>id2</inner:id>
+    </alt:record>
+
+    <!-- Overrides default namespace to be the same as inner -->
+    <record xmlns="http://example.com/newdefault">
+        <inner:id>id3</inner:id>
+        <inherited>From local default</inherited>
+    </record>
+
+</foo>
