@@ -16,6 +16,10 @@ package dk.kb.util;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Structure for timing-instrumentation of other code. Intended for always-enabled use as all methods are
@@ -35,6 +39,10 @@ public class Timing {
             STATS.name, STATS.subject, STATS.ms, STATS.updates, STATS.ms_updates, STATS.updates_s,
             STATS.min_ms, STATS.max_ms, STATS.utilization
     };
+    public static final STATS[] MS_STATS_SIMPLE = new STATS[]{
+            STATS.name, STATS.subject, STATS.ms, STATS.updates, STATS.ms_updates, STATS.updates_s,
+            STATS.max_ms
+    };
     public static final STATS[] NS_STATS = new STATS[]{
             STATS.name, STATS.subject, STATS.ns, STATS.updates, STATS.ns_updates, STATS.updates_s,
             STATS.min_ns, STATS.max_ns, STATS.utilization
@@ -43,7 +51,7 @@ public class Timing {
     private final String name;
     private final String subject;
     private final String unit;
-    private STATS[] showStats = MS_STATS;
+    private STATS[] showStats;
     private final long objectCreation = System.nanoTime();
 
     private long lastStart = System.nanoTime();
@@ -77,9 +85,7 @@ public class Timing {
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
      */
     public Timing(String name, String subject, String unit) {
-        this.name = name;
-        this.subject = subject;
-        this.unit = unit == null ? "upd" : unit;
+        this(name, subject, unit, MS_STATS);
     }
 
     /**
@@ -114,13 +120,24 @@ public class Timing {
         return showStats;
     }
 
-    public void setShowStats(STATS[] showStats) {
+    /**
+     * Specify the stats to show on {@code toString}.
+     * @param showStats the stats to show.
+     * @return this Timing for further chaining.
+     */
+    public Timing setShowStats(STATS[] showStats) {
         this.showStats = showStats == null ? MS_STATS : showStats;
+        return this;
     }
 
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * <p>
+     * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
      * @param name child Timing designation. Typically a method name or a similar code-path description.
      * @return the re-used or newly created child.
      */
@@ -131,6 +148,11 @@ public class Timing {
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * <p>
+     * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @return the re-used or newly created child.
@@ -142,6 +164,11 @@ public class Timing {
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created. It will use the default {@link #MS_STATS}.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * <p>
+     * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
@@ -154,6 +181,9 @@ public class Timing {
     /**
      * If a child with the given name already exists, it will be returned.
      * If a child does not exist, it will be created.
+     * <p>
+     * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
+     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
@@ -163,16 +193,152 @@ public class Timing {
     @SuppressWarnings("SameParameterValue")
     public synchronized Timing getChild(String name, String subject, String unit, STATS[] showStats) {
         if (children == null) {
-            children = new LinkedHashMap<String, Timing>();
+            children = new LinkedHashMap<>();
         }
         Timing child = children.get(name);
         if (child == null) {
-            child = new Timing(name, subject, unit, showStats);
+            child = new Timing(name, subject, unit, showStats == null ? this.showStats : showStats);
             children.put(name, child);
         }
         return child;
-
     }
+
+    /**
+     * Perform 1 call to {@link Runnable#run()}, measuring the time and adding that to the current Timing.
+     * <p>
+     * This is equivalent to
+     * <pre>
+     *     myTiming.start();
+     *     runnable.run();
+     *     myTiming.stop();
+     * </pre>
+     * <p>
+     * A common pattern is to measure with a child-Timing:
+     * <pre>
+     *     parent.getChild("xslt").measure(() ->
+     *         collector.setResult(xsltProcessor.transform(myInput));
+     *     );
+     * </pre>
+     * <p>
+     * If the {@code runnable} throws an Exception, the time used up to that Exception is still added, as well as
+     * an increment of {@link #updateCount}.
+     * @param runnable any runnable action.
+     * @return this Timing for further chaining.
+     */
+    public Timing measure(Runnable runnable) {
+        start();
+        try {
+            runnable.run();
+        } finally {
+            stop();
+        }
+        return this;
+    }
+
+    /**
+     * Perform 1 call to {@link Supplier#get()}, measuring the time and adding that to the current Timing before
+     * returning the result of the call. The supplier will be called exactly once.
+     * <p>
+     * This is equivalent to
+     * <pre>
+     *     myTiming.start();
+     *     myResult = supplier.get();
+     *     myTiming.stop();
+     * </pre>
+     * <p>
+     * A common pattern is to measure with a child-Timing:
+     * <pre>
+     *     myResult = parent.getChild("xslt").measure(() ->
+     *         xsltProcessor.transform(myInput);
+     *     );
+     * </pre>
+     * <p>
+     * If the {@code supplier} throws an Exception, the time used up to that Exception is still added, as well as
+     * an increment of {@link #updateCount}.
+     * @param supplier delivers the result.
+     * @return the result from activating the supplier.
+     * @see #wrap(Supplier)
+     */
+    public <T> T measure(Supplier<T> supplier) {
+        start();
+        try {
+            return supplier.get();
+        } finally {
+            stop();
+        }
+    }
+
+    /**
+     * Wrap the provided {@link Runnable} lambda in the measure function.
+     * @param runnable any runnable to be measured.
+     * @return the runnable with the side effect of collecting statistics.
+     * @see #measure(Runnable)
+     */
+    public Runnable wrap(Runnable runnable) {
+        return () -> measure(runnable);
+    }
+
+    /**
+     * Wrap the provided {@link Supplier} lambda in the measure function.
+     * @param supplier any supplier to be measured.
+     * @return the supplier with the side effect of collecting statistics.
+     * @see #measure(Supplier) 
+     */
+    public <T> Supplier<T> wrap(Supplier<T> supplier) {
+        return () -> measure(supplier);
+    }
+
+    /**
+     * Wrap the provided function in the measure function for use with streaming.
+     * Example:
+     * <pre>
+     *     Function<Integer, String> myFunction = num -> Integer.toString(num);
+     *     Function<Integer, String> wrappedFunction = myTimer.wrap(myFunction);
+     *     return Stream.of(1, 2, 3).map(wrappedFunction).collect(Collectors.toList());
+     * </pre>
+     * will measure invocation time and count of {@code myFunction} during the streaming processing.
+     * @param function any function to be measured.
+     * @return the function with the side effect of collecting statistics.
+     */
+    public <S, T> Function<S, T> wrap(Function<S, T> function) {
+        return s -> measure(() -> function.apply(s));
+    }
+
+    /**
+     * Wrap the provided predicate in the measure function for use with streaming.
+     * Example:
+     * <pre>
+     *     Function<Integer> isEven = num -> (num & 1) == 0;
+     *     Function<Integer, String> wrappedPredicate = myTimer.wrap(mypredicate);
+     *     return Stream.of(1, 2, 3).filter(wrappedpredicate).collect(Collectors.toList());
+     * </pre>
+     * will measure invocation time and count of {@code myPredicate} during the streaming processing.
+     * @param predicate any predicate to be measured.
+     * @return the predicate with the side effect of collecting statistics.
+     */
+    public <T> Predicate<T> wrap(Predicate<T> predicate) {
+        return t -> measure(() -> predicate.test(t));
+    }
+
+    /**
+     * Wrap the provided Consumer in the measure function for use with streaming.
+     * Example:
+     * <pre>
+     *     List<Integer> myNumbers = new ArrayList<>();
+     *     Consumer<Integer> myConsumer = num -> myNumbers.add(num);
+     *     Consumer<Integer> wrappedConsumer = myTimer.wrap(myConsumer);
+     *     Stream.of(1, 2, 3).forEach(wrappedConsumer);
+     *     assertEquals(3, myNumbers.size());
+     * </pre>
+     * will measure invocation time and count of {@code myConsumer} during the streaming processing.
+     * @param Consumer any Consumer to be measured.
+     * @return the Consumer with the side effect of collecting statistics.
+     */
+    public <T> Consumer<T> wrap(Consumer<T> Consumer) {
+        return t -> measure(() -> Consumer.accept(t));
+    }
+
+    // No wrapping of collector as it is unclear what to do with count
 
     /**
      * Not a high-performance method as the list is created on each call from a HashMap.
@@ -180,14 +346,9 @@ public class Timing {
      * @return A list of all children. If there are no children, the empty list will be returned.
      */
     public List<Timing> getAllChildren() {
-        if (children == null || children.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<Timing> cList = new ArrayList<Timing>(children.size());
-        for (Map.Entry<String, Timing> child: children.entrySet()) {
-            cList.add(child.getValue());
-        }
-        return cList;
+        return children == null ?
+                Collections.emptyList() :
+                new ArrayList<>(children.values());
     }
 
     /**
@@ -199,13 +360,15 @@ public class Timing {
 
     /**
      * Resets start time to current nanoTime.
-     *
+     * <p>
      * Note: Start is automatically called during construction of this Timing instance.
-     *
+     * <p>
      * Note 2: The use of start() and {@link #stop()} is not thread-safe by nature.
+     * @return this Timing for further chaining.
      */
-    public void start() {
+    public Timing start() {
         lastStart = System.nanoTime();
+        return this;
     }
 
     /**
@@ -330,9 +493,11 @@ public class Timing {
      * Set the update count to the specific number.
      * Note that calling {@link #stop()} auto-increments the updateCount with 1.
      * @param updateCount the number of updated for the timing.
+     * @return this Timing for further chaining.
      */
-    public void setUpdates(int updateCount) {
+    public Timing setUpdates(int updateCount) {
         this.updateCount.set(updateCount);
+        return this;
     }
 
     /**
@@ -369,11 +534,12 @@ public class Timing {
         return count == 0 ? 0 : getNS()/count/1000000;
     }
 
-    public void clear() {
+    public Timing clear() {
         updateCount.set(0);
         lastNS.set(0);
         spendNS.set(0);
         start();
+        return this;
     }
 
     /**
