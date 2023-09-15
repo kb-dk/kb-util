@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -359,8 +360,58 @@ public class XMLStepperTest {
                          "After iteration with step==" + step +
                          ", the reader should be positioned at the correct end tag");
         }
+    }
 
+    @Test
+    public void testNamespaceInner() throws IOException, XMLStreamException {
+        XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(Resolver.resolveUTF8String(
+                "xml/InheritNamespace.xml")));
+        List<String> records = new ArrayList<>();
+        xmlOutFactory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, "true");
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
 
+        XMLStepper.iterateElements(in, null, "record", new XMLStepper.XMLCallback() {
+            @Override
+            public void execute(XMLStreamReader xml) throws XMLStreamException {
+                os.reset();
+                XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
+                // We could add an XML declaration here if needed
+                XMLStepper.pipeXML(in, out, false, false);
+                out.flush();
+                records.add(os.toString(StandardCharsets.UTF_8));
+            }
+        });
+        assertInheritExtraction(records);
+    }
+
+    @Test
+    public void testSerializeSubElements() {
+        InputStream xml = Resolver.resolveStream("xml/InheritNamespace.xml");
+        // Normally we would NOT collect to a List as the whole point here is to have streaming processing!
+        List<String> records = XMLStepper.serializeSubElements(xml, "record", true).
+                collect(Collectors.toList());
+
+        assertInheritExtraction(records);
+    }
+
+    private static void assertInheritExtraction(List<String> records) {
+        assertEquals(3, records.size(), "The expected number of records should be extracted");
+
+        assertTrue(records.get(0).contains("xmlns:inner=\"http://example.com/\""),
+                "First inner record should have the inner namespace defined");
+        assertTrue(records.get(0).contains("xmlns=\"http://defaultnamespace.example.com/\""),
+                "First inner record should have the default namespace defined");
+
+        assertTrue(records.get(1).contains("xmlns:inner=\"http://example.com/\""),
+                "Second inner record should have the inner namespace defined");
+
+        assertTrue(records.get(2).contains("xmlns:inner=\"http://example.com/\""),
+                "Third inner record should have the inner namespace defined");
+        assertTrue(records.get(2).contains("xmlns=\"http://example.com/newdefault\""),
+                "Third inner record should have the overriding new default namespace defined");
+        assertTrue(records.get(2).contains("<inherited>"),
+                "Third inner record should NOT have a default namespace defined for inherited " +
+                        "as is is already defined for record");
     }
 
     @Test
