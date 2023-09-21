@@ -30,6 +30,7 @@ public class OAIHarvester {
     private static final Logger log = LoggerFactory.getLogger(OAIHarvester.class);
 
     // TODO: Setup mechanism for repository URL and calls
+    // TODO: gzip-compression
 
     /**
      * Issued one call to
