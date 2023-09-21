@@ -103,7 +103,7 @@ public class ExportWriterFactory {
      }
      * </pre>
      * @param output      the destination stream.
-     * @param response    used for setting the proper contentType.
+     * @param response    used for setting the proper contentType. Can be null.
      * @param format      the format to export to.
      * @param writeNulls  if true, null-values are exported as {@code "key":null} for JSON and JSONL.
      *                    If false, null-values are not stated.
@@ -115,7 +115,11 @@ public class ExportWriterFactory {
      */
     public static ExportWriter wrap(OutputStream output, HttpServletResponse response,
                                     FORMAT format, boolean writeNulls, String rootElement) {
-        format.setContentType(response);
+        if (response == null) {
+            log.warn("warp: No HttpServletResponse given so the content MIME type could not be set");
+        } else {
+            format.setContentType(response);
+        }
         Writer writer = new OutputStreamWriter(output, StandardCharsets.UTF_8);
         switch (format) {
             case jsonl: return new JSONStreamWriter(writer, JSONStreamWriter.FORMAT.jsonl, writeNulls);
