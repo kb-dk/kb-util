@@ -18,10 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
- *
+ * <a href="http://www.openarchives.org/OAI/openarchivesprotocol.html#harvester">OAI-PMH Harvester</a> implementation
+ * with a focus on low heap / low garbage collector load using streaming XML processing.
+ * <p>
+ * The implementation is XML namespace rapairing, ensuring that alle delivered XML snippets are self contained,
+ * if the originating OAI PMH Repository delivers valid XML.
  */
 public class OAIHarvester {
     private static final Logger log = LoggerFactory.getLogger(OAIHarvester.class);
@@ -34,7 +37,7 @@ public class OAIHarvester {
      * and return the response.
      * @return the indentify information for the OAI-PMH Repository.
      */
-    public IdentifyResponse identify() {
+    public Identify identify() {
         // http://memory.loc.gov/cgi-bin/oai?verb=Identify
         throw new UnsupportedOperationException("Not implemented yet");
     }
@@ -44,10 +47,10 @@ public class OAIHarvester {
      * <a href="http://www.openarchives.org/OAI/openarchivesprotocol.html#ListIdentifiers">OAI-PMH ListIdentifiers</a>
      * requests, using returned {@code resumptionToken}s for paging.
      * @param request for OAI-PMH ListIdentifiers.
-     * @return a stream of
+     * @return an encapsulated stream of
      *         <a href="http://www.openarchives.org/OAI/openarchivesprotocol.html#Record">OAI-PMH Record headers</a>.
      */
-    public Stream<Header> listIdentifiers(ListIdentifiersRequest request) {
+    public ListIdentifiersResponse listIdentifiers(ListIdentifiersRequest request) {
         // http://an.oa.org/OAI-script?verb=ListIdentifiers&from=1998-01-15&metadataPrefix=oldArXiv&set=physics:hep
         throw new UnsupportedOperationException("Not implemented yet");
     }
@@ -57,10 +60,10 @@ public class OAIHarvester {
      * <a href="http://www.openarchives.org/OAI/openarchivesprotocol.html#ListRecords">OAI-PMH ListRecords</a>
      * requests, using returned {@code resumptionToken}s for paging.
      * @param request for OAI-PMH ListRecords.
-     * @return a stream of
+     * @return an encapsulated stream of
      *         <a href="http://www.openarchives.org/OAI/openarchivesprotocol.html#Record">OAI-PMH Records</a>.
      */
-    public Stream<Record> listRecords(ListRecordsRequest request) {
+    public ListRecordsResponse listRecords(ListRecordsRequest request) {
         // http://an.oa.org/OAI-script?verb=ListRecords&from=1998-01-15&set=physics:hep&metadataPrefix=oai_rfc1807
         throw new UnsupportedOperationException("Not implemented yet");
     }

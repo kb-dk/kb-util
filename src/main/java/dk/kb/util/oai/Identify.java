@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,8 +26,8 @@ import java.util.List;
  * <p>
  * Modelled from <a href="http://www.openarchives.org/OAI/openarchivesprotocol.html#Identify">OAI Identify</a>.
  */
-public class IdentifyResponse {
-    private static final Logger log = LoggerFactory.getLogger(IdentifyResponse.class);
+public class Identify {
+    private static final Logger log = LoggerFactory.getLogger(Identify.class);
 
     // Mandatorys
     private String repositoryName;
@@ -43,7 +42,7 @@ public class IdentifyResponse {
     private String compression;
     private List<String> descriptions;
 
-    public IdentifyResponse repositoryName(String repositoryName) {
+    public Identify repositoryName(String repositoryName) {
         this.repositoryName = repositoryName;
         return this;
     }
@@ -54,7 +53,7 @@ public class IdentifyResponse {
         this.repositoryName = repositoryName;
     }
 
-    public IdentifyResponse baseURL(String baseURL) {
+    public Identify baseURL(String baseURL) {
         this.baseURL = baseURL;
         return this;
     }
@@ -65,7 +64,7 @@ public class IdentifyResponse {
         this.baseURL = baseURL;
     }
 
-    public IdentifyResponse protocolVersion(String protocolVersion) {
+    public Identify protocolVersion(String protocolVersion) {
         this.protocolVersion = protocolVersion;
         return this;
     }
@@ -76,7 +75,7 @@ public class IdentifyResponse {
         this.protocolVersion = protocolVersion;
     }
 
-    public IdentifyResponse earliestDatestamp(String earliestDatestamp) {
+    public Identify earliestDatestamp(String earliestDatestamp) {
         this.earliestDatestamp = earliestDatestamp;
         return this;
     }
@@ -87,7 +86,7 @@ public class IdentifyResponse {
         this.earliestDatestamp = earliestDatestamp;
     }
 
-    public IdentifyResponse deletion(String deletion) {
+    public Identify deletion(String deletion) {
         this.deletion = deletion;
         return this;
     }
@@ -98,7 +97,7 @@ public class IdentifyResponse {
         this.deletion = deletion;
     }
 
-    public IdentifyResponse granularity(String granularity) {
+    public Identify granularity(String granularity) {
         this.granularity = granularity;
         return this;
     }
@@ -109,14 +108,14 @@ public class IdentifyResponse {
         this.granularity = granularity;
     }
 
-    public IdentifyResponse adminEmails(List<String> adminEmails) {
+    public Identify adminEmails(List<String> adminEmails) {
         this.adminEmails = adminEmails;
         return this;
     }
     public List<String> getAdminEmails() {
         return adminEmails;
     }
-    public IdentifyResponse addAdminEmail(String adminEmail) {
+    public Identify addAdminEmail(String adminEmail) {
         if (adminEmails == null) {
             adminEmails = new ArrayList<>();
         }
@@ -130,7 +129,7 @@ public class IdentifyResponse {
         this.adminEmails = adminEmails;
     }
 
-    public IdentifyResponse compression(String compression) {
+    public Identify compression(String compression) {
         this.compression = compression;
         return this;
     }
@@ -141,14 +140,14 @@ public class IdentifyResponse {
         this.compression = compression;
     }
 
-    public IdentifyResponse descriptions(List<String> descriptions) {
+    public Identify descriptions(List<String> descriptions) {
         this.descriptions = descriptions;
         return this;
     }
     public List<String> getDescriptions() {
         return descriptions;
     }
-    public IdentifyResponse addDescription(String description) {
+    public Identify addDescription(String description) {
         if (descriptions == null) {
             descriptions = new ArrayList<>();
         }
