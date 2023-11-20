@@ -19,11 +19,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.swagger.jackson.mixin.ResponseSchemaMixin;
-import io.swagger.models.Response;
-import io.swagger.util.DeserializationModule;
-import io.swagger.util.Json;
-import io.swagger.util.ReferenceSerializationConfigurer;
+import io.swagger.v3.core.util.DeserializationModule;
+import io.swagger.v3.core.util.Json;
+import io.swagger.v3.core.util.PathsDeserializer;
+import io.swagger.v3.oas.models.Paths;
 
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
@@ -83,16 +82,16 @@ public abstract class ExportWriter extends Writer {
         // Taken near verbatim from ObjectMapperFactory
         ObjectMapper mapper = new ObjectMapper();
 
-        Module deserializerModule = new DeserializationModule(true, true);
+        Module deserializerModule = new DeserializationModule().addDeserializer(Paths.class, new PathsDeserializer());
         mapper.registerModule(deserializerModule);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        mapper.addMixIn(Response.class, ResponseSchemaMixin.class);
-
-        ReferenceSerializationConfigurer.serializeAsComputedRef(mapper);
+        // TODO: Investigate what these did under v1.6
+        //mapper.addMixIn(Response.class, ResponseSchemaMixin.class);
+        //ReferenceSerializationConfigurer.serializeAsComputedRef(mapper);
 
         return mapper;
     }
