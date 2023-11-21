@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -71,7 +71,7 @@ public class BookDto {
    * @return id
   **/
   @NotNull
-  @ApiModelProperty(example = "book_bookid87", required = true, value = "Book ID")
+  //@ApiModelProperty(example = "book_bookid87", required = true, value = "Book ID")
   @JsonProperty(JSON_PROPERTY_ID)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   @JacksonXmlProperty(isAttribute = true, localName = "id")
@@ -97,7 +97,9 @@ public class BookDto {
    * @return title
   **/
   @NotNull
-  @ApiModelProperty(example = "Disappeared by the Storm", required = true, value = "Book title")
+  // https://stackoverflow.com/questions/72221934/apimodelproperty-to-schema
+  @Schema(example = "Disappeared by the Storm", required = true, description = "Book title")
+  //@ApiModelProperty(example = "Disappeared by the Storm", required = true, value = "Book title")
   @JsonProperty(JSON_PROPERTY_TITLE)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   @JacksonXmlProperty(localName = "title")
@@ -123,7 +125,8 @@ public class BookDto {
    * @return pages
   **/
   @javax.annotation.Nullable
-  @ApiModelProperty(example = "43", value = "")
+  @Schema(example = "43", description = "")
+  //@ApiModelProperty(example = "43", value = "")
   @JsonProperty(JSON_PROPERTY_PAGES)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
   @JacksonXmlProperty(localName = "pages")

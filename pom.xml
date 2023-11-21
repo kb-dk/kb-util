@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.sbforge</groupId>
         <artifactId>sbforge-parent</artifactId>
-        <version>22</version>
+        <version>24</version>
         <relativePath /><!-- override default parentpath of ../pom.xml which allows this to be a git submodule without reporting errors-->
     </parent>
 
@@ -82,7 +82,7 @@
                 https://github.com/mojohaus/license-maven-plugin/issues/403
                 https://github.com/mojohaus/license-maven-plugin/pull/408
                 is fixed. -->
-                <version>2.0.0</version>
+                <version>2.3.0</version>
                 <executions>
                     <execution>
                         <id>download-licenses</id>
@@ -120,15 +120,25 @@
             <!--For the @NotNull annotations-->
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+            <!-- Latest major version is 3, but changes namespace relative to version 2 -->
             <version>2.0.2</version>
         </dependency>
+
+        <!-- Only used for Iterators in ExtractionUtils. Could we do without? -->
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>32.1.3-jre</version>
+        </dependency>
+
 
         <!-- Needed fsupressing ForbiddenAPI where needed -->
         <!-- https://mvnrepository.com/artifact/de.thetaphi/forbiddenapis -->
         <dependency>
             <groupId>de.thetaphi</groupId>
             <artifactId>forbiddenapis</artifactId>
-            <version>2.7</version>
+            <version>3.6</version>
         </dependency>
 
         <!--Included utilities-->
@@ -136,7 +146,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <version>2.15.0</version>
         </dependency>
 
         <dependency>
@@ -149,19 +159,19 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.15</version>
+            <version>1.16.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
+            <version>3.13.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.9</version>
+            <version>1.11.0</version>
         </dependency>
         <!--Utilities end-->
 
@@ -169,42 +179,54 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>4.0.2</version>
+            <!-- Latest major version is 6. Has not been investigated -->
+            <version>4.0.4</version>
         </dependency>
         
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-            <version>3.3.5</version>
+            <!-- Latest major version is 4. Has not been investigated -->
+            <version>3.6.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.8</version>
+            <version>1.10.0</version>
         </dependency>
 
+        <!-- Previously io.swagger / swagger-jaxrs -->
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-jaxrs</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>jsr311-api</artifactId>
-                    <groupId>javax.ws.rs</groupId>
-                </exclusion>
-                <exclusion>
-                    <!-- swagger-jaxrs has 1.1.0.Final, but transitive resolving has 2.0.2 somewhere-->
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </exclusion>
-            </exclusions>
-            <version>1.5.23</version>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-jaxrs2</artifactId>
+            <version>2.2.19</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.swagger</groupId>-->
+<!--            <artifactId>swagger-jaxrs</artifactId>-->
+<!--            <version>1.6.9</version>-->
+<!--        </dependency>-->
+        <!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>2.2.19</version>
         </dependency>
 
+        <!-- Provides @javax.annotation.Nullable needed by OpenAPI -->
+        <!-- https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305 -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+
+        <!-- TODO: Breaks unit tests when bumped -->
         <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
             <artifactId>jackson-jaxrs-xml-provider</artifactId>
-            <version>2.10.1</version>
+            <version>2.16.0</version>
         </dependency>
 
         <!--YAML-->
@@ -212,17 +234,17 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.29</version>
+            <version>2.2</version>
         </dependency>
         <!--YAML end-->
-
 
         <!--Logging-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.36</version>
+            <version>2.0.9</version>
         </dependency>
+        <!--Logging end-->
 
 
         <!--XML-->
@@ -231,19 +253,22 @@
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
+            <!-- Latest version is 4.0.1. Has not been investigated -->
             <version>2.3.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/jakarta.activation/jakarta.activation-api -->
         <dependency>
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
+            <!-- Latest version is 2.1.2. Has not been investigated -->
             <version>1.2.2</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>2.3.4</version>
+            <!-- Latest version is 4.0.4. Has not been investigated -->
+            <version>2.3.9</version>
             <scope>runtime</scope>
         </dependency>
         <!--XML end-->
@@ -254,24 +279,23 @@
             <!--Only for the incomplete JSONWrapper-->
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20190722</version>
+            <version>20231013</version>
         </dependency>
-
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.12.5</version>
+            <version>2.16.0</version>
         </dependency>
         <dependency>
             <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310 -->
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.12.5</version>
+            <version>2.16.0</version>
         </dependency>
-
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
+            <!-- Latest major version is 3, but changes namespace relative to version 2 -->
             <version>2.1.6</version>
         </dependency>
         <!--JSON end-->
@@ -281,13 +305,13 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.10</version>
+            <version>1.4.11</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.8.2</version>
+            <version>5.10.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -300,13 +324,8 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>3.2.4</version>
+            <version>5.7.0</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>1.10.0</version>
         </dependency>
 
 
