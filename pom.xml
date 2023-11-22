@@ -215,11 +215,12 @@
         </dependency>
 
         <!-- Provides @javax.annotation.Nullable needed by OpenAPI -->
-        <!-- https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305 -->
+        <!-- https://mvnrepository.com/artifact/org.openapitools/jackson-databind-nullable
+             Used for OpenAPI client generation -->
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.2</version>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
         </dependency>
 
         <!-- TODO: Breaks unit tests when bumped -->

@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
+## [1.4.17](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.17)
+### Bugfix
+- Wrong dependency for @Nullable
+
 ## [1.4.16](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.16)
 ### Changed
 - Bump of practically all dependencies to latest compatible version
-
+ 
 ## [1.4.15](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.15)
 ### Added
 - `XMLStepper.serializeSubElements` for streaming serialization (aka extraction) of XML sub elements.
