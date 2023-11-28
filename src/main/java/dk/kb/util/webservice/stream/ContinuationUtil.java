@@ -115,7 +115,7 @@ public class ContinuationUtil {
      * @param continuationToken the continuation token or {@code null} is none exists.
      * @param <C> the type of continuation token, typically {@code String} or {@code Long}.
      */
-    private static <C> void setHeaderContinuation(HttpServletResponse httpServletResponse, C continuationToken) {
+    public static <C> void setHeaderContinuation(HttpServletResponse httpServletResponse, C continuationToken) {
         if (continuationToken == null) {
             return;
         }
@@ -127,7 +127,7 @@ public class ContinuationUtil {
      * @param httpServletResponse header is assigned with {@link HttpServletResponse#setHeader(String, String)}.
      * @param hasMore the has more token or {@code null} is none exists.
      */
-    private static void setHeaderHasMore(HttpServletResponse httpServletResponse, Boolean hasMore) {
+    public static void setHeaderHasMore(HttpServletResponse httpServletResponse, Boolean hasMore) {
         if (hasMore == null) {
             return;
         }

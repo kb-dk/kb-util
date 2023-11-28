@@ -18,6 +18,7 @@ import dk.kb.util.FilterStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.stream.Stream;
 
 /**
@@ -52,6 +53,17 @@ public class ContinuationStream<T, C> extends FilterStream<T> implements AutoClo
     }
 
     /**
+     * Set the continuation token ans has more as HTTP headers on the given {@code httpServletResponse}
+     * @param httpServletResponse headers will be assigned here.
+     * @return this continuation stream, usable for chaining.
+     */
+    public ContinuationStream<T, C> setHeaders(HttpServletResponse httpServletResponse) {
+        ContinuationUtil.setHeaderContinuation(httpServletResponse, getContinuationToken());
+        ContinuationUtil.setHeaderHasMore(httpServletResponse, hasMore());
+        return this;
+    }
+
+    /**
      * @return continuation token intended for requesting a new stream that delivers from the point where the
      * current stream stops. If {@code null}, no continuation information is available.
      * @see #hasMore()
@@ -69,7 +81,7 @@ public class ContinuationStream<T, C> extends FilterStream<T> implements AutoClo
      * result is extra data at a later point in time.
      * @see #getContinuationToken()
      */
-    public boolean hasMore() {
+    public Boolean hasMore() {
         return hasMore;
     }
 }

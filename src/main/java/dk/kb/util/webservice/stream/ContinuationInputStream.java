@@ -18,6 +18,7 @@ import dk.kb.util.json.JSONStreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -89,6 +90,17 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
         } catch (IOException e) {
             throw new RuntimeException("IOException constructing object stream", e);
         }
+    }
+
+    /**
+     * Set the continuation token ans has more as HTTP headers on the given {@code httpServletResponse}
+     * @param httpServletResponse headers will be assigned here.
+     * @return this continuation byte stream, usable for chaining.
+     */
+    public ContinuationInputStream<C> setHeaders(HttpServletResponse httpServletResponse) {
+        ContinuationUtil.setHeaderContinuation(httpServletResponse, getContinuationToken());
+        ContinuationUtil.setHeaderHasMore(httpServletResponse, hasMore());
+        return this;
     }
 
     /**
