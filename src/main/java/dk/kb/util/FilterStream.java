@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.kb.storage.util;
+package dk.kb.util;
 
 import java.util.Comparator;
 import java.util.Iterator;
