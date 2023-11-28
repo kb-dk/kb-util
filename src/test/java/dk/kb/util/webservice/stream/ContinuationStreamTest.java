@@ -1,16 +1,15 @@
 package dk.kb.util.webservice.stream;
 
-import dk.kb.util.json.JSONStreamUtil;
 import dk.kb.util.json.JSONStreamUtilTest;
 import dk.kb.util.json.JSONStreamUtilTest.DsRecordDto;
 import org.apache.commons.io.input.CharSequenceInputStream;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,7 +33,7 @@ class ContinuationStreamTest {
     public void testMultiLevel() throws IOException {
         try (ContinuationInputStream<Long> is =
                      new ContinuationInputStream<>(
-                             new CharSequenceInputStream(JSONStreamUtilTest.RECORDS2, StandardCharsets.UTF_8, 1024),
+                             new ByteArrayInputStream(JSONStreamUtilTest.RECORDS2.getBytes(StandardCharsets.UTF_8)),
                              124L, true) ;
              ContinuationStream<DsRecordDto, Long> recordStream = is.stream(DsRecordDto.class)) {
             List<DsRecordDto> records = recordStream.collect(Collectors.toList());
@@ -42,6 +41,21 @@ class ContinuationStreamTest {
             assertEquals("id1", records.get(0).getId(), "The first record should have the expected ID");
             assertEquals(is.getContinuationToken(), records.get(records.size()-1).getmTime(),
                     "The continuation token should match the last record");
+            assertEquals(true, is.hasMore(), "The has more flag should be transfered");
+        }
+    }
+
+    @Test
+    public void testEmpty() throws IOException {
+        try (ContinuationInputStream<Long> is =
+                     new ContinuationInputStream<>(
+                             new ByteArrayInputStream(JSONStreamUtilTest.RECORDS0.getBytes(StandardCharsets.UTF_8)),
+                             null, false) ;
+             ContinuationStream<DsRecordDto, Long> recordStream = is.stream(DsRecordDto.class)) {
+            List<DsRecordDto> records = recordStream.collect(Collectors.toList());
+            assertTrue(records.isEmpty(), "There should be no records");
+            assertNull(is.getContinuationToken(), "There should be no continuation token");
+            assertEquals(false, is.hasMore(), "The has more flag should be transfered");
         }
     }
 
