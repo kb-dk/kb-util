@@ -12,9 +12,9 @@
  *  limitations under the License.
  *
  */
-package dk.kb.storage.webservice;
+package dk.kb.util.webservice.stream;
 
-import dk.kb.storage.util.FilterStream;
+import dk.kb.util.FilterStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

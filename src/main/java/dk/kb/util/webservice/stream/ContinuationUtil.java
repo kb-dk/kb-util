@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.kb.storage.webservice;
+package dk.kb.util.webservice.stream;
 
 import dk.kb.util.Pair;
 

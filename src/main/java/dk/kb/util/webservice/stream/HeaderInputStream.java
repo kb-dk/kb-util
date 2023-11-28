@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.kb.storage.webservice;
+package dk.kb.util.webservice.stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
