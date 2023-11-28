@@ -17,8 +17,11 @@ package dk.kb.util.webservice.stream;
 import dk.kb.util.Pair;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Support methods for handling continuation headers for webservices.
@@ -38,27 +41,60 @@ public class ContinuationUtil {
     /**
      * Extract the {@code #HEADER_PAGING_CONTINUATION_TOKEN} from the given {@code headerInputStream} and return it.
      * <p>
-     * Note: The header might be undefined.
+     * Note: The header can be undefined in the {@code headerInputStream}.
+     * In that case in will not be present in the result.
      * @param headerInputStream provides the headers to check.
+     * @param tokenMapper maps the String header {@link ContinuationUtil#HEADER_PAGING_CONTINUATION_TOKEN}
+     *                    to the concrete token type.
      * @return an optional continuation.
      */
-    public static Optional<String> getContinuationToken(HeaderInputStream headerInputStream) {
-        return headerInputStream.getHeaders().get(HEADER_PAGING_CONTINUATION_TOKEN) == null ?
+    public static <C> Optional<C> getContinuationToken(
+            HeaderInputStream headerInputStream, Function<String, C> tokenMapper) {
+        return getContinuationToken(headerInputStream.getHeaders(), tokenMapper);
+    }
+
+    /**
+     * Extract the {@code #HEADER_PAGING_CONTINUATION_TOKEN} from the given {@code headerInputStream} and return it.
+     * <p>
+     * Note: The header can be undefined in the {@code headers}.
+     * In that case in will not be present in the result.
+     * @param headers map of headers from a HTTP response.
+     * @param tokenMapper maps the String header {@link ContinuationUtil#HEADER_PAGING_CONTINUATION_TOKEN}
+     *                    to the concrete token type.
+     * @return an optional continuation.
+     */
+    public static <C> Optional<C> getContinuationToken(
+            Map<String, List<String>> headers, Function<String, C> tokenMapper) {
+        return headers.get(HEADER_PAGING_CONTINUATION_TOKEN) == null ?
                 Optional.empty() :
-                Optional.of(headerInputStream.getHeaders().get(HEADER_PAGING_CONTINUATION_TOKEN).get(0));
+                Optional.of(headers.get(HEADER_PAGING_CONTINUATION_TOKEN).get(0))
+                        .map(tokenMapper);
     }
 
     /**
      * Extract the {@code #HEADER_PAGING_HAS_MORE} from the given {@code headerInputStream} and return it.
      * <p>
-     * Note: The header might be undefined.
+     * Note: The header can be undefined in the {@code headerInputStream}.
+     * In that case in will not be present in the result.
      * @param headerInputStream provides the headers to check.
      * @return an optional hasMore, signalling whether subsequent calls are likely to provide more data.
      */
     public static Optional<Boolean> getHasMore(HeaderInputStream headerInputStream) {
-        return headerInputStream.getHeaders().get(HEADER_PAGING_HAS_MORE) == null ?
+        return getHasMore(headerInputStream.getHeaders());
+    }
+
+    /**
+     * Extract the {@code #HEADER_PAGING_HAS_MORE} from the given {@code headers} and return it.
+     * <p>
+     * Note: The header can be undefined in the {@code headers}.
+     * In that case in will not be present in the result.
+     * @param headers map of headers from a HTTP response.
+     * @return an optional hasMore, signalling whether subsequent calls are likely to provide more data.
+     */
+    public static Optional<Boolean> getHasMore(Map<String, List<String>> headers) {
+        return headers.get(HEADER_PAGING_HAS_MORE) == null ?
                 Optional.empty() :
-                Optional.of(Boolean.parseBoolean(headerInputStream.getHeaders().get(HEADER_PAGING_HAS_MORE).get(0)));
+                Optional.of(Boolean.parseBoolean(headers.get(HEADER_PAGING_HAS_MORE).get(0)));
     }
 
     /**
@@ -66,8 +102,9 @@ public class ContinuationUtil {
      * Use {@link Pair#getRight()} as {@code hasMore} for {@link #HEADER_PAGING_HAS_MORE}.
      * @param httpServletResponse headers are assigned with {@link HttpServletResponse#setHeader(String, String)}.
      * @param continuationAndHasMore pair containing the continuation token and the has more boolean.
+     * @param <C> the type of continuation token, typically {@code String} or {@code Long}.
      */
-    public static void setHeaders(HttpServletResponse httpServletResponse, Pair<Long, Boolean> continuationAndHasMore) {
+    public static <C> void setHeaders(HttpServletResponse httpServletResponse, Pair<C, Boolean> continuationAndHasMore) {
         setHeaderContinuation(httpServletResponse, continuationAndHasMore.getLeft());
         setHeaderHasMore(httpServletResponse, continuationAndHasMore.getRight());
     }
@@ -76,8 +113,9 @@ public class ContinuationUtil {
      * Set {@code continuationToken} as the value for {@link #HEADER_PAGING_CONTINUATION_TOKEN} if it exists.
      * @param httpServletResponse header is assigned with {@link HttpServletResponse#setHeader(String, String)}.
      * @param continuationToken the continuation token or {@code null} is none exists.
+     * @param <C> the type of continuation token, typically {@code String} or {@code Long}.
      */
-    private static void setHeaderContinuation(HttpServletResponse httpServletResponse, Object continuationToken) {
+    private static <C> void setHeaderContinuation(HttpServletResponse httpServletResponse, C continuationToken) {
         if (continuationToken == null) {
             return;
         }

@@ -41,19 +41,16 @@ public class HeaderInputStream extends FilterInputStream implements AutoCloseabl
      * @throws IOException if the connection failed.
      */
     public static HeaderInputStream from(URI uri) throws IOException {
-        log.debug("Opening streaming connection to '{}'", uri);
-        HttpURLConnection con = (HttpURLConnection) uri.toURL().openConnection();
-        con.setInstanceFollowRedirects(true);
-        int status = con.getResponseCode();
-        if (status < 200 || status > 299) {
-            throw new IOException("Got HTTP " + status + " establishing connection to '" + uri + "'");
-            // TODO: Consider if the error stream should be logged. It can be arbitrarily large
-        }
+        HttpURLConnection con = getHttpURLConnection(uri);
         Map<String, List<String>> headers = con.getHeaderFields();
         return new HeaderInputStream(headers, con.getInputStream());
     }
 
-    private HeaderInputStream(Map<String, List<String>> headers, InputStream in) {
+    /**
+     * @param headers the headers from a HTTP response.
+     * @param in      the content from a HTTP response.
+     */
+    public HeaderInputStream(Map<String, List<String>> headers, InputStream in) {
         super(in);
         this.headers = headers;
     }
@@ -64,4 +61,24 @@ public class HeaderInputStream extends FilterInputStream implements AutoCloseabl
     public Map<String, List<String>> getHeaders() {
         return headers;
     }
+
+    /**
+     * Establish a connection to the given {@code uri}, throwing an exception if the response is not {@code >= 200}
+     * and {@code <= 299}.
+     * @param uri the URI to establish a connection to.
+     * @return a connection to the given {@code uri}.
+     * @throws IOException if the connection response was not {@code >= 200} and {@code <= 299}.
+     */
+    protected static HttpURLConnection getHttpURLConnection(URI uri) throws IOException {
+        log.debug("Opening streaming connection to '{}'", uri);
+        HttpURLConnection con = (HttpURLConnection) uri.toURL().openConnection();
+        con.setInstanceFollowRedirects(true);
+        int status = con.getResponseCode();
+        if (status < 200 || status > 299) {
+            throw new IOException("Got HTTP " + status + " establishing connection to '" + uri + "'");
+            // TODO: Consider if the error stream should be logged. It can be arbitrarily large
+        }
+        return con;
+    }
+
 }
