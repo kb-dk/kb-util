@@ -72,25 +72,26 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
         Boolean hasMore = ContinuationUtil.getHasMore(headers).orElse(null);
         log.debug("Established connection with continuation token '{}' and hasMore {} to '{}'",
                 continuationToken, hasMore, uri);
-        return new ContinuationInputStream<>(headers, con.getInputStream(), continuationToken, hasMore);
+        return new ContinuationInputStream<>(hasMore, con.getInputStream(), continuationToken, headers);
     }
 
     /**
      * Construct a continuation stream directly from the given parameters.
-     * @param headers HTTP headers from a HTTP connection. Can be {@code null}.
-     * @param in the content stream.
+     *
+     * @param hasMore           has more signal. Can be {@code }
+     * @param in                the content stream.
      * @param continuationToken the continuation token. Can be {@code null}.
-     * @param hasMore has more signal. Can be {@code }
+     * @param responseHeaders   HTTP headers from a HTTP connection. Can be {@code null}.
      */
     public ContinuationInputStream(
-            Map<String, List<String>> headers, InputStream in, C continuationToken, Boolean hasMore) {
-        super(headers, in);
+            Boolean hasMore, InputStream in, C continuationToken, Map<String, List<String>> responseHeaders) {
+        super(responseHeaders, in);
         this.continuationToken = continuationToken;
         this.hasMore = hasMore;
     }
 
     public ContinuationInputStream(InputStream in, C continuationToken, Boolean hasMore) {
-        this(null, in, continuationToken, hasMore);
+        this(hasMore, in, continuationToken, null);
     }
 
     /**
@@ -101,14 +102,15 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
     public <T> ContinuationStream<T, C> stream(Class<T> clazz) {
         try {
             return new ContinuationStream<>(
-                    JSONStreamUtil.jsonToObjectsStream(this, clazz), getContinuationToken(), hasMore());
+                    JSONStreamUtil.jsonToObjectsStream(this, clazz),
+                    getContinuationToken(), hasMore(), getResponseHeaders());
         } catch (IOException e) {
             throw new RuntimeException("IOException constructing object stream", e);
         }
     }
 
     /**
-     * Set the continuation token ans has more as HTTP headers on the given {@code httpServletResponse}
+     * Set the continuation token and hasMore as HTTP headers on the given {@code httpServletResponse}
      * @param httpServletResponse headers will be assigned here.
      * @return this continuation byte stream, usable for chaining.
      */
