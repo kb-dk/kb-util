@@ -29,14 +29,23 @@ import java.util.function.Function;
 public class ContinuationUtil {
 
     /**
-     * Set as header by record streaming endpoints to communicate the highest mTime that any records will contain.
-     * This always means the mTime for the last record in the stream.
+     * Set as HTTP header by record streaming endpoints to communicate the highest mTime that any records will contain.
      * <p>
-     * Note that there is no preceeding {@code X-} as this is discouraged by
+     * Note that there is no preceding {@code X-} as this is discouraged by
      * <a href="https://www.rfc-editor.org/rfc/rfc6648">rfc6648</a>.
      */
     public static final String HEADER_PAGING_CONTINUATION_TOKEN = "Paging-Continuation-Token";
+
+    /**
+     * Set as HTTP header by record streaming endpoints to communicate if subsequent calls starting from
+     * {@link #HEADER_PAGING_CONTINUATION_TOKEN} are likely to yield more records.
+     */
     public static final String HEADER_PAGING_HAS_MORE = "Paging-Has-More";
+    
+    /**
+     * Set as HTTP header by record streaming endpoints to communicate the number of re cords in the current stream.
+     */
+    public static final String HEADER_PAGING_RECORD_COUNT = "Paging-Record-Count";
 
     /**
      * Extract the {@code #HEADER_PAGING_CONTINUATION_TOKEN} from the given {@code headerInputStream} and return it.
@@ -50,7 +59,7 @@ public class ContinuationUtil {
      */
     public static <C> Optional<C> getContinuationToken(
             HeaderInputStream headerInputStream, Function<String, C> tokenMapper) {
-        return getContinuationToken(headerInputStream.getHeaders(), tokenMapper);
+        return getContinuationToken(headerInputStream.getResponseHeaders(), tokenMapper);
     }
 
     /**
@@ -59,7 +68,7 @@ public class ContinuationUtil {
      * Note: The header can be undefined in the {@code headers}.
      * In that case in will not be present in the result.
      * @param headers map of headers from a HTTP response.
-     * @param tokenMapper maps the String header {@link ContinuationUtil#HEADER_PAGING_CONTINUATION_TOKEN}
+     * @param tokenMapper maps the String header {@link #HEADER_PAGING_CONTINUATION_TOKEN}
      *                    to the concrete token type.
      * @return an optional continuation.
      */
@@ -72,7 +81,7 @@ public class ContinuationUtil {
     }
 
     /**
-     * Extract the {@code #HEADER_PAGING_HAS_MORE} from the given {@code headerInputStream} and return it.
+     * Extract the {@link #HEADER_PAGING_HAS_MORE} from the given {@code headerInputStream} and return it.
      * <p>
      * Note: The header can be undefined in the {@code headerInputStream}.
      * In that case in will not be present in the result.
@@ -80,11 +89,23 @@ public class ContinuationUtil {
      * @return an optional hasMore, signalling whether subsequent calls are likely to provide more data.
      */
     public static Optional<Boolean> getHasMore(HeaderInputStream headerInputStream) {
-        return getHasMore(headerInputStream.getHeaders());
+        return getHasMore(headerInputStream.getResponseHeaders());
     }
 
     /**
-     * Extract the {@code #HEADER_PAGING_HAS_MORE} from the given {@code headers} and return it.
+     * Extract the {@link #HEADER_PAGING_RECORD_COUNT} from the given {@code headerInputStream} and return it.
+     * <p>
+     * Note: The header can be undefined in the {@code headerInputStream}.
+     * In that case in will not be present in the result.
+     * @param headerInputStream provides the headers to check.
+     * @return an optional record count, signalling the number of serialised records the current stream represents.
+     */
+    public static Optional<Long> getRecordCount(HeaderInputStream headerInputStream) {
+        return getRecordCount(headerInputStream.getResponseHeaders());
+    }
+
+    /**
+     * Extract the {@link #HEADER_PAGING_HAS_MORE} from the given {@code headers} and return it.
      * <p>
      * Note: The header can be undefined in the {@code headers}.
      * In that case in will not be present in the result.
@@ -98,8 +119,24 @@ public class ContinuationUtil {
     }
 
     /**
+     * Extract the {@link #HEADER_PAGING_RECORD_COUNT} from the given {@code headers} and return it.
+     * <p>
+     * Note: The header can be undefined in the {@code headers}.
+     * In that case in will not be present in the result.
+     * @param headers map of headers from a HTTP response.
+     * @return an optional record count, signalling the number of serialised records the current stream represents.
+     */
+    public static Optional<Long> getRecordCount(Map<String, List<String>> headers) {
+        return headers.get(HEADER_PAGING_RECORD_COUNT) == null ?
+                Optional.empty() :
+                Optional.of(Long.getLong(headers.get(HEADER_PAGING_HAS_MORE).get(0)));
+    }
+
+    /**
      * Use {@link Pair#getLeft()} as {@code continuationToken} for {@link #HEADER_PAGING_CONTINUATION_TOKEN}.
      * Use {@link Pair#getRight()} as {@code hasMore} for {@link #HEADER_PAGING_HAS_MORE}.
+     * <p>
+     * Note: This does not set {@link #setHeaderRecordCount}.
      * @param httpServletResponse headers are assigned with {@link HttpServletResponse#setHeader(String, String)}.
      * @param continuationAndHasMore pair containing the continuation token and the has more boolean.
      * @param <C> the type of continuation token, typically {@code String} or {@code Long}.
@@ -132,6 +169,18 @@ public class ContinuationUtil {
             return;
         }
         httpServletResponse.setHeader(HEADER_PAGING_HAS_MORE, Boolean.toString(hasMore));
+    }
+
+    /**
+     * Set {@code recordCount} as the value for {@link #HEADER_PAGING_RECORD_COUNT} if it exists.
+     * @param httpServletResponse header is assigned with {@link HttpServletResponse#setHeader(String, String)}.
+     * @param recordCount the number of records or {@code null} if unknown.
+     */
+    public static void setHeaderRecordCount(HttpServletResponse httpServletResponse, Long recordCount) {
+        if (recordCount == null) {
+            return;
+        }
+        httpServletResponse.setHeader(HEADER_PAGING_RECORD_COUNT, Long.toString(recordCount));
     }
 
 }

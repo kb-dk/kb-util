@@ -40,6 +40,7 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
 
     private final C continuationToken;
     private final Boolean hasMore;
+    private final Long recordCount;
 
     /**
      * Establish a connection to the given {@code uri}, extract all headers and construct a
@@ -70,28 +71,51 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
         Map<String, List<String>> headers = con.getHeaderFields();
         C2 continuationToken = ContinuationUtil.getContinuationToken(headers, tokenMapper).orElse(null);
         Boolean hasMore = ContinuationUtil.getHasMore(headers).orElse(null);
-        log.debug("Established connection with continuation token '{}' and hasMore {} to '{}'",
-                continuationToken, hasMore, uri);
-        return new ContinuationInputStream<>(hasMore, con.getInputStream(), continuationToken, headers);
+        Long recordCount = ContinuationUtil.getRecordCount(headers).orElse(null);
+        log.debug("Established connection with continuation token '{}', hasMore {} and recordCount {} to '{}'",
+                continuationToken, hasMore, recordCount, uri);
+        return new ContinuationInputStream<>(con.getInputStream(), continuationToken, hasMore, recordCount, headers);
     }
 
     /**
      * Construct a continuation stream directly from the given parameters.
      *
-     * @param hasMore           has more signal. Can be {@code }
      * @param in                the content stream.
      * @param continuationToken the continuation token. Can be {@code null}.
+     * @param hasMore           has more signal. Can be {@code null}
+     * @param recordCount       the number od records in the stream. Can be {@code null}.
      * @param responseHeaders   HTTP headers from a HTTP connection. Can be {@code null}.
      */
     public ContinuationInputStream(
-            Boolean hasMore, InputStream in, C continuationToken, Map<String, List<String>> responseHeaders) {
+            InputStream in, C continuationToken, Boolean hasMore, Long recordCount,
+            Map<String, List<String>> responseHeaders) {
         super(responseHeaders, in);
         this.continuationToken = continuationToken;
         this.hasMore = hasMore;
+        this.recordCount = recordCount;
     }
 
+    /**
+     * Construct a continuation stream directly from the given parameters.
+     *
+     * @param in                the content stream.
+     * @param continuationToken the continuation token. Can be {@code null}.
+     * @param hasMore           has more signal. Can be {@code null}
+     */
     public ContinuationInputStream(InputStream in, C continuationToken, Boolean hasMore) {
-        this(hasMore, in, continuationToken, null);
+        this(in, continuationToken, hasMore, null, null);
+    }
+
+    /**
+     * Construct a continuation stream directly from the given parameters.
+     *
+     * @param in                the content stream.
+     * @param continuationToken the continuation token. Can be {@code null}.
+     * @param hasMore           has more signal. Can be {@code null}
+     * @param recordCount       the number od records in the stream. Can be {@code null}.
+     */
+    public ContinuationInputStream(InputStream in, C continuationToken, Boolean hasMore, Long recordCount) {
+        this(in, continuationToken, hasMore, recordCount, null);
     }
 
     /**
@@ -117,6 +141,7 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
     public ContinuationInputStream<C> setHeaders(HttpServletResponse httpServletResponse) {
         ContinuationUtil.setHeaderContinuation(httpServletResponse, getContinuationToken());
         ContinuationUtil.setHeaderHasMore(httpServletResponse, hasMore());
+        ContinuationUtil.setHeaderRecordCount(httpServletResponse, getRecordCount());
         return this;
     }
 
@@ -124,6 +149,7 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
      * @return continuation token intended for requesting a new stream that delivers from the point where the
      * current stream stops. If {@code null}, no continuation information is available.
      * @see #hasMore()
+     * @see #getRecordCount()
      */
     public C getContinuationToken() {
         return continuationToken;
@@ -137,9 +163,20 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
      * false if such a call will <em>probably</em> not give any data at the current time, but might
      * result is extra data at a later point in time. {@code null} signals undecided.
      * @see #getContinuationToken()
+     * @see #getRecordCount()
      */
     public Boolean hasMore() {
         return hasMore;
     }
 
+    /**
+     * Non-authoritative indicator for the number of records that are serialised in this stream.
+     *
+     * @return number of records in the stream. {@code null} signals undecided.
+     * @see #getContinuationToken()
+     * @see #hasMore()
+     */
+    public Long getRecordCount() {
+        return recordCount;
+    }
 }

@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Support for request headers when creating HeaderInputStreams from URIs
+- Support for Paging-Record-Count headers for continuations
 
 ## [1.4.18](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.18)
 ### Added
