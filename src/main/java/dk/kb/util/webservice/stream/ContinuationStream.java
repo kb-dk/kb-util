@@ -14,11 +14,12 @@
  */
 package dk.kb.util.webservice.stream;
 
-import dk.kb.util.FilterStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -30,7 +31,8 @@ import java.util.stream.Stream;
  * @param <T> the class of objects for the stream.
  * @param <C> the class for the {@code continuationToken}, typically {@code String>} or {@code Long}.
  */
-public class ContinuationStream<T, C> extends FilterStream<T> implements AutoCloseable {
+// TODO: Pagesize
+public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ContinuationStream.class);
 
     private final C continuationToken;
@@ -45,15 +47,29 @@ public class ContinuationStream<T, C> extends FilterStream<T> implements AutoClo
      * @param hasMore           whether or not a subsequent request for a stream is likely to produce any elements.
      */
     public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore) {
-        super(inner);
-        this.continuationToken = continuationToken;
-        this.hasMore = hasMore;
-        log.debug("Creating ContinuationStream with continuationToken='{}', hasMore={}",
-                  continuationToken, hasMore);
+        this(inner, continuationToken, hasMore, null);
     }
 
     /**
-     * Set the continuation token ans has more as HTTP headers on the given {@code httpServletResponse}
+     * Create a stream.
+     *
+     * @param inner             the provider of the elements.
+     * @param continuationToken used for requesting a new stream that continues after the last element of the
+     *                          current stream. If {@code null}, no continuation information is available.
+     * @param hasMore           whether or not a subsequent request for a stream is likely to produce any elements.
+     * @param responseHeaders HTTP headers from the response that {@code inner} was constructed from.
+     */
+    public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore,
+                              Map<String, List<String>> responseHeaders) {
+        super(inner, responseHeaders);
+        this.continuationToken = continuationToken;
+        this.hasMore = hasMore;
+        log.debug("Creating ContinuationStream with continuationToken='{}', hasMore={}, responseHeaders={}",
+                  continuationToken, hasMore, responseHeaders);
+    }
+
+    /**
+     * Set the continuation token and hasMore as HTTP headers on the given {@code httpServletResponse}
      * @param httpServletResponse headers will be assigned here.
      * @return this continuation stream, usable for chaining.
      */

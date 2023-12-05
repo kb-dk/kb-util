@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +42,19 @@ public class HeaderInputStream extends FilterInputStream implements AutoCloseabl
      * @throws IOException if the connection failed.
      */
     public static HeaderInputStream from(URI uri) throws IOException {
-        HttpURLConnection con = getHttpURLConnection(uri);
+        return from(uri, Collections.emptyMap());
+    }
+
+    /**
+     * Establish a connection to the given {@code uri}, extract all headers and construct a
+     * {@link HeaderInputStream} with the headers and response stream from the {@code uri}.
+     * @param uri full URI for a call to a webservice.
+     * @param requestHeaders headers to set for the request for content from {@code uri}.
+     * @return an {@code InputStream} with the response.
+     * @throws IOException if the connection failed.
+     */
+    public static HeaderInputStream from(URI uri, Map<String, String> requestHeaders) throws IOException {
+        HttpURLConnection con = getHttpURLConnection(uri, requestHeaders);
         Map<String, List<String>> headers = con.getHeaderFields();
         return new HeaderInputStream(headers, con.getInputStream());
     }
@@ -56,16 +69,49 @@ public class HeaderInputStream extends FilterInputStream implements AutoCloseabl
     }
 
     /**
-     * @return headers from the established connection.
+     * @return the HTTP headers from the response that this stream was constructed from. Can be null.
+     * @deprecated use {@link #getResponseHeaders()} instead.
      */
     public Map<String, List<String>> getHeaders() {
         return headers;
     }
 
     /**
+     * @return the HTTP headers from the response that this stream was constructed from. Can be null.
+     */
+    public Map<String, List<String>> getResponseHeaders() {
+        return headers;
+    }
+
+    /**
+     * Extract the header with the given key from the response headers.
+     * In case of multiple values, only the first one is returned.
+     * In case of no values, {@code null} is returned.
+     * @param key HTTP response header key.
+     * @return the first HTTP response header value for the given {@code key} or null is there are no values.
+     */
+    public String getResponseHeader(String key) {
+        return headers == null || !headers.containsKey(key) || headers.get(key).isEmpty() ?
+                null : 
+                headers.get(key).get(0);
+    }
+
+    /**
      * Establish a connection to the given {@code uri}, throwing an exception if the response is not {@code >= 200}
      * and {@code <= 299}.
      * @param uri the URI to establish a connection to.
+     * @return a connection to the given {@code uri}.
+     * @throws IOException if the connection response was not {@code >= 200} and {@code <= 299}.
+     */
+    protected static HttpURLConnection getHttpURLConnection(URI uri) throws IOException {
+        return getHttpURLConnection(uri, Collections.emptyMap());
+    }
+
+    /**
+     * Establish a connection to the given {@code uri}, throwing an exception if the response is not {@code >= 200}
+     * and {@code <= 299}.
+     * @param uri the URI to establish a connection to.
+     * @param requestHeaders headers to set for the request for content from {@code uri}.
      * @return a connection to the given {@code uri}.
      * @throws IOException if the connection response was not {@code >= 200} and {@code <= 299}.
      */
