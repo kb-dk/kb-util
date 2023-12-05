@@ -69,10 +69,14 @@ public class HeaderInputStream extends FilterInputStream implements AutoCloseabl
      * @return a connection to the given {@code uri}.
      * @throws IOException if the connection response was not {@code >= 200} and {@code <= 299}.
      */
-    protected static HttpURLConnection getHttpURLConnection(URI uri) throws IOException {
-        log.debug("Opening streaming connection to '{}'", uri);
+    protected static HttpURLConnection getHttpURLConnection(
+            URI uri, Map<String, String> requestHeaders) throws IOException {
+        log.debug("Opening streaming connection to '{}' with headers {}", uri, requestHeaders);
         HttpURLConnection con = (HttpURLConnection) uri.toURL().openConnection();
         con.setInstanceFollowRedirects(true);
+        if (requestHeaders != null) {
+            requestHeaders.forEach(con::setRequestProperty);
+        }
         int status = con.getResponseCode();
         if (status < 200 || status > 299) {
             throw new IOException("Got HTTP " + status + " establishing connection to '" + uri + "'");
