@@ -51,7 +51,22 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
      * @throws IOException if the connection failed.
      */
     public static <C2> ContinuationInputStream<C2> from(URI uri, Function<String, C2> tokenMapper) throws IOException {
-        HttpURLConnection con = getHttpURLConnection(uri);
+        return from(uri, tokenMapper, null);
+    }
+
+    /**
+     * Establish a connection to the given {@code uri}, extract all headers and construct a
+     * {@link ContinuationInputStream} with the headers and response stream from the {@code uri}.
+     * @param uri full URI for a call to a webservice.
+     * @param tokenMapper maps the String header {@link ContinuationUtil#HEADER_PAGING_CONTINUATION_TOKEN}
+     *                    to the concrete token type.
+     * @param requestHeaders optional headers for the connection. Can be null.
+     * @return an {@code InputStream} with the response.
+     * @throws IOException if the connection failed.
+     */
+    public static <C2> ContinuationInputStream<C2> from(
+            URI uri, Function<String, C2> tokenMapper, Map<String, String> requestHeaders) throws IOException {
+        HttpURLConnection con = getHttpURLConnection(uri, requestHeaders);
         Map<String, List<String>> headers = con.getHeaderFields();
         C2 continuationToken = ContinuationUtil.getContinuationToken(headers, tokenMapper).orElse(null);
         Boolean hasMore = ContinuationUtil.getHasMore(headers).orElse(null);
