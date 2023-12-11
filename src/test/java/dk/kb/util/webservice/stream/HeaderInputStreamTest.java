@@ -35,7 +35,7 @@ class HeaderInputStreamTest {
         String headerString;
         try (HeaderInputStream headerStream = HeaderInputStream.from(uri)) {
             headerString = IOUtils.toString(headerStream, StandardCharsets.UTF_8);
-            assertEquals("bytes", headerStream.getHeaders().get("Accept-Ranges").get(0),
+            assertEquals("bytes", headerStream.getResponseHeaders().get("Accept-Ranges").get(0),
                     "The header 'Accept-Ranges: bytes' should be present");
         }
 

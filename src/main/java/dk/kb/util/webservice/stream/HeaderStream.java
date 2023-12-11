@@ -18,6 +18,7 @@ import dk.kb.util.FilterStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -73,4 +74,18 @@ public class HeaderStream<T> extends FilterStream<T> implements AutoCloseable {
                 null :
                 responseHeaders.get(key).get(0);
     }
+
+    /**
+     * Extract the header values for the given key from the response headers.
+     * In case of no values, the empty list is returned.
+     * @param key HTTP response header key.
+     * @return the HTTP response header values for the given {@code key}.
+     */
+    public List<String> getResponseHeaders(String key) {
+        return responseHeaders == null || !responseHeaders.containsKey(key) || responseHeaders.get(key).isEmpty() ?
+                Collections.emptyList() :
+                responseHeaders.get(key);
+    }
+
+
 }
