@@ -97,6 +97,18 @@ public class HeaderInputStream extends FilterInputStream implements AutoCloseabl
     }
 
     /**
+     * Extract the header values for the given key from the response headers.
+     * In case of no values, the empty list is returned.
+     * @param key HTTP response header key.
+     * @return the HTTP response header values for the given {@code key}.
+     */
+    public List<String> getResponseHeaders(String key) {
+        return headers == null || !headers.containsKey(key) || headers.get(key).isEmpty() ?
+                Collections.emptyList() :
+                headers.get(key);
+    }
+
+    /**
      * Establish a connection to the given {@code uri}, throwing an exception if the response is not {@code >= 200}
      * and {@code <= 299}.
      * @param uri the URI to establish a connection to.
