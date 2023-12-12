@@ -33,9 +33,11 @@ public class HeaderStream<T> extends FilterStream<T> implements AutoCloseable {
     protected final Map<String, List<String>> responseHeaders;
 
     /**
-     * Create a stream.
+     * Take the {@code inner} stream and wrap it, without setting headers.
+     * Except for the class, this is effectively the same as the non-wrapped {@code inner}.
      *
-     * @param inner   the provider of the elements.
+     * @param inner the stream to wrap as a {@code HeaderStream}.
+     * @see #HeaderStream(Stream, Map)
      */
     public HeaderStream(Stream<T> inner) {
         super(inner);
@@ -44,9 +46,10 @@ public class HeaderStream<T> extends FilterStream<T> implements AutoCloseable {
     }
 
     /**
-     * Create a stream.
+     * Take the {@code inner} stream and wrap it along with the provided {@code responseHeaders}.
+     * All stream functionality for {@code inner} is unchanged.
      *
-     * @param inner           the provider of the elements.
+     * @param inner           the stream to wrap as a {@code HeaderStream}.
      * @param responseHeaders HTTP headers from the response that {@code inner} was constructed from.
      */
     public HeaderStream(Stream<T> inner, Map<String, List<String>> responseHeaders) {
