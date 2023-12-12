@@ -43,7 +43,7 @@ public class ContinuationUtil {
     public static final String HEADER_PAGING_HAS_MORE = "Paging-Has-More";
     
     /**
-     * Set as HTTP header by record streaming endpoints to communicate the number of re cords in the current stream.
+     * Set as HTTP header by record streaming endpoints to communicate the number of records in the current stream.
      */
     public static final String HEADER_PAGING_RECORD_COUNT = "Paging-Record-Count";
 
