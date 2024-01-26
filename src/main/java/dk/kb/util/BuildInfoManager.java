@@ -55,6 +55,9 @@ public class BuildInfoManager {
     private static String buildTime = null;
     private static String gitBranch = null;
     private static String gitCommitChecksum = null;
+    private static String gitCommitTime = null;
+    private static String gitCurrentTag = null;
+    private static String gitClosestTag = null;
 
     /**
      * @return the human readable name of the application, as defined in pom.xml.
@@ -88,6 +91,45 @@ public class BuildInfoManager {
     }
 
     /**
+     * @return name of the built branch.
+     */
+    public static String getGitBranch(){
+        if (gitBranch == null){
+            loadBuildInfo();
+        }
+        return gitBranch;
+    }
+
+
+    public static String getGitCommitChecksum(){
+        if (gitCommitChecksum == null){
+            loadBuildInfo();
+        }
+        return gitCommitChecksum;
+    }
+
+    public static String getGitCommitTime(){
+        if (gitCommitTime == null ){
+            loadBuildInfo();
+        }
+        return gitCommitTime;
+    }
+
+    public static String getGitCurrentTag(){
+        if (gitCurrentTag == null){
+            loadBuildInfo();
+        }
+        return gitCurrentTag;
+    }
+
+    public static String getGitClosestTag(){
+        if (gitClosestTag == null){
+            loadBuildInfo();
+        }
+        return gitClosestTag;
+    }
+
+    /**
      * Load build information from {@link #BUILD_PROPERTY_FILE} on the path.
      */
     private static synchronized void loadBuildInfo() {
@@ -112,5 +154,8 @@ public class BuildInfoManager {
         buildTime = properties.getProperty("APPLICATION.BUILDTIME", "unknown");
         gitCommitChecksum = properties.getProperty("GIT.COMMIT.CHECKSUM", "unknown");
         gitBranch = properties.getProperty("GIT.BRANCH", "unknown");
+        gitClosestTag = properties.getProperty("GIT.CLOSEST.TAG", "unknown");
+        gitCurrentTag = properties.getProperty("GIT.CURRENT.TAG", "unknown");
+        gitCommitTime = properties.getProperty("GIT.COMMIT.TIME", "unknown");
     }
 }
