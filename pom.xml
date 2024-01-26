@@ -148,6 +148,9 @@
                     <includeOnlyProperties>
                         <includeOnlyProperty>git.commit.id</includeOnlyProperty>
                         <includeOnlyProperty>git.branch</includeOnlyProperty>
+                        <includeOnlyProperty>git.tag</includeOnlyProperty>
+                        <includeOnlyProperty>git.closest.tag.name</includeOnlyProperty>
+                        <includeOnlyProperty>git.commit.author.time</includeOnlyProperty>
                     </includeOnlyProperties>
                 </configuration>
             </plugin>
