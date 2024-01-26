@@ -113,22 +113,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>properties-maven-plugin</artifactId>
-                <version>1.0.0</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>write-project-properties</goal>
-                        </goals>
-                        <configuration>
-                            <outputFile>${project.build.outputDirectory}/kbutil.build.properties</outputFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <!-- Plugin used to extract information on the current git setup.
                  See: https://github.com/git-commit-id/git-commit-id-maven-plugin -->
             <plugin>
