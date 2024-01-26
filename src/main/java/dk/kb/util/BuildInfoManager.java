@@ -53,6 +53,8 @@ public class BuildInfoManager {
     private static String name = null;
     private static String version = null;
     private static String buildTime = null;
+    private static String gitBranch = null;
+    private static String gitCommitChecksum = null;
 
     /**
      * @return the human readable name of the application, as defined in pom.xml.
@@ -108,5 +110,7 @@ public class BuildInfoManager {
         name = properties.getProperty("APPLICATION.NAME", "unknown");
         version = properties.getProperty("APPLICATION.VERSION", "unknown");
         buildTime = properties.getProperty("APPLICATION.BUILDTIME", "unknown");
+        gitCommitChecksum = properties.getProperty("GIT.COMMIT.CHECKSUM", "unknown");
+        gitBranch = properties.getProperty("GIT.BRANCH", "unknown");
     }
 }
