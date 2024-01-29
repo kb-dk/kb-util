@@ -102,9 +102,7 @@ public class BuildInfoManager {
      * @return the human readable name of the application, as defined in pom.xml.
      */
     public static String getName() {
-        if (name == null) {
-            loadBuildInfo();
-        }
+        loadBuildInfo();
         return name;
     }
 
@@ -112,10 +110,7 @@ public class BuildInfoManager {
      * @return the version of the application, as defined in pom.xml.
      */
     public static String getVersion() {
-        if (version == null) {
-            loadBuildInfo();
-        }
-
+        loadBuildInfo();
         return version;
     }
 
@@ -123,9 +118,7 @@ public class BuildInfoManager {
      * @return the build time of the application.
      */
     public static String getBuildTime() {
-        if (buildTime == null) {
-            loadBuildInfo();
-        }
+        loadBuildInfo();
         return buildTime;
     }
 
@@ -133,38 +126,28 @@ public class BuildInfoManager {
      * @return name of the built branch.
      */
     public static String getGitBranch(){
-        if (gitBranch == null){
-            loadBuildInfo();
-        }
+        loadBuildInfo();
         return gitBranch;
     }
 
 
     public static String getGitCommitChecksum(){
-        if (gitCommitChecksum == null){
-            loadBuildInfo();
-        }
+        loadBuildInfo();
         return gitCommitChecksum;
     }
 
     public static String getGitCommitTime(){
-        if (gitCommitTime == null ){
-            loadBuildInfo();
-        }
+        loadBuildInfo();
         return gitCommitTime;
     }
 
     public static String getGitCurrentTag(){
-        if (gitCurrentTag == null){
-            loadBuildInfo();
-        }
+        loadBuildInfo();
         return gitCurrentTag;
     }
 
     public static String getGitClosestTag(){
-        if (gitClosestTag == null){
-            loadBuildInfo();
-        }
+        loadBuildInfo();
         return gitClosestTag;
     }
 
@@ -196,6 +179,7 @@ public class BuildInfoManager {
                         "Build information will be unavailable");
             } else {
                 properties.load(is);
+                log.debug("Properties were loaded from: '{}'", BUILD_PROPERTY_FILE);
             }
         } catch (IOException e) {
             log.warn("Could not load build information from:" + BUILD_PROPERTY_FILE, e);
