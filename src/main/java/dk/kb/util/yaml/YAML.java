@@ -559,6 +559,10 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultValue;
         }
     }
+
+    public String getMultiple(String path){
+        return "";
+    }
     
     /* **************************** Path-supporting overrides ************************************ */
     
@@ -1369,5 +1373,10 @@ public class YAML extends LinkedHashMap<String, Object> {
                 return null; // The framework will handle it if action needs to be taken
             }
         }
+
+        void accept(YAMLVisitor visitor){
+
+        }
+
     }
 }
