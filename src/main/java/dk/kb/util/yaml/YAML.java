@@ -1375,6 +1375,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
 
         void accept(YAMLVisitor visitor){
+            visitor.visitString(this);
 
         }
 
