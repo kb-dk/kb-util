@@ -12,7 +12,7 @@ import java.util.Properties;
  * The information is typically logged upon application start to make it easier for Operations an other log users
  * to determine what is running.
  *
- * As of 2022-06-27 this requires that the project pom.xml contains the sections
+ * As of 2024-01-29 this requires that the project pom.xml contains the following sections
  * <pre>
  *   <properties>
  *     ...
@@ -37,16 +37,55 @@ import java.util.Properties;
  *     ...
  *   </build>
  * </pre>
+ *
+ * <pre>
+ *   <plugin>
+ *     <groupId>io.github.git-commit-id</groupId>
+ *     <artifactId>git-commit-id-maven-plugin</artifactId>
+ *     <version>7.0.0</version>
+ *     <executions>
+ *       <execution>
+ *         <id>get-the-git-infos</id>
+ *         <goals>
+ *           <goal>revision</goal>
+ *         </goals>
+ *         <phase>initialize</phase>
+ *       </execution>
+ *     </executions>
+ *     <configuration>
+ *       <includeOnlyProperties>
+ *         <includeOnlyProperty>git.commit.id</includeOnlyProperty>
+ *         <includeOnlyProperty>git.branch</includeOnlyProperty>
+ *         <includeOnlyProperty>git.tag</includeOnlyProperty>
+ *         <includeOnlyProperty>git.closest.tag.name</includeOnlyProperty>
+ *         <includeOnlyProperty>git.commit.author.time</includeOnlyProperty>
+ *       </includeOnlyProperties>
+ *       <replacementProperties>
+ *         <replacementProperty>
+ *           <property>git.tag</property>
+ *           <regex>false</regex>
+ *           <token>git.tag</token>
+ *           <value>unknown</value>
+ *        </replacementProperty>
+ *      </replacementProperties>
+ *    </configuration>
+ *  </plugin>
+ * </pre>
  * The file {@code src/main/resources/build.properties} should contain at least
  * <pre>
  *   # Build Time Information
  *   APPLICATION.NAME=${pom.name}
  *   APPLICATION.VERSION=${pom.version}
  *   APPLICATION.BUILDTIME=${timestamp}
+ *   GIT.COMMIT.CHECKSUM=${git.commit.id}
+ *   GIT.BRANCH=${git.branch}
+ *   GIT.CURRENT.TAG=${git.tag}
+ *   GIT.CLOSEST.TAG=${git.closest.tag.name}
+ *   GIT.COMMIT.TIME=${git.commit.author.time}
  * </pre>
  */
 public class BuildInfoManager {
-    static final String BUILD_PROPERTY_FILE = "build.properties";
+    static String BUILD_PROPERTY_FILE = "build.properties";
 
     private static final Logger log = LoggerFactory.getLogger(BuildInfoManager.class);
 
@@ -130,9 +169,22 @@ public class BuildInfoManager {
     }
 
     /**
+     * Load build info from an inputted property file.
+     * @param propertyFile the file to extract the properties from.
+     */
+    private static synchronized void loadBuildInfo(String propertyFile) {
+        BUILD_PROPERTY_FILE = propertyFile;
+        getBuildInfo();
+    }
+
+    /**
      * Load build information from {@link #BUILD_PROPERTY_FILE} on the path.
      */
     private static synchronized void loadBuildInfo() {
+        getBuildInfo();
+    }
+
+    private static void getBuildInfo() {
         if (name != null) { // Already resolved
             return;
         }
@@ -141,7 +193,7 @@ public class BuildInfoManager {
         try (InputStream is = Resolver.resolveStream(BUILD_PROPERTY_FILE)) {
             if (is == null) {
                 log.warn("Unable to load '" + BUILD_PROPERTY_FILE + "' from the classpath. " +
-                         "Build information will be unavailable");
+                        "Build information will be unavailable");
             } else {
                 properties.load(is);
             }
