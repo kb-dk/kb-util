@@ -15,20 +15,16 @@ public class MultipleValuesVisitor implements YAMLVisitor{
         if (yamlElement instanceof Map) {
             Map<?, ?> yamlMap = (Map<?, ?>) yamlElement;
             yamlMap.forEach((key, value) -> {
-                if (key.equals(keyToExtract)){
+                if (key.equals(keyToExtract) && !(value instanceof Map) ){
                     extractedValues.add((String) value);
                 }
                 traverseYaml(value, extractedValues, keyToExtract);
             });
         } else if (yamlElement instanceof Iterable) {
             Iterable<?> yamlList = (Iterable<?>) yamlElement;
-            int index = 0;
             for (Object item : yamlList) {
                 traverseYaml(item, extractedValues, keyToExtract);
-                index++;
             }
-        } else {
-            // Handle scalar values
         }
     }
 

@@ -25,6 +25,17 @@ test:
     - item3:
         name: baz
         age: 121
+  anotherlevel:
+    name:
+      a: 1
+      b: 2
+      c: 3
+      name: john
+  arrayofqueens:
+    - name: Thyra
+    - name: Gunhild
+    - name: Margrethe
 
+name: doe
 anothertest:
   name: qux
