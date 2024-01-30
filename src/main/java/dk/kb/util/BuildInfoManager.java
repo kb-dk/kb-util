@@ -98,6 +98,7 @@ public class BuildInfoManager {
     private static String gitCurrentTag = null;
     private static String gitClosestTag = null;
 
+
     /**
      * @return the human readable name of the application, as defined in pom.xml.
      */
@@ -155,7 +156,7 @@ public class BuildInfoManager {
      * Load build info from an inputted property file.
      * @param propertyFile the file to extract the properties from.
      */
-    private static synchronized void loadBuildInfo(String propertyFile) {
+    public static synchronized void loadBuildInfo(String propertyFile) {
         BUILD_PROPERTY_FILE = propertyFile;
         getBuildInfo();
     }
