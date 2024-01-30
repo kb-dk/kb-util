@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -611,5 +613,39 @@ class YAMLTest {
         // It is important to test this WITHOUT performing the direct get request from testDirectPath first as
         // that creates the substitutors
         assertEquals("boom", yaml.getSubMap("nested").get("inner.foosubst"), "Getting from submap should work");
+    }
+
+    @Test
+    public void testGetMultiple() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux");
+
+        List<String> extractedNames = yaml.getMultiple("name");
+        assertEquals(5, extractedNames.size());
+        assertTrue(extractedNames.containsAll(testValues));
+    }
+
+    @Test
+    public void testSubsetFromGetMultiple() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<YAML> subsetYaml = yaml.getYAMLList("test.tuplesequence");
+        List<String> testValues = Arrays.asList("foo", "bar", "baz");
+
+        List<String> extractedNames = new ArrayList<>();
+
+        for (YAML yamlEntry : subsetYaml) {
+            extractedNames.addAll(yamlEntry.getMultiple("name"));
+        }
+
+        assertEquals(3, extractedNames.size());
+        assertTrue(extractedNames.containsAll(testValues));
+        assertFalse(extractedNames.contains("fooz"));
+
+    }
+
+    @Test
+    public void testVisitor() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        yaml.getMultiple("name");
     }
 }

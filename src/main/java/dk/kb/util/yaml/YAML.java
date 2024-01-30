@@ -560,8 +560,11 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-    public String getMultiple(String path){
-        return "";
+    public List<String> getMultiple(String key){
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        List<String> extractedValues = new ArrayList<>();
+        visitor.traverseYaml(this, extractedValues, key);
+        return extractedValues;
     }
     
     /* **************************** Path-supporting overrides ************************************ */
@@ -1373,11 +1376,9 @@ public class YAML extends LinkedHashMap<String, Object> {
                 return null; // The framework will handle it if action needs to be taken
             }
         }
+    }
 
-        void accept(YAMLVisitor visitor){
-            visitor.visitString(this);
-
-        }
-
+    void accept(YAMLVisitor visitor) {
+        visitor.visit(this);
     }
 }
