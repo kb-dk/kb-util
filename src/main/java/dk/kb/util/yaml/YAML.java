@@ -572,6 +572,21 @@ public class YAML extends LinkedHashMap<String, Object> {
         visitor.traverseYaml(this, extractedValues, key);
         return extractedValues;
     }
+
+    /**
+     * Resolves all values related to a given key, from a part of a YAML structure. All values that are children of the
+     * input {@code yamlPath} and are specified with the input {@code key} are returned as a list.
+     * @param yamlPath the specific part of a YAML file, that is to be queried for values.
+     * @param key all values that are associated with this key are added to the returned list.
+     * @return a list of all scalar values that are associated with the input key.
+     */
+    public List<String> getMultipleFromSubYaml(String yamlPath, String key){
+        Object subYaml = this.get(yamlPath);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        List<String> extractedValues = new ArrayList<>();
+        visitor.traverseYaml(subYaml, extractedValues, key);
+        return extractedValues;
+    }
     
     /* **************************** Path-supporting overrides ************************************ */
     
