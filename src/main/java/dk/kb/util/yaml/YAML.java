@@ -560,6 +560,12 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
+    /**
+     * Resolves all values related to a given key, from a YAML structure. All values that have the specified key are
+     * returned as part of a list.
+     * @param key the key to look for in the input YAML.
+     * @return a list of all values that can be cast to strings.
+     */
     public List<String> getMultiple(String key){
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         List<String> extractedValues = new ArrayList<>();

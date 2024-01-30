@@ -618,10 +618,11 @@ class YAMLTest {
     @Test
     public void testGetMultiple() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux");
+        List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
+                                                "Thyra", "Gunhild", "Margrethe");
 
         List<String> extractedNames = yaml.getMultiple("name");
-        assertEquals(5, extractedNames.size());
+        assertEquals(10, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
 
