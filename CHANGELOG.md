@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.4.23](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.23)
+### Added
+- Support for extracting multiple values from a YAML file that share the same key. The getMultiple method works for YAMLs that are not overly complicated.
+
+
+## [1.4.22](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.22)
 ### Added
 - Support for fetching git information through BuildInfoManager. Commit hash, deployed branch, time of latest commit and closest git tag is extracted.
 
