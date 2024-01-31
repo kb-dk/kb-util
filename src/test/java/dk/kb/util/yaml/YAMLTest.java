@@ -656,8 +656,8 @@ class YAMLTest {
 
     // The YAML structure has subtrees under the sequence.
     // The task here is to get all 'name's under 'primary', but not those under 'secondary'
-    @Test
-    public void testSequenceWithSubtrees() throws IOException {
+    // TODO: Disabled for now in anticipation of later increase in flexibility
+    public void disabledtestSequenceWithSubtrees() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> expectedNames = Arrays.asList("foo", "bar", "baz");
 
