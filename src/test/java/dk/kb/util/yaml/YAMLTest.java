@@ -622,7 +622,7 @@ class YAMLTest {
                                                 "Thyra", "Gunhild", "Margrethe");
 
         List<String> extractedNames = yaml.getMultiple("name");
-        assertEquals(10, extractedNames.size());
+        assertEquals(16, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
 
