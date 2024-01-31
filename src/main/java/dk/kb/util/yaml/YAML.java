@@ -568,9 +568,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     public List<String> getMultiple(String key){
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        List<String> extractedValues = new ArrayList<>();
-        visitor.traverseYaml(this, extractedValues, key);
-        return extractedValues;
+        visitor.setKeyToExtract(key);
+        this.accept(visitor);
+        return visitor.extractedValues;
     }
 
     /**
@@ -581,13 +581,39 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return a list of all scalar values that are associated with the input key.
      */
     public List<String> getMultipleFromSubYaml(String yamlPath, String key){
-        Object subYaml = this.get(yamlPath);
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        List<String> extractedValues = new ArrayList<>();
-        visitor.traverseYaml(subYaml, extractedValues, key);
-        return extractedValues;
+        if (this.get(yamlPath) instanceof List){
+            return getMultipleFromSubYamlList(yamlPath, key);
+        } else if (this.get(yamlPath) instanceof Iterable){
+            YAML subYaml = this.getSubMap(yamlPath);
+            MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+            visitor.setKeyToExtract(key);
+            subYaml.accept(visitor);
+            return visitor.extractedValues;
+        } else {
+            // If the loop gets to here, then the value isn't iterable, and it is therefore a scalar/atomic value.
+            // Therefore, there is no need to use the visitor.
+            Object subYaml = this.get(yamlPath);
+            return List.of(subYaml.toString());
+        }
     }
-    
+
+    /**
+     * Helper for the method {@link #getMultipleFromSubYaml(String, String)} used to visit a list-part of a YAML file.
+     * This method gets a list from the {@code yamlPath} and looks for values that are associated with the input {@code key}.
+     * @param yamlPath to a list in the overall YAML being parsed.
+     * @param key to extract values for.
+     * @return a new list of all values, that are represented in the YAML List by the input {@code key}.
+     */
+    private List<String> getMultipleFromSubYamlList(String yamlPath, String key) {
+        List<YAML> yamlList = this.getYAMLList(yamlPath);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        visitor.setKeyToExtract(key);
+        for (YAML yamlPart : yamlList) {
+            yamlPart.accept(visitor);
+        }
+        return visitor.extractedValues;
+    }
+
     /* **************************** Path-supporting overrides ************************************ */
     
     /**
