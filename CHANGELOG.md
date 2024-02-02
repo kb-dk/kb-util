@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.24](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.24)
+### Fixed
+- The method getRecordCount in ContinuationUtil returned the value of getMore. Has been fixed to return actual record count for the stream. 
+
 ## [1.4.23](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.23)
 ### Added
 - Support for extracting multiple values from a YAML file that share the same key. The getMultiple method works for YAMLs that are not overly complicated.
