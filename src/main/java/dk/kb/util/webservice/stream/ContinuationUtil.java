@@ -128,8 +128,7 @@ public class ContinuationUtil {
      */
     public static Optional<Long> getRecordCount(Map<String, List<String>> headers) {
         return headers.get(HEADER_PAGING_RECORD_COUNT) == null ?
-                Optional.empty() :
-                Optional.of(Long.getLong(headers.get(HEADER_PAGING_HAS_MORE).get(0)));
+                Optional.empty() : Optional.of(Long.valueOf(headers.get(HEADER_PAGING_RECORD_COUNT).get(0)));
     }
 
     /**
