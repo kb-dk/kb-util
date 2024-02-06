@@ -31,12 +31,12 @@ import java.util.stream.Stream;
  * @param <T> the class of objects for the stream.
  * @param <C> the class for the {@code continuationToken}, typically {@code String>} or {@code Long}.
  */
-// TODO: Pagesize
 public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ContinuationStream.class);
 
     private final C continuationToken;
     private final Boolean hasMore;
+    private final Long recordCount;
 
     /**
      * Create a stream.
@@ -47,7 +47,7 @@ public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoClo
      * @param hasMore           whether or not a subsequent request for a stream is likely to produce any elements.
      */
     public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore) {
-        this(inner, continuationToken, hasMore, null);
+        this(inner, continuationToken, hasMore, null, null);
     }
 
     /**
@@ -57,25 +57,41 @@ public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoClo
      * @param continuationToken used for requesting a new stream that continues after the last element of the
      *                          current stream. If {@code null}, no continuation information is available.
      * @param hasMore           whether or not a subsequent request for a stream is likely to produce any elements.
+     * @param recordCount       the amount of records in the stream.
+     */
+    public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore, Long recordCount) {
+        this(inner, continuationToken, hasMore, recordCount, null);
+    }
+
+    /**
+     * Create a stream.
+     *
+     * @param inner             the provider of the elements.
+     * @param continuationToken used for requesting a new stream that continues after the last element of the
+     *                          current stream. If {@code null}, no continuation information is available.
+     * @param hasMore           whether or not a subsequent request for a stream is likely to produce any elements.
+     * @param recordCount
      * @param responseHeaders HTTP headers from the response that {@code inner} was constructed from.
      */
-    public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore,
+    public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore, Long recordCount,
                               Map<String, List<String>> responseHeaders) {
         super(inner, responseHeaders);
         this.continuationToken = continuationToken;
         this.hasMore = hasMore;
-        log.debug("Creating ContinuationStream with continuationToken='{}', hasMore={}, responseHeaders={}",
-                  continuationToken, hasMore, responseHeaders);
+        this.recordCount = recordCount;
+        log.debug("Creating ContinuationStream with continuationToken='{}', hasMore={}, recordCount={}, responseHeaders={}",
+                  continuationToken, hasMore, recordCount, responseHeaders);
     }
 
     /**
-     * Set the continuation token and hasMore as HTTP headers on the given {@code httpServletResponse}
+     * Set the continuation token, hasMore and recordCount as HTTP headers on the given {@code httpServletResponse}
      * @param httpServletResponse headers will be assigned here.
      * @return this continuation stream, usable for chaining.
      */
     public ContinuationStream<T, C> setHeaders(HttpServletResponse httpServletResponse) {
         ContinuationUtil.setHeaderContinuation(httpServletResponse, getContinuationToken());
         ContinuationUtil.setHeaderHasMore(httpServletResponse, hasMore());
+        ContinuationUtil.setHeaderRecordCount(httpServletResponse, getRecordCount());
         return this;
     }
 
@@ -99,5 +115,16 @@ public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoClo
      */
     public Boolean hasMore() {
         return hasMore;
+    }
+
+    /**
+     * Non-authoritative indicator for the number of records that are serialised in this stream.
+     *
+     * @return number of records in the stream. {@code null} signals undecided.
+     * @see #getContinuationToken()
+     * @see #hasMore()
+     */
+    public Long getRecordCount() {
+        return recordCount;
     }
 }
