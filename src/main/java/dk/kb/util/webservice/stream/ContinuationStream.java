@@ -70,7 +70,7 @@ public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoClo
      * @param continuationToken used for requesting a new stream that continues after the last element of the
      *                          current stream. If {@code null}, no continuation information is available.
      * @param hasMore           whether or not a subsequent request for a stream is likely to produce any elements.
-     * @param recordCount
+     * @param recordCount       the amount of records in the stream. This can be {@code null}.
      * @param responseHeaders HTTP headers from the response that {@code inner} was constructed from.
      */
     public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore, Long recordCount,
