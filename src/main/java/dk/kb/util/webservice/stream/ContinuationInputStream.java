@@ -127,7 +127,7 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
         try {
             return new ContinuationStream<>(
                     JSONStreamUtil.jsonToObjectsStream(this, clazz),
-                    getContinuationToken(), hasMore(), getResponseHeaders());
+                    getContinuationToken(), hasMore(), getRecordCount(), getResponseHeaders());
         } catch (IOException e) {
             throw new RuntimeException("IOException constructing object stream", e);
         }
