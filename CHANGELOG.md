@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added support for the Paging-Record-Count header in the ContinuationStream
 
 ## [1.4.24](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.24)
 ### Fixed
