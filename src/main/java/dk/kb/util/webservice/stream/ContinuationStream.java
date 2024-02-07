@@ -78,14 +78,8 @@ public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoClo
      */
     public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore,
                               Map<String, List<String>> responseHeaders) {
-        super(inner, responseHeaders);
-        this.continuationToken = continuationToken;
-        this.hasMore = hasMore;
-        this.recordCount = null;
-        log.debug("Creating ContinuationStream with continuationToken='{}', hasMore={}, responseHeaders={}",
-                continuationToken, hasMore, responseHeaders);
+        this(inner, continuationToken, hasMore, null, responseHeaders);
     }
-
 
     /**
      * Create a stream.
