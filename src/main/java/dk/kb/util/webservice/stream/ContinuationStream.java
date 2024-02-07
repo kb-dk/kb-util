@@ -41,6 +41,8 @@ public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoClo
     /**
      * Create a stream.
      *
+     * @deprecated use {@link ContinuationStream#ContinuationStream(Stream, Object, Boolean, Long)} instead.
+     *
      * @param inner             the provider of the elements.
      * @param continuationToken used for requesting a new stream that continues after the last element of the
      *                          current stream. If {@code null}, no continuation information is available.
@@ -62,6 +64,28 @@ public class ContinuationStream<T, C> extends HeaderStream<T> implements AutoClo
     public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore, Long recordCount) {
         this(inner, continuationToken, hasMore, recordCount, null);
     }
+
+    /**
+     * Create a stream.
+     *
+     * @deprecated use {@link ContinuationStream#ContinuationStream(Stream, Object, Boolean, Long, Map)} instead.
+     *
+     * @param inner             the provider of the elements.
+     * @param continuationToken used for requesting a new stream that continues after the last element of the
+     *                          current stream. If {@code null}, no continuation information is available.
+     * @param hasMore           whether or not a subsequent request for a stream is likely to produce any elements.
+     * @param responseHeaders HTTP headers from the response that {@code inner} was constructed from.
+     */
+    public ContinuationStream(Stream<T> inner, C continuationToken, Boolean hasMore,
+                              Map<String, List<String>> responseHeaders) {
+        super(inner, responseHeaders);
+        this.continuationToken = continuationToken;
+        this.hasMore = hasMore;
+        this.recordCount = null;
+        log.debug("Creating ContinuationStream with continuationToken='{}', hasMore={}, responseHeaders={}",
+                continuationToken, hasMore, responseHeaders);
+    }
+
 
     /**
      * Create a stream.
