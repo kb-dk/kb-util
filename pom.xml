@@ -11,7 +11,7 @@
 
     <groupId>dk.kb.util</groupId>
     <artifactId>kb-util</artifactId>
-    <version>1.4.25-SNAPSHOT</version>
+    <version>1.4.26-SNAPSHOT</version>
 
     <scm>
         <url>https://github.com/kb-dk/kb-util</url>
