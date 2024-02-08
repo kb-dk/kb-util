@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [1.4.25](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.25)
+## [1.4.26](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.26)
 ### Added
 - Added support for the Paging-Record-Count header in the ContinuationStream
 
