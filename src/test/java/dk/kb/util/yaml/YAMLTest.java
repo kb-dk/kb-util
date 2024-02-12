@@ -621,7 +621,7 @@ class YAMLTest {
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
                                                 "Thyra", "Gunhild", "Margrethe");
 
-        List<String> extractedNames = yaml.getMultiple("name");
+        List<String> extractedNames = yaml.getMultiple("*.name", yaml);
         assertEquals(16, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
@@ -629,15 +629,9 @@ class YAMLTest {
     @Test
     public void testSubsetFromGetMultiple() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<YAML> subsetYaml = yaml.getYAMLList("test.tuplesequence");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
-        List<String> extractedNames = new ArrayList<>();
-
-        for (YAML yamlEntry : subsetYaml) {
-            extractedNames.addAll(yamlEntry.getMultiple("name"));
-        }
-
+        List<String> extractedNames = yaml.getMultiple("test.tuplesequence[*].name", yaml);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
         assertFalse(extractedNames.contains("fooz"));
@@ -648,37 +642,31 @@ class YAMLTest {
     public void testGetMultipleFromSubYaml() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
+        List<String> extractedNames = yaml.getMultiple("test.tuplesequence[*].name", yaml);
 
-        List<String> extractedNames = yaml.getMultipleFromSubYaml("test.tuplesequence", "name");
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
 
     // The YAML structure has subtrees under the sequence.
     // The task here is to get all 'name's under 'primary', but not those under 'secondary'
-    // TODO: Disabled for now in anticipation of later increase in flexibility
+    @Test
     public void disabledtestSequenceWithSubtrees() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> expectedNames = Arrays.asList("foo", "bar", "baz");
-
-        // FIXME: This does not work as the 'name's from the 'secondary' subtree are also returned
-        List<String> extractedNames = yaml.getMultipleFromSubYaml("subtrees", "name");
+        List<String> extractedNames = yaml.getMultiple("subtrees[*].primary.name");
 
         assertEquals(expectedNames, extractedNames);
     }
+
 
     @Test
     public void testGetMultipleFromSubYamlOnScalar() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
 
-        List<String> extractedNames = yaml.getMultipleFromSubYaml("name", "name");
+        List<String> extractedNames =  yaml.getMultiple("name", yaml);
         assertEquals(1, extractedNames.size());
         assertTrue(extractedNames.contains("doe"));
     }
 
-    @Test
-    public void testVisitor() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        yaml.getMultiple("name");
-    }
 }
