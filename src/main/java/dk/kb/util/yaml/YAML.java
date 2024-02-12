@@ -567,9 +567,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @return a list of all values that can be cast to strings.
      */
     public List<String> getMultiple(String key){
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        visitor.setKeyToExtract(key);
-        this.accept(visitor);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor(key);
+        visitor.visit(this);
         return visitor.extractedValues;
     }
 
@@ -585,9 +584,8 @@ public class YAML extends LinkedHashMap<String, Object> {
             return getMultipleFromSubYamlList(yamlPath, key);
         } else if (this.get(yamlPath) instanceof Iterable){
             YAML subYaml = this.getSubMap(yamlPath);
-            MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-            visitor.setKeyToExtract(key);
-            subYaml.accept(visitor);
+            MultipleValuesVisitor visitor = new MultipleValuesVisitor(yamlPath);
+            visitor.visit(subYaml);
             return visitor.extractedValues;
         } else {
             // If the loop gets to here, then the value isn't iterable, and it is therefore a scalar/atomic value.
@@ -606,10 +604,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     private List<String> getMultipleFromSubYamlList(String yamlPath, String key) {
         List<YAML> yamlList = this.getYAMLList(yamlPath);
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        visitor.setKeyToExtract(key);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor(yamlPath);
         for (YAML yamlPart : yamlList) {
-            yamlPart.accept(visitor);
+            visitor.visit(yamlPart);
         }
         return visitor.extractedValues;
     }
@@ -668,8 +665,39 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Override
     @NotNull
     public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
+        //return getMultiple(path, this);
         return get(path, this);
+        // This method should call a new getMultiple method
     }
+
+    public List<String> getMultiple(Object path0, YAML yaml) {
+        if (path0 == null) {
+            throw new NullPointerException("Failed to query config for null path");
+        }
+        String path = path0.toString().trim();
+        if (path.startsWith(".")) {
+            path = path.substring(1);
+        }
+        List<String> inputPathElements = splitPath(path);
+
+        YAML current = yaml;
+        boolean toTraverse = inputPathElements.stream()
+                .anyMatch(element -> element.equals("*") || element.contains("[*]"));
+
+        if (toTraverse) {
+
+            log.info("Starting traversel to find all paths");
+            MultipleValuesVisitor visitor = new MultipleValuesVisitor(path);
+            visitor.visit(current);
+
+            log.info("Matching paths: '{}'", visitor.matchingPaths);
+            return visitor.extractedValues;
+        }
+
+        // TODO: Figure the structure here.
+        return null;
+    }
+
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
     private Object get(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
@@ -1425,7 +1453,4 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-    void accept(YAMLVisitor visitor) {
-        visitor.visit(this);
-    }
 }
