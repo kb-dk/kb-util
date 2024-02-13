@@ -614,7 +614,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     /* **************************** Path-supporting overrides ************************************ */
     
     /**
-     * Used internally by {@link #get} to avoid endless recursion.
+     * Used internally by {@link #oldGet} to avoid endless recursion.
      *
      * @param key the key to look up.
      * @return the value for the key or null if the key is not present in the map.
@@ -689,12 +689,83 @@ public class YAML extends LinkedHashMap<String, Object> {
 
             return visitor.extractedValues;
         } else {
-            return List.of(get(path0, yaml));
+            return List.of(oldGet(path0, yaml));
         }
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
-    private Object get(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
+    private Object visit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
+        if (pathO == null) {
+            throw new NullPointerException("Failed to query config for null path");
+        }
+        String path = pathO.toString().trim();
+        if (path.startsWith(".")) {
+            path = path.substring(1);
+        }
+        List<String> pathElements = splitPath(path);
+        YAML current = yaml;
+
+        // følgende skal understøttes:
+        // foo.**.bar   foo.zoo.bac.bu.bar         * [*] [] [foo=bar] [foo!=bar]
+        for (int i = 0; i < pathElements.size(); i++) {
+            String fullPathElement = pathElements.get(i);
+            Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
+            final String pathKey;
+            final String arrayElementIndex;
+            if (matcher.matches()) { // foo.bar[2]
+                pathKey = matcher.group(1);
+                arrayElementIndex = matcher.group(2);
+            } else {
+                pathKey = fullPathElement;
+                arrayElementIndex = null;
+            }
+            Object sub;
+            if (pathKey.isEmpty()) {
+                sub = current;
+            } else {
+                sub = current.getSuper(pathKey);
+            }
+            if (sub == null) {
+                throw new NotFoundException(
+                        "Unable to request " + i + "'th sub-element: '" + pathKey + "'", path);
+            }
+
+            // Handle array lookup
+
+            if (arrayElementIndex != null) { // foo.bar.[2] or foo.bar.[key=val]
+                sub = getArrayElement(sub, arrayElementIndex, pathKey, fullPathElement, path);
+            }
+
+            if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
+                return extrapolate(sub);
+            } //Otherwise, we require that it is a map so we can continue to query
+
+            //If sub is a list, make it a map with the indexes as keys
+            if (sub instanceof List) {
+                List<Object> list = (List<Object>) sub;
+                LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
+                for (int j = 0; j < list.size(); j++) {
+                    map.put(j + "", extrapolate(list.get(j)));
+                }
+                sub = map;
+            }
+            if (!(sub instanceof Map)) {
+                throw new InvalidTypeException(
+                        "The " + i + "'th sub-element ('" + pathKey + "') was not a Map but a " +
+                                sub.getClass().getSimpleName(), path);
+            }
+            try { //Update current as the sub we have found
+                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties, getSubstitutors());
+            } catch (ClassCastException e) {
+                throw new InvalidTypeException(
+                        "Expected a Map<String, Object> for path but got ClassCastException", path, e);
+            }
+        }
+        return current;
+    }
+
+    // The real implementation of get(path), made flexible so that the entry YAML can be specified
+    private Object oldGet(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
@@ -1410,7 +1481,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Substitutor that takes paths in the current YAML.
      * See {@link PathLookup} for details on syntax and use.
      */
-    private static class PathSubstitutor {
+    static class PathSubstitutor {
         /**
          * Create a path based substitutor backed by the given YAML.
          * @param yaml the YAML used for resolving paths.
