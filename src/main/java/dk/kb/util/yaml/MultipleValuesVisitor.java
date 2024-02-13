@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 public class MultipleValuesVisitor implements YAMLVisitor {
     private static final Logger log = LoggerFactory.getLogger(MultipleValuesVisitor.class);
 
+    private static final String PLACEHOLDER = "*";
     List<Object> extractedValues = new ArrayList<>();
     List<String> matchingPaths = new ArrayList<>();
     List<String> inputPathElements = new ArrayList<>();
@@ -52,7 +53,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
             }
 
             // Should match every entry of the input path element, when the input path starts with "*."
-            if (inputPath.startsWith("*.") && path.endsWith((inputPathElements.get(1)))){
+            if (inputPath.startsWith(PLACEHOLDER + ".") && path.endsWith((inputPathElements.get(1)))){
                 extractedValues.add(yamlEntry.toString());
                 return;
             }
@@ -82,7 +83,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
             String pathInYaml = listWithValuesFromYaml.get(index2);
 
             // Handle array lookup
-            if (queryPath.contains("[*]")) {
+            if (queryPath.contains("[" + PLACEHOLDER + "]")) {
                 // Extract the prefix before '[*]'
                 String prefix = queryPath.substring(0, queryPath.indexOf("["));
 
@@ -116,7 +117,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
                     // If the prefix doesn't match, return false
                     return false;
                 }
-            } else if (queryPath.equals("*")) {
+            } else if (queryPath.equals(PLACEHOLDER)) {
                 // Treat '*' or '[*]' as a placeholder for one or more strings
                 // If '*' or '[*]' is the last element in listWithPlaceholder, it matches any remaining elements in listWithValuesFromYaml
                 if (index1 == listWithPlaceholder.size() - 1) {
