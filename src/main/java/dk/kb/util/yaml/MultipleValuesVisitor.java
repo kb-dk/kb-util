@@ -17,53 +17,40 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     List<String> matchingPaths = new ArrayList<>();
     List<String> inputPathElements = new ArrayList<>();
     String inputPath;
+    String currentPath;
 
     public MultipleValuesVisitor(String inputPath){
         this.inputPath = inputPath;
         this.inputPathElements = splitPath(inputPath);
     }
 
+    public MultipleValuesVisitor(){}
+
     @Override
-    public void visit(YAML yaml) {
+    public void visit(Object yaml) {
+        this.inputPathElements = splitPath(inputPath);
         // Traverse the full yaml by not giving it a path here.
         // The path variable is needed for the following iterations.
-        traverseYaml("", yaml);
+        // Should match every entry of the input path element, when the input path starts with "*."
+        if (inputPath.startsWith(PLACEHOLDER + ".") && currentPath.endsWith((inputPathElements.get(1)))){
+            extractedValues.add(yaml);
+            return;
+        }
+
+        boolean pathMatches = compareCurrentPathToInput(currentPath, inputPathElements);
+        if (pathMatches){
+            matchingPaths.add(currentPath);
+            extractedValues.add(yaml);
+        }
     }
 
-    private void traverseYaml(String path, Object yamlEntry) {
-        // Handle maps by appending .key to the current path and then traversing again.
-        if (yamlEntry instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) yamlEntry;
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                String key = entry.getKey().toString();
-                Object value = entry.getValue();
-                traverseYaml(path + "." + key, value);
-            }
-        // Handle lists by appending [i] to the current path and then getting that value.
-        } else if (yamlEntry instanceof List) {
-            List<?> list = (List<?>) yamlEntry;
-            for (int i = 0; i < list.size(); i++) {
-                traverseYaml(path + "[" + i + "]", list.get(i));
-            }
-        // Handle scalar values by checking that the path matches
-        // then adding the scalar to extracted values if paths match.
-        } else {
-            if (path.startsWith(".")) {
-                path = path.substring(1);
-            }
 
-            // Should match every entry of the input path element, when the input path starts with "*."
-            if (inputPath.startsWith(PLACEHOLDER + ".") && path.endsWith((inputPathElements.get(1)))){
-                extractedValues.add(yamlEntry.toString());
-                return;
-            }
+    public void setInputPath(String inputPath) {
+        this.inputPath = inputPath;
+    }
 
-            boolean pathMatches = compareCurrentPathToInput(path, inputPathElements);
-            if (pathMatches){
-                matchingPaths.add(path);
-                extractedValues.add(yamlEntry.toString());
-            }
-        }
+    public void setCurrentPath(String currentPath) {
+        this.currentPath = currentPath;
     }
 
     private boolean compareCurrentPathToInput(String path, List<String> inputPathElements) {

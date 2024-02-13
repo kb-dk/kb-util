@@ -683,18 +683,14 @@ public class YAML extends LinkedHashMap<String, Object> {
                 .anyMatch(element -> element.equals("*") || element.contains("[*]"));
 
         if (toTraverse) {
-            log.info("Starting traversel to find all paths");
-            MultipleValuesVisitor visitor = new MultipleValuesVisitor(path);
-            visitor.visit(yaml);
-
-            return visitor.extractedValues;
+            return yaml.visit(path, this);
         } else {
             return List.of(oldGet(path0, yaml));
         }
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
-    private Object visit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public List<Object> visit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
@@ -705,7 +701,14 @@ public class YAML extends LinkedHashMap<String, Object> {
         List<String> pathElements = splitPath(path);
         YAML current = yaml;
 
-        // følgende skal understøttes:
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        visitor.setInputPath(path);
+
+        traverseYaml("", current, visitor);
+
+        return visitor.extractedValues;
+
+        /*// følgende skal understøttes:
         // foo.**.bar   foo.zoo.bac.bu.bar         * [*] [] [foo=bar] [foo!=bar]
         for (int i = 0; i < pathElements.size(); i++) {
             String fullPathElement = pathElements.get(i);
@@ -761,7 +764,34 @@ public class YAML extends LinkedHashMap<String, Object> {
                         "Expected a Map<String, Object> for path but got ClassCastException", path, e);
             }
         }
-        return current;
+        return current;*/
+    }
+
+    private void traverseYaml(String currentPath, Object yamlEntry, MultipleValuesVisitor visitor) {
+        // Handle maps by appending .key to the current currentPath and then traversing again.
+        if (yamlEntry instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) yamlEntry;
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                String key = entry.getKey().toString();
+                Object value = entry.getValue();
+                traverseYaml(currentPath + "." + key, value, visitor);
+            }
+            // Handle lists by appending [i] to the current currentPath and then getting that value.
+        } else if (yamlEntry instanceof List) {
+            List<?> list = (List<?>) yamlEntry;
+            for (int i = 0; i < list.size(); i++) {
+                traverseYaml(currentPath + "[" + i + "]", list.get(i), visitor);
+            }
+            // Handle scalar values by checking that the currentPath matches
+            // then adding the scalar to extracted values if paths match.
+        } else {
+            log.info("Entry at this point: '{}'", yamlEntry);
+            if (currentPath.startsWith(".")) {
+                currentPath = currentPath.substring(1);
+            }
+            visitor.setCurrentPath(currentPath);
+            visitor.visit(yamlEntry);
+        }
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
