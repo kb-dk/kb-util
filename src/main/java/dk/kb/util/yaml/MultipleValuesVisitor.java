@@ -87,6 +87,8 @@ public class MultipleValuesVisitor implements YAMLVisitor {
                 String prefix = queryPath.substring(0, queryPath.indexOf("["));
 
                 // Check if pathInYaml starts with the same prefix followed by '['
+                // If it matches continue the iteration. The following code is identical with the proces in the
+                // else if (queryPath.equals("*")) - part of the outer if-else loop.
                 if (pathInYaml.startsWith(prefix + "[")) {
                     // If the prefix matches, move to the next elements in both lists
                     if (index1 == listWithPlaceholder.size() - 1) {

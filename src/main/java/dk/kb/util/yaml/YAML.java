@@ -665,11 +665,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Override
     @NotNull
     public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
-        //return getMultiple(path, this);
         List<Object> result = getMultiple(path, this);
-
         return result.get(0);
-        // This method should call a new getMultiple method
     }
 
     public List<Object> getMultiple(Object path0, YAML yaml) {
@@ -682,23 +679,18 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         List<String> inputPathElements = splitPath(path);
 
-        YAML current = yaml;
         boolean toTraverse = inputPathElements.stream()
                 .anyMatch(element -> element.equals("*") || element.contains("[*]"));
 
         if (toTraverse) {
-
             log.info("Starting traversel to find all paths");
             MultipleValuesVisitor visitor = new MultipleValuesVisitor(path);
-            visitor.visit(current);
+            visitor.visit(yaml);
 
-            log.info("Matching paths: '{}'", visitor.matchingPaths);
             return visitor.extractedValues;
         } else {
-            return List.of(get(path0, current));
+            return List.of(get(path0, yaml));
         }
-
-        // TODO: Figure the structure here.
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
@@ -783,7 +775,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path the full path expression. Used for error messages.
      * @return the first element in the collection that satisfies the given index or condition.
      */
-    private Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
+    public Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
         final Collection<?> subCollection;
         if (collection instanceof List) {
             subCollection = (List<?>) collection;
