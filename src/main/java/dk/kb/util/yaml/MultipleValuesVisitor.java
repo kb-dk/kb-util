@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class MultipleValuesVisitor implements YAMLVisitor {
     private static final Logger log = LoggerFactory.getLogger(MultipleValuesVisitor.class);
 
-    List<String> extractedValues = new ArrayList<>();
+    List<Object> extractedValues = new ArrayList<>();
     List<String> matchingPaths = new ArrayList<>();
     List<String> inputPathElements = new ArrayList<>();
     String inputPath;
@@ -81,7 +81,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
             String queryPath = listWithPlaceholder.get(index1);
             String pathInYaml = listWithValuesFromYaml.get(index2);
 
-            // Handle
+            // Handle array lookup
             if (queryPath.contains("[*]")) {
                 // Extract the prefix before '[*]'
                 String prefix = queryPath.substring(0, queryPath.indexOf("["));

@@ -621,7 +621,7 @@ class YAMLTest {
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
                                                 "Thyra", "Gunhild", "Margrethe");
 
-        List<String> extractedNames = yaml.getMultiple("*.name", yaml);
+        List<Object> extractedNames = yaml.getMultiple("*.name", yaml);
         assertEquals(16, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
@@ -631,7 +631,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
-        List<String> extractedNames = yaml.getMultiple("test.tuplesequence[*].name", yaml);
+        List<Object> extractedNames = yaml.getMultiple("test.tuplesequence[*].name", yaml);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
         assertFalse(extractedNames.contains("fooz"));
@@ -642,7 +642,7 @@ class YAMLTest {
     public void testGetMultipleFromSubYaml() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
-        List<String> extractedNames = yaml.getMultiple("test.tuplesequence[*].name", yaml);
+        List<Object> extractedNames = yaml.getMultiple("test.tuplesequence[*].name", yaml);
 
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
@@ -654,7 +654,7 @@ class YAMLTest {
     public void disabledtestSequenceWithSubtrees() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> expectedNames = Arrays.asList("foo", "bar", "baz");
-        List<String> extractedNames = yaml.getMultiple("subtrees[*].primary.name");
+        List<Object> extractedNames = yaml.getMultiple("subtrees[*].primary.name");
 
         assertEquals(expectedNames, extractedNames);
     }
@@ -664,7 +664,7 @@ class YAMLTest {
     public void testGetMultipleFromSubYamlOnScalar() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
 
-        List<String> extractedNames =  yaml.getMultiple("name", yaml);
+        List<Object> extractedNames =  yaml.getMultiple("name", yaml);
         assertEquals(1, extractedNames.size());
         assertTrue(extractedNames.contains("doe"));
     }
