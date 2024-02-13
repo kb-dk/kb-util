@@ -566,7 +566,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param key the key to look for in the input YAML.
      * @return a list of all values that can be cast to strings.
      */
-    public List<String> getMultiple(String key){
+    public List<Object> getMultiple(String key){
         MultipleValuesVisitor visitor = new MultipleValuesVisitor(key);
         visitor.visit(this);
         return visitor.extractedValues;
@@ -579,7 +579,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param key all values that are associated with this key are added to the returned list.
      * @return a list of all scalar values that are associated with the input key.
      */
-    public List<String> getMultipleFromSubYaml(String yamlPath, String key){
+    public List<Object> getMultipleFromSubYaml(String yamlPath, String key){
         if (this.get(yamlPath) instanceof List){
             return getMultipleFromSubYamlList(yamlPath, key);
         } else if (this.get(yamlPath) instanceof Iterable){
@@ -602,7 +602,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param key to extract values for.
      * @return a new list of all values, that are represented in the YAML List by the input {@code key}.
      */
-    private List<String> getMultipleFromSubYamlList(String yamlPath, String key) {
+    private List<Object> getMultipleFromSubYamlList(String yamlPath, String key) {
         List<YAML> yamlList = this.getYAMLList(yamlPath);
         MultipleValuesVisitor visitor = new MultipleValuesVisitor(yamlPath);
         for (YAML yamlPart : yamlList) {
@@ -666,11 +666,13 @@ public class YAML extends LinkedHashMap<String, Object> {
     @NotNull
     public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
         //return getMultiple(path, this);
-        return get(path, this);
+        List<Object> result = getMultiple(path, this);
+
+        return result.get(0);
         // This method should call a new getMultiple method
     }
 
-    public List<String> getMultiple(Object path0, YAML yaml) {
+    public List<Object> getMultiple(Object path0, YAML yaml) {
         if (path0 == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
@@ -692,10 +694,11 @@ public class YAML extends LinkedHashMap<String, Object> {
 
             log.info("Matching paths: '{}'", visitor.matchingPaths);
             return visitor.extractedValues;
+        } else {
+            return List.of(get(path0, current));
         }
 
         // TODO: Figure the structure here.
-        return null;
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
