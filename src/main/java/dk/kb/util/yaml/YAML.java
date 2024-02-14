@@ -667,6 +667,15 @@ public class YAML extends LinkedHashMap<String, Object> {
     public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
         List<Object> result = getMultiple(path, this);
         return result.get(0);
+
+
+        /*log.info(result.toString());
+
+        if (result.isEmpty()){
+            return this;
+        } else {
+            return result.get(0);
+        }*/
     }
 
     public List<Object> getMultiple(Object path0, YAML yaml) {
@@ -715,6 +724,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         //[last] - working
         // TODO:
         // Investigate how JQ handles paths as: test.tuplesequence[*].*.name
+        // Switch to new visit method in get
     }
 
     static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {

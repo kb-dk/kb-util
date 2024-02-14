@@ -41,6 +41,7 @@ class YAMLTest {
     @Test
     public void testLoad() throws IOException {
         YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
+        //YAML.resolveLayeredConfigs("test.yml");
     }
     
     @Test
@@ -455,10 +456,12 @@ class YAMLTest {
 
     @Test
     public void testListEntry() throws IOException {
+        YAML yamlTest = YAML.resolveLayeredConfigs("test.yml");
         YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
-        assertEquals("b", yaml.getString("arrayofstrings[1]"),
+
+        assertEquals("b", yamlTest.getString("test.arrayofstrings[1]"),
                      "Index-specified entry in arrays should be gettable");
-        assertEquals("c", yaml.getString("arrayofstrings[last]"),
+        assertEquals("c", yamlTest.getString("test.arrayofstrings[last]"),
                      "Last entry in arrays should be gettable");
     }
 

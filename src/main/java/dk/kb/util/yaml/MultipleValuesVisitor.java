@@ -36,7 +36,6 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     @Override
     public void visit(Object yamlEntry) {
         this.inputPathElements = splitPath(inputPath);
-        log.info("Visiting entry: '{}' with currentPath: '{}'", yamlEntry, currentPath);
         // Traverse the full yamlEntry by not giving it a path here.
         // Should match every entry of the input path element, when the input path starts with "*." or "**."
         if ((inputPath.startsWith(PLACEHOLDER + ".") ||inputPath.startsWith("**.")) && currentPath.endsWith((inputPathElements.get(1)))){
