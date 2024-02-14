@@ -16,7 +16,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     private static final Pattern CURRENT_KEY = Pattern.compile("([^.\\[\\]]+)$");
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
     private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
-
+    private static final Pattern INTEGER_LOOKUP = Pattern.compile("(\\d+)");
 
     private static final String PLACEHOLDER = "*";
     List<Object> extractedValues = new ArrayList<>();
@@ -113,8 +113,6 @@ public class MultipleValuesVisitor implements YAMLVisitor {
             }
             // Handle array lookup with conditions like [foo=bar] and [foo!=bar]
             else if (isArray.matches()) {
-                log.info("Here some logic happens");
-                String pathKey = isArray.group(1);
                 String arrayElement = isArray.group(2);
 
                 Matcher getCurrectKey = CURRENT_KEY.matcher(currentPath);
@@ -139,6 +137,19 @@ public class MultipleValuesVisitor implements YAMLVisitor {
                         return false;
                     }
                 }
+
+                // If the YAML array path contains an integer lookup as [0] or [4] and
+                // the currentPath equals the input path there is a match.
+                Matcher intLookup = INTEGER_LOOKUP.matcher(arrayElement);
+                if (intLookup.matches() && currentPath.equals(inputPath)){
+
+                    index1 ++;
+                    index2 ++;
+                } else {
+                    return false;
+                }
+
+
             }
             // Handle other non-placeholder strings
             else {

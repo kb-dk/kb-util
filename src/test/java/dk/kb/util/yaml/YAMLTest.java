@@ -653,6 +653,14 @@ class YAMLTest {
         assertEquals(2, extractedNames.size());
         assertFalse(extractedNames.contains("Thyra"));
     }
+
+    @Test
+    public void testIndexBasedLookupInVisit() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<Object> extractedNames = yaml.visit("test.arrayofqueens[0].name", yaml);
+        assertEquals(1, extractedNames.size());
+        assertTrue(extractedNames.contains("Thyra"));
+    }
     @Test
     public void testGetMultipleFromSubYaml() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
