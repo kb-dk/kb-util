@@ -5,9 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 public class MultipleValuesVisitor implements YAMLVisitor {
     private static final Logger log = LoggerFactory.getLogger(MultipleValuesVisitor.class);
@@ -27,26 +27,27 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     public MultipleValuesVisitor(){}
 
     @Override
-    public void visit(Object yaml) {
+    public void visit(Object yamlEntry) {
         this.inputPathElements = splitPath(inputPath);
-        // Traverse the full yaml by not giving it a path here.
+        // Traverse the full yamlEntry by not giving it a path here.
         // The path variable is needed for the following iterations.
         // Should match every entry of the input path element, when the input path starts with "*."
         if (inputPath.startsWith(PLACEHOLDER + ".") && currentPath.endsWith((inputPathElements.get(1)))){
-            extractedValues.add(yaml);
+            extractedValues.add(yamlEntry);
             return;
         }
 
         boolean pathMatches = compareCurrentPathToInput(currentPath, inputPathElements);
         if (pathMatches){
             matchingPaths.add(currentPath);
-            extractedValues.add(yaml);
+            extractedValues.add(yamlEntry);
         }
     }
 
 
     public void setInputPath(String inputPath) {
         this.inputPath = inputPath;
+        this.inputPathElements = splitPath(inputPath);
     }
 
     public void setCurrentPath(String currentPath) {
@@ -60,8 +61,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         return isMatchingPath;
     }
 
-    public static boolean compareStringLists(List<String> listWithPlaceholder, List<String> listWithValuesFromYaml) {
-        
+    public boolean compareStringLists(List<String> listWithPlaceholder, List<String> listWithValuesFromYaml) {
         int index1 = 0;
         int index2 = 0;
 
@@ -69,44 +69,9 @@ public class MultipleValuesVisitor implements YAMLVisitor {
             String queryPath = listWithPlaceholder.get(index1);
             String pathInYaml = listWithValuesFromYaml.get(index2);
 
-            // Handle array lookup
-            if (queryPath.contains("[" + PLACEHOLDER + "]")) {
-                // Extract the prefix before '[*]'
-                String prefix = queryPath.substring(0, queryPath.indexOf("["));
-
-                // Check if pathInYaml starts with the same prefix followed by '['
-                // If it matches continue the iteration. The following code is identical with the proces in the
-                // else if (queryPath.equals("*")) - part of the outer if-else loop.
-                if (pathInYaml.startsWith(prefix + "[")) {
-                    // If the prefix matches, move to the next elements in both lists
-                    if (index1 == listWithPlaceholder.size() - 1) {
-                        return true;
-                    } else {
-                        // Find the next non-placeholder string in listWithPlaceholder.
-                        String nextNonPlaceholder = listWithPlaceholder.get(index1 + 1);
-                        int placeholderMatches = 0;
-                        // Count the number of matches in listWithValuesFromYaml until the next non-placeholder string is found
-                        while (!pathInYaml.equals(nextNonPlaceholder) && index2 < listWithValuesFromYaml.size()) {
-                            index2++;
-                            if (index2 < listWithValuesFromYaml.size())
-                                pathInYaml = listWithValuesFromYaml.get(index2);
-                            placeholderMatches++;
-                        }
-                        // If the placeholder doesn't match any elements in listWithValuesFromYaml, return false
-                        if (placeholderMatches == 0) {
-                            return false;
-                        }
-                        index1++;
-                    }
-                    index1++;
-                    index2++;
-                } else {
-                    // If the prefix doesn't match, return false
-                    return false;
-                }
-            } else if (queryPath.equals(PLACEHOLDER)) {
-                // Treat '*' or '[*]' as a placeholder for one or more strings
-                // If '*' or '[*]' is the last element in listWithPlaceholder, it matches any remaining elements in listWithValuesFromYaml
+            // Handle [**] and ** (traverse the full path)
+            if (queryPath.equals("**") || queryPath.contains("[**]")) {
+                // If ** or [**] is the last element in listWithPlaceholder, it matches any remaining elements in listWithValuesFromYaml
                 if (index1 == listWithPlaceholder.size() - 1) {
                     return true;
                 } else {
@@ -126,7 +91,28 @@ public class MultipleValuesVisitor implements YAMLVisitor {
                     }
                     index1++;
                 }
-            } else {
+            }
+            // Handle [*] and * (match a single level)
+            else if (queryPath.equals("*") || queryPath.contains("[*]")) {
+                // If * or [*] is the last element in listWithPlaceholder, it matches any remaining elements in listWithValuesFromYaml
+                if (index1 == listWithPlaceholder.size() - 1) {
+                    return true;
+                } else {
+                    // Move to the next elements in both lists
+                    index1++;
+                    index2++;
+                }
+            }
+            // Handle array lookup with conditions like [foo=bar] and [foo!=bar]
+            else if (queryPath.contains("[") && queryPath.endsWith("]")) {
+                log.info("Here some logic happens");
+
+                // If the condition doesn't match, return false
+                return false;
+
+            }
+            // Handle other non-placeholder strings
+            else {
                 // If both strings are not placeholders, compare them. If they are not equal, then there is no match.
                 if (!queryPath.equals(pathInYaml)) {
                     return false;
