@@ -639,6 +639,18 @@ class YAMLTest {
     }
 
     @Test
+    public void testSubsetFromGetMultipleEmptyBrackets() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<String> testValues = Arrays.asList("foo", "bar", "baz");
+
+        List<Object> extractedNames = yaml.visit("test.tuplesequence[].*.name", yaml);
+        assertEquals(3, extractedNames.size());
+        assertTrue(extractedNames.containsAll(testValues));
+        assertFalse(extractedNames.contains("fooz"));
+
+    }
+
+    @Test
     public void testConditionalArrayLookupInVisit() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<Object> extractedNames = yaml.visit("test.arrayofqueens[name=Thyra]", yaml);

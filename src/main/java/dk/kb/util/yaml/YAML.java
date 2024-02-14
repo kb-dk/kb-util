@@ -709,12 +709,11 @@ public class YAML extends LinkedHashMap<String, Object> {
         return visitor.extractedValues;
 
         // The following is handled by the visitor:
-        // * / [*] - Compares every child of the current node
+        // * / [*] / [] - Compares every child of the current node
         // ** / [**]- Compares all children and following grandchildren for the current node
         // [foo=bar] [foo!=bar] - working
+        //[last] - working
         // TODO:
-        // [] - should do the same as [*]
-        // [last] should be implemented
         // Investigate how JQ handles paths as: test.tuplesequence[*].*.name
     }
 

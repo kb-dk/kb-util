@@ -102,7 +102,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
                 }
             }
             // Handle [*] and * (match a single level)
-            else if (queryPath.equals("*") || queryPath.contains("[*]")) {
+            else if (queryPath.equals("*") || queryPath.contains("[*]") || queryPath.contains("[]")) {
                 // If * or [*] is the last element in listWithPlaceholder, it matches any remaining elements in listWithValuesFromYaml
                 if (index1 == listWithPlaceholder.size() - 1) {
                     return true;
