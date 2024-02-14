@@ -17,6 +17,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
     private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
     private static final Pattern INTEGER_LOOKUP = Pattern.compile("(\\d+)");
+    private static final Pattern LAST_LOOKUP = Pattern.compile("(last)");
 
     private static final String PLACEHOLDER = "*";
     List<Object> extractedValues = new ArrayList<>();
@@ -141,10 +142,17 @@ public class MultipleValuesVisitor implements YAMLVisitor {
                 // If the YAML array path contains an integer lookup as [0] or [4] and
                 // the currentPath equals the input path there is a match.
                 Matcher intLookup = INTEGER_LOOKUP.matcher(arrayElement);
+                Matcher lastLookup = LAST_LOOKUP.matcher(arrayElement);
                 if (intLookup.matches() && currentPath.equals(inputPath)){
 
                     index1 ++;
                     index2 ++;
+
+                // Clears the extracted values list and ensures that only the last value is returned
+                } else if (lastLookup.matches()) {
+                    extractedValues.clear();
+                    index1++;
+                    index2++;
                 } else {
                     return false;
                 }
