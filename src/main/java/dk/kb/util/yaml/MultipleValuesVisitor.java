@@ -32,7 +32,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         // Traverse the full yamlEntry by not giving it a path here.
         // The path variable is needed for the following iterations.
         // Should match every entry of the input path element, when the input path starts with "*."
-        if (inputPath.startsWith(PLACEHOLDER + ".") && currentPath.endsWith((inputPathElements.get(1)))){
+        if ((inputPath.startsWith(PLACEHOLDER + ".") ||inputPath.startsWith("**.")) && currentPath.endsWith((inputPathElements.get(1)))){
             extractedValues.add(yamlEntry);
             return;
         }

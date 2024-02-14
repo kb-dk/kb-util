@@ -739,7 +739,8 @@ public class YAML extends LinkedHashMap<String, Object> {
         visitor.setCurrentPath(currentPath);
         Matcher isArray = YAML_ARRAY.matcher(currentPath);
         // Do some simple checks to quickly determine if some parts of the yaml should be traversed
-        if (currentPath.isEmpty() || visitor.inputPath.startsWith(currentPath) || isArray.find() ){
+        if (currentPath.isEmpty() || visitor.inputPath.startsWith(currentPath) || isArray.find() ||
+                visitor.inputPath.startsWith("*") || visitor.inputPath.startsWith("**")){
             // Handle maps by appending .key to the current currentPath and then traversing again.
             if (yamlEntry instanceof Map) {
                 Map<?, ?> map = (Map<?, ?>) yamlEntry;

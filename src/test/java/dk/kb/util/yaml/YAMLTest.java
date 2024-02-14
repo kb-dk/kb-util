@@ -621,7 +621,7 @@ class YAMLTest {
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
                                                 "Thyra", "Gunhild", "Margrethe");
 
-        List<Object> extractedNames = yaml.getMultiple("*.name", yaml);
+        List<Object> extractedNames = yaml.visit("**.name", yaml);
         assertEquals(16, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
@@ -631,7 +631,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
-        List<Object> extractedNames = yaml.getMultiple("test.tuplesequence[*].name", yaml);
+        List<Object> extractedNames = yaml.visit("test.tuplesequence[**].name", yaml);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
         assertFalse(extractedNames.contains("fooz"));
@@ -673,7 +673,7 @@ class YAMLTest {
     public void testSequenceWithSubtrees() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> expectedNames = Arrays.asList("foo", "bar", "baz");
-        List<Object> extractedNames = yaml.visit("subtrees[*].primary.name", yaml);
+        List<Object> extractedNames = yaml.visit("subtrees[**].primary.name", yaml);
 
         assertEquals(expectedNames, extractedNames);
     }
