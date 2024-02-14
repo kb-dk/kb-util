@@ -9,8 +9,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
+
 public class MultipleValuesVisitor implements YAMLVisitor {
     private static final Logger log = LoggerFactory.getLogger(MultipleValuesVisitor.class);
+
+    private static final Pattern CURRENT_KEY = Pattern.compile("([^.\\[\\]]+)$");
+    private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
+    private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
+
 
     private static final String PLACEHOLDER = "*";
     List<Object> extractedValues = new ArrayList<>();
@@ -29,15 +35,15 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     @Override
     public void visit(Object yamlEntry) {
         this.inputPathElements = splitPath(inputPath);
+        log.info("Visiting entry: '{}' with currentPath: '{}'", yamlEntry, currentPath);
         // Traverse the full yamlEntry by not giving it a path here.
-        // The path variable is needed for the following iterations.
-        // Should match every entry of the input path element, when the input path starts with "*."
+        // Should match every entry of the input path element, when the input path starts with "*." or "**."
         if ((inputPath.startsWith(PLACEHOLDER + ".") ||inputPath.startsWith("**.")) && currentPath.endsWith((inputPathElements.get(1)))){
             extractedValues.add(yamlEntry);
             return;
         }
 
-        boolean pathMatches = compareCurrentPathToInput(currentPath, inputPathElements);
+        boolean pathMatches = compareCurrentPathToInput(currentPath, inputPathElements, yamlEntry);
         if (pathMatches){
             matchingPaths.add(currentPath);
             extractedValues.add(yamlEntry);
@@ -54,20 +60,22 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         this.currentPath = currentPath;
     }
 
-    private boolean compareCurrentPathToInput(String path, List<String> inputPathElements) {
+    private boolean compareCurrentPathToInput(String path, List<String> inputPathElements, Object yamlEntry) {
         List<String> currentPathElements = splitPath(path);
 
-        boolean isMatchingPath = compareStringLists(inputPathElements, currentPathElements);
+        boolean isMatchingPath = compareStringLists(inputPathElements, currentPathElements, yamlEntry);
         return isMatchingPath;
     }
 
-    public boolean compareStringLists(List<String> listWithPlaceholder, List<String> listWithValuesFromYaml) {
+    public boolean compareStringLists(List<String> listWithPlaceholder, List<String> listWithValuesFromYaml, Object yamlEntry) {
         int index1 = 0;
         int index2 = 0;
 
         while (index1 < listWithPlaceholder.size() && index2 < listWithValuesFromYaml.size()) {
             String queryPath = listWithPlaceholder.get(index1);
             String pathInYaml = listWithValuesFromYaml.get(index2);
+
+            Matcher isArray = ARRAY_ELEMENT.matcher(queryPath);
 
             // Handle [**] and ** (traverse the full path)
             if (queryPath.equals("**") || queryPath.contains("[**]")) {
@@ -104,12 +112,33 @@ public class MultipleValuesVisitor implements YAMLVisitor {
                 }
             }
             // Handle array lookup with conditions like [foo=bar] and [foo!=bar]
-            else if (queryPath.contains("[") && queryPath.endsWith("]")) {
+            else if (isArray.matches()) {
                 log.info("Here some logic happens");
+                String pathKey = isArray.group(1);
+                String arrayElement = isArray.group(2);
 
-                // If the condition doesn't match, return false
-                return false;
+                Matcher getCurrectKey = CURRENT_KEY.matcher(currentPath);
+                String currentKey = "";
+                if (getCurrectKey.find()){
+                    currentKey = getCurrectKey.group(1);
+                }
 
+                Matcher arrayMatch = ARRAY_CONDITIONAL.matcher(arrayElement);
+                if (arrayMatch.matches()){
+                    String key = arrayMatch.group(1);
+                    boolean mustMatch = arrayMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
+                    String value = arrayMatch.group(3);
+
+                    if ((mustMatch && currentKey.equals(key) && yamlEntry.equals(value)) || (!mustMatch && currentKey.equals(key) && !yamlEntry.equals(value))) {
+                        // Move to the next elements in both lists and also add the found value to the output array
+                        index1++;
+                        index2++;
+                        extractedValues.add(yamlEntry);
+                    } else {
+                        // If the condition doesn't match, return false
+                        return false;
+                    }
+                }
             }
             // Handle other non-placeholder strings
             else {

@@ -647,6 +647,13 @@ class YAMLTest {
     }
 
     @Test
+    public void testNegativeConditionalArrayLookupInVisit() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<Object> extractedNames = yaml.visit("test.arrayofqueens[name!=Thyra]", yaml);
+        assertEquals(2, extractedNames.size());
+        assertFalse(extractedNames.contains("Thyra"));
+    }
+    @Test
     public void testGetMultipleFromSubYaml() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
