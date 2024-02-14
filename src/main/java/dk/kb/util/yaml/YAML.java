@@ -705,92 +705,65 @@ public class YAML extends LinkedHashMap<String, Object> {
         visitor.setInputPath(path);
 
         traverseYaml("", current, visitor);
-
+        // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
         return visitor.extractedValues;
 
-        /*// følgende skal understøttes:
-        // foo.**.bar   foo.zoo.bac.bu.bar         * [*] [] [foo=bar] [foo!=bar]
-        for (int i = 0; i < pathElements.size(); i++) {
-            String fullPathElement = pathElements.get(i);
-            Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
-            final String pathKey;
-            final String arrayElementIndex;
-            if (matcher.matches()) { // foo.bar[2]
-                pathKey = matcher.group(1);
-                arrayElementIndex = matcher.group(2);
-            } else {
-                pathKey = fullPathElement;
-                arrayElementIndex = null;
-            }
-            Object sub;
-            if (pathKey.isEmpty()) {
-                sub = current;
-            } else {
-                sub = current.getSuper(pathKey);
-            }
-            if (sub == null) {
-                throw new NotFoundException(
-                        "Unable to request " + i + "'th sub-element: '" + pathKey + "'", path);
-            }
-
-            // Handle array lookup
-
-            if (arrayElementIndex != null) { // foo.bar.[2] or foo.bar.[key=val]
-                sub = getArrayElement(sub, arrayElementIndex, pathKey, fullPathElement, path);
-            }
-
-            if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
-                return extrapolate(sub);
-            } //Otherwise, we require that it is a map so we can continue to query
-
-            //If sub is a list, make it a map with the indexes as keys
-            if (sub instanceof List) {
-                List<Object> list = (List<Object>) sub;
-                LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
-                for (int j = 0; j < list.size(); j++) {
-                    map.put(j + "", extrapolate(list.get(j)));
-                }
-                sub = map;
-            }
-            if (!(sub instanceof Map)) {
-                throw new InvalidTypeException(
-                        "The " + i + "'th sub-element ('" + pathKey + "') was not a Map but a " +
-                                sub.getClass().getSimpleName(), path);
-            }
-            try { //Update current as the sub we have found
-                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties, getSubstitutors());
-            } catch (ClassCastException e) {
-                throw new InvalidTypeException(
-                        "Expected a Map<String, Object> for path but got ClassCastException", path, e);
-            }
-        }
-        return current;*/
+        // The following is handled by the visitor:
+        // * / [*] - Compares every child of the current node
+        // ** / [**]- Compares all children and following grandchildren for the current node
+        // TODO:
+        // [] - should do the same as [*]
+        // [foo=bar] [foo!=bar] - should be handled as well
+        // Investigate how JQ handles paths as: test.tuplesequence[*].*.name
     }
 
-    private void traverseYaml(String currentPath, Object yamlEntry, MultipleValuesVisitor visitor) {
-        // Handle maps by appending .key to the current currentPath and then traversing again.
-        if (yamlEntry instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) yamlEntry;
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                String key = entry.getKey().toString();
-                Object value = entry.getValue();
-                traverseYaml(currentPath + "." + key, value, visitor);
-            }
-            // Handle lists by appending [i] to the current currentPath and then getting that value.
-        } else if (yamlEntry instanceof List) {
-            List<?> list = (List<?>) yamlEntry;
-            for (int i = 0; i < list.size(); i++) {
-                traverseYaml(currentPath + "[" + i + "]", list.get(i), visitor);
-            }
-            // Handle scalar values by checking that the currentPath matches
-            // then adding the scalar to extracted values if paths match.
+    static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {
+        Object sub;
+        if (yamlArrayInfo.pathKey.isEmpty()) {
+            sub = current;
         } else {
-            log.info("Entry at this point: '{}'", yamlEntry);
-            if (currentPath.startsWith(".")) {
-                currentPath = currentPath.substring(1);
+            sub = current.getSuper(yamlArrayInfo.pathKey);
+        }
+        if (sub == null) {
+            throw new NotFoundException(
+                    "Unable to request " + i + "'th sub-element: '" + yamlArrayInfo.pathKey + "'", path);
+        }
+        return sub;
+    }
+
+    private static final Pattern YAML_ARRAY = Pattern.compile("^(.*?)\\[");
+   private void traverseYaml(String currentPath, Object yamlEntry, MultipleValuesVisitor visitor) {
+        if (currentPath.startsWith(".")) {
+            currentPath = currentPath.substring(1);
+        }
+        visitor.setCurrentPath(currentPath);
+        Matcher isArray = YAML_ARRAY.matcher(currentPath);
+        // Do some simple checks to quickly determine if some parts of the yaml should be traversed
+        if (currentPath.isEmpty() || visitor.inputPath.startsWith(currentPath) || isArray.find() ){
+            // Handle maps by appending .key to the current currentPath and then traversing again.
+            if (yamlEntry instanceof Map) {
+                Map<?, ?> map = (Map<?, ?>) yamlEntry;
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    String key = entry.getKey().toString();
+                    Object value = entry.getValue();
+                    traverseYaml(currentPath + "." + key, value, visitor);
+                }
+            // Handle lists by appending [i] to the current currentPath and then getting that value.
+            } else if (yamlEntry instanceof List) {
+               List<?> list = (List<?>) yamlEntry;
+               for (int i = 0; i < list.size(); i++) {
+                   log.info("List is: '{}'", list);
+                   traverseYaml(currentPath + "[" + i + "]", list.get(i), visitor);
+               }
+
+            // Visit scalar values with the MutlipleValuesVisitor
+            // and check that the currentPath matches
+            // then adding the scalar to extracted values if paths match.
+            } else {
+                visitor.visit(yamlEntry);
             }
-            visitor.setCurrentPath(currentPath);
-            visitor.visit(yamlEntry);
+        } else {
+            log.info("Should not continue for path: '{}'", currentPath);
         }
     }
 
@@ -806,32 +779,13 @@ public class YAML extends LinkedHashMap<String, Object> {
         List<String> pathElements = splitPath(path);
         YAML current = yaml;
         for (int i = 0; i < pathElements.size(); i++) {
-            String fullPathElement = pathElements.get(i);
-            Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
-            final String pathKey;
-            final String arrayElementIndex;
-            if (matcher.matches()) { // foo.bar[2]
-                pathKey = matcher.group(1);
-                arrayElementIndex = matcher.group(2);
-            } else {
-                pathKey = fullPathElement;
-                arrayElementIndex = null;
-            }
-            Object sub;
-            if (pathKey.isEmpty()) {
-                sub = current;
-            } else {
-                sub = current.getSuper(pathKey);
-            }
-            if (sub == null) {
-                throw new NotFoundException(
-                        "Unable to request " + i + "'th sub-element: '" + pathKey + "'", path);
-            }
+            yamlArrayInformation yamlArrayInfo = getYamlArrayInformation(pathElements, i);
+            Object sub = getSubYaml(yamlArrayInfo, current, i, path);
 
             // Handle array lookup
 
-            if (arrayElementIndex != null) { // foo.bar.[2] or foo.bar.[key=val]
-                sub = getArrayElement(sub, arrayElementIndex, pathKey, fullPathElement, path);
+            if (yamlArrayInfo.arrayElementIndex != null) { // foo.bar.[2] or foo.bar.[key=val]
+                sub = getArrayElement(sub, yamlArrayInfo.arrayElementIndex, yamlArrayInfo.pathKey, yamlArrayInfo.fullPathElement, path);
             }
 
             if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
@@ -849,7 +803,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
             if (!(sub instanceof Map)) {
                 throw new InvalidTypeException(
-                        "The " + i + "'th sub-element ('" + pathKey + "') was not a Map but a " +
+                        "The " + i + "'th sub-element ('" + yamlArrayInfo.pathKey + "') was not a Map but a " +
                                 sub.getClass().getSimpleName(), path);
             }
             try { //Update current as the sub we have found
@@ -860,6 +814,33 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
         }
         return current;
+    }
+
+    static yamlArrayInformation getYamlArrayInformation(List<String> pathElements, int i) {
+        String fullPathElement = pathElements.get(i);
+        Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
+        final String pathKey;
+        final String arrayElementIndex;
+        if (matcher.matches()) { // foo.bar[2]
+            pathKey = matcher.group(1);
+            arrayElementIndex = matcher.group(2);
+        } else {
+            pathKey = fullPathElement;
+            arrayElementIndex = null;
+        }
+        return new yamlArrayInformation(fullPathElement, pathKey, arrayElementIndex);
+    }
+
+    static class yamlArrayInformation {
+        public final String fullPathElement;
+        public final String pathKey;
+        public final String arrayElementIndex;
+
+        public yamlArrayInformation(String fullPathElement, String pathKey, String arrayElementIndex) {
+            this.fullPathElement = fullPathElement;
+            this.pathKey = pathKey;
+            this.arrayElementIndex = arrayElementIndex;
+        }
     }
 
     /**
