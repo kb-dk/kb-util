@@ -42,10 +42,10 @@ public class MultipleValuesVisitor implements YAMLVisitor {
 
         if (yamlEntry instanceof Map || yamlEntry instanceof List){
             if (inputPath.equals(currentPath)){
-                YAML current = new YAML((Map<String, Object>) yamlEntry, topYaml.extrapolateSystemProperties, topYaml.getSubstitutors());
+                //YAML current = new YAML((Map<String, Object>) yamlEntry, topYaml.extrapolateSystemProperties, topYaml.getSubstitutors());
                 matchingPaths.add(currentPath);
-                extractedValues.add(current);
-                log.info(String.valueOf(current));
+                extractedValues.add(yamlEntry);
+                log.info(String.valueOf(yamlEntry));
                 log.info("Added map/list to extracted values");
             }
             // Handle lists and maps for getList and getMap

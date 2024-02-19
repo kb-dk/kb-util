@@ -670,7 +670,6 @@ public class YAML extends LinkedHashMap<String, Object> {
 
 
         List<Object> result = visit(path, this);
-        log.info(result.toString());
 
         if (result.isEmpty()){
             return null;
