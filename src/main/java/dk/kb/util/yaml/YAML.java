@@ -757,13 +757,14 @@ public class YAML extends LinkedHashMap<String, Object> {
                 for (Map.Entry<?, ?> entry : map.entrySet()) {
                     String key = entry.getKey().toString();
                     Object value = entry.getValue();
+                    visitor.visit(map);
                     traverseYaml(currentPath + "." + key, value, visitor);
                 }
             // Handle lists by appending [i] to the current currentPath and then getting that value.
             } else if (yamlEntry instanceof List) {
                List<?> list = (List<?>) yamlEntry;
                for (int i = 0; i < list.size(); i++) {
-                   log.info("List is: '{}'", list);
+                   visitor.visit(list);
                    traverseYaml(currentPath + "[" + i + "]", list.get(i), visitor);
                }
 

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,15 +37,25 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     @Override
     public void visit(Object yamlEntry) {
         this.inputPathElements = splitPath(inputPath);
+
+        if (yamlEntry instanceof Map || yamlEntry instanceof List){
+            // Handle lists and maps for getList and getMap
+            log.info("Skipping Maps and Lists for now");
+            return;
+        }
+
         // Traverse the full yamlEntry by not giving it a path here.
         // Should match every entry of the input path element, when the input path starts with "*." or "**."
         if ((inputPath.startsWith(PLACEHOLDER + ".") ||inputPath.startsWith("**.")) && currentPath.endsWith((inputPathElements.get(1)))){
+            matchingPaths.add(currentPath);
             extractedValues.add(yamlEntry);
+            //log.info("Extracted the value: '{}' from path: '{}'.", yamlEntry, currentPath );
             return;
         }
 
         boolean pathMatches = compareCurrentPathToInput(currentPath, inputPathElements, yamlEntry);
         if (pathMatches){
+            log.info("Extracted the value: '{}' from path: '{}'.", yamlEntry, currentPath );
             matchingPaths.add(currentPath);
             extractedValues.add(yamlEntry);
         }
@@ -60,6 +71,13 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         this.currentPath = currentPath;
     }
 
+    /**
+     * Converts the current path to a list of path elements, to make placeholders work.
+     * @param path current path in the YAML.
+     * @param inputPathElements the path searched for in the YAML split by dots.
+     * @param yamlEntry the value of the current place in the YAML.
+     * @return a boolean for a match between input path and current path.
+     */
     private boolean compareCurrentPathToInput(String path, List<String> inputPathElements, Object yamlEntry) {
         List<String> currentPathElements = splitPath(path);
 
@@ -67,6 +85,13 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         return isMatchingPath;
     }
 
+    /**
+     * Compares two paths split by dots. This implementation makes room for placeholders such as .* and .** in YAML paths.
+     * @param listWithPlaceholder List that can contain placeholders as * and **.
+     * @param listWithValuesFromYaml list containing current path in YAML.
+     * @param yamlEntry the value at the current entry.
+     * @return true if the paths match, false if not.
+     */
     public boolean compareStringLists(List<String> listWithPlaceholder, List<String> listWithValuesFromYaml, Object yamlEntry) {
         int index1 = 0;
         int index2 = 0;
@@ -77,7 +102,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
 
             Matcher isArray = ARRAY_ELEMENT.matcher(queryPath);
 
-            // Handle [**] and ** (traverse the full path)
+            // Handle [**] and ** (traverse the full path) for matches
             if (queryPath.equals("**") || queryPath.contains("[**]")) {
                 // If ** or [**] is the last element in listWithPlaceholder, it matches any remaining elements in listWithValuesFromYaml
                 if (index1 == listWithPlaceholder.size() - 1) {
@@ -113,6 +138,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
             }
             // Handle array lookup with conditions like [foo=bar] and [foo!=bar]
             else if (isArray.matches()) {
+                log.info("Current path is: '{}'", currentPath);
                 String arrayElement = isArray.group(2);
 
                 Matcher getCurrectKey = CURRENT_KEY.matcher(currentPath);

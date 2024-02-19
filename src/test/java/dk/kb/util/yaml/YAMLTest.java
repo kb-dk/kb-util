@@ -1,7 +1,6 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
-import org.apache.commons.collections4.functors.ExceptionPredicate;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -625,6 +623,7 @@ class YAMLTest {
                                                 "Thyra", "Gunhild", "Margrethe");
 
         List<Object> extractedNames = yaml.visit("**.name", yaml);
+        System.out.println(extractedNames);
         assertEquals(16, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
