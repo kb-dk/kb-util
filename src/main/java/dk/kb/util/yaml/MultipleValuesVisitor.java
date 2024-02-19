@@ -26,6 +26,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     List<String> inputPathElements = new ArrayList<>();
     String inputPath;
     String currentPath;
+    YAML topYaml;
 
     public MultipleValuesVisitor(String inputPath){
         this.inputPath = inputPath;
@@ -37,10 +38,17 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     @Override
     public void visit(Object yamlEntry) {
         this.inputPathElements = splitPath(inputPath);
+        this.topYaml.setExtrapolate(true);
 
         if (yamlEntry instanceof Map || yamlEntry instanceof List){
+            if (inputPath.equals(currentPath)){
+                YAML current = new YAML((Map<String, Object>) yamlEntry, topYaml.extrapolateSystemProperties, topYaml.getSubstitutors());
+                matchingPaths.add(currentPath);
+                extractedValues.add(current);
+                log.info(String.valueOf(current));
+                log.info("Added map/list to extracted values");
+            }
             // Handle lists and maps for getList and getMap
-            log.info("Skipping Maps and Lists for now");
             return;
         }
 
@@ -48,7 +56,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         // Should match every entry of the input path element, when the input path starts with "*." or "**."
         if ((inputPath.startsWith(PLACEHOLDER + ".") ||inputPath.startsWith("**.")) && currentPath.endsWith((inputPathElements.get(1)))){
             matchingPaths.add(currentPath);
-            extractedValues.add(yamlEntry);
+            extractedValues.add(topYaml.extrapolate(yamlEntry));
             //log.info("Extracted the value: '{}' from path: '{}'.", yamlEntry, currentPath );
             return;
         }
@@ -57,10 +65,17 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         if (pathMatches){
             log.info("Extracted the value: '{}' from path: '{}'.", yamlEntry, currentPath );
             matchingPaths.add(currentPath);
-            extractedValues.add(yamlEntry);
+            extractedValues.add(topYaml.extrapolate(yamlEntry));
         }
     }
 
+    public YAML getTopYaml() {
+        return topYaml;
+    }
+
+    public void setTopYaml(YAML topYaml) {
+        this.topYaml = topYaml;
+    }
 
     public void setInputPath(String inputPath) {
         this.inputPath = inputPath;
