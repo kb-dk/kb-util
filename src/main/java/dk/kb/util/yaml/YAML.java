@@ -91,7 +91,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
     private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
 
-    private boolean extrapolateSystemProperties = false;
+    boolean extrapolateSystemProperties = false;
     private List<StringSubstitutor> substitutors = null;
     
     /**
@@ -665,17 +665,18 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Override
     @NotNull
     public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
-        List<Object> result = getMultiple(path, this);
-        return result.get(0);
+        /*List<Object> result = getMultiple(path, this);
+        return result.get(0);*/
 
 
-        /*log.info(result.toString());
+        List<Object> result = visit(path, this);
+        log.info(result.toString());
 
         if (result.isEmpty()){
-            return this;
+            return null;
         } else {
-            return result.get(0);
-        }*/
+            return extrapolate(result.get(0));
+        }
     }
 
     public List<Object> getMultiple(Object path0, YAML yaml) {
@@ -709,9 +710,12 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         List<String> pathElements = splitPath(path);
         YAML current = yaml;
+        current.setExtrapolate(true);
+        log.info("YAML is extrapolating: '{}'", isExtrapolating());
 
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         visitor.setInputPath(path);
+        visitor.setTopYaml(current);
 
         traverseYaml("", current, visitor);
         // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
@@ -757,25 +761,23 @@ public class YAML extends LinkedHashMap<String, Object> {
                 for (Map.Entry<?, ?> entry : map.entrySet()) {
                     String key = entry.getKey().toString();
                     Object value = entry.getValue();
-                    visitor.visit(map);
-                    traverseYaml(currentPath + "." + key, value, visitor);
+                    visitor.visit(extrapolate(map));
+                    traverseYaml(currentPath + "." + key, extrapolate(value), visitor);
                 }
             // Handle lists by appending [i] to the current currentPath and then getting that value.
             } else if (yamlEntry instanceof List) {
                List<?> list = (List<?>) yamlEntry;
                for (int i = 0; i < list.size(); i++) {
-                   visitor.visit(list);
-                   traverseYaml(currentPath + "[" + i + "]", list.get(i), visitor);
+                   visitor.visit(extrapolate(list));
+                   traverseYaml(currentPath + "[" + i + "]", extrapolate(list.get(i)), visitor);
                }
 
             // Visit scalar values with the MutlipleValuesVisitor
             // and check that the currentPath matches
             // then adding the scalar to extracted values if paths match.
             } else {
-                visitor.visit(yamlEntry);
+                visitor.visit(extrapolate(yamlEntry));
             }
-        } else {
-            log.info("Should not continue for path: '{}'", currentPath);
         }
     }
 
@@ -970,7 +972,8 @@ public class YAML extends LinkedHashMap<String, Object> {
                 value == null || !value.toString().equals(expected);
     }
 
-    private Object extrapolate(Object sub) {
+
+    Object extrapolate(Object sub) {
         if (sub == null || !isExtrapolating()){
             return sub;
         }

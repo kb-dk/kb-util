@@ -198,6 +198,7 @@ class YAMLTest {
     @Test
     public void testIntArrayExtrapolatedContent() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        System.out.println(yaml);
         List<Integer> ints = yaml.getList("arrayofints");
         assertTrue(ints.get(0) >= 11,
                    "Arrays of integers should be supported. Expected first element to be >= 11, but got array " + ints);
