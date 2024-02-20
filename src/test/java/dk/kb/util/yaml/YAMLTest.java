@@ -616,6 +616,39 @@ class YAMLTest {
     }
 
     @Test
+    public void testEmptyEscapingContains() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/empty.yaml");
+        yaml.setExtrapolate(true);
+
+        for (String key: new String[]{
+                "values",
+                "values.empty1",
+                "values.isnull",
+                "values.sub",
+                "values.sub.empty2",
+
+                "values.\"multi.word.empty\"",
+                "values.\"multi.word.parent\"",
+                "values.\"multi.word.parent\".\"multi.world.child\"",
+                "values.\"multi.word.parent\".\"multi.world.child.content\""}) {
+            assertTrue(yaml.containsKey(key), "The yaml empty.yaml should contain key " + key);
+        }
+    }
+
+    @Test
+    public void testEmptyEscapingGet() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/empty.yaml");
+        yaml.setExtrapolate(true);
+
+        assertTrue(yaml.getSubMap("values.empty1").isEmpty(),
+                "Getting subMap from key with null value should return empty subMap");
+        assertTrue(yaml.getList("values.empty1").isEmpty(),
+                "Getting list from key with null value should return empty list");
+        assertTrue(yaml.getYAMLList("values.empty1").isEmpty(),
+                "Getting YAMLList from key with null value should return empty YAMLList");
+    }
+
+    @Test
     public void testGetMultiple() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
