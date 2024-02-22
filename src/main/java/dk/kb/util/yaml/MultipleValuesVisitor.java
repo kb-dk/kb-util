@@ -26,7 +26,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     List<String> inputPathElements = new ArrayList<>();
     String inputPath;
     String currentPath;
-    YAML topYaml;
+
 
     public MultipleValuesVisitor(String inputPath){
         this.inputPath = inputPath;
@@ -37,10 +37,11 @@ public class MultipleValuesVisitor implements YAMLVisitor {
 
     @Override
     public void visit(Object yamlEntry) {
-        this.inputPathElements = splitPath(inputPath);
-        this.topYaml.setExtrapolate(true);
+        //this.inputPathElements = splitPath(inputPath);
 
-        if (yamlEntry instanceof Map || yamlEntry instanceof List){
+        this.extractedValues.add(yamlEntry);
+
+        /*if (yamlEntry instanceof Map || yamlEntry instanceof List){
             if (inputPath.equals(currentPath)){
                 //YAML current = new YAML((Map<String, Object>) yamlEntry, topYaml.extrapolateSystemProperties, topYaml.getSubstitutors());
                 matchingPaths.add(currentPath);
@@ -66,16 +67,9 @@ public class MultipleValuesVisitor implements YAMLVisitor {
             log.info("Extracted the value: '{}' from path: '{}'.", yamlEntry, currentPath );
             matchingPaths.add(currentPath);
             extractedValues.add(topYaml.extrapolate(yamlEntry));
-        }
+        }*/
     }
 
-    public YAML getTopYaml() {
-        return topYaml;
-    }
-
-    public void setTopYaml(YAML topYaml) {
-        this.topYaml = topYaml;
-    }
 
     public void setInputPath(String inputPath) {
         this.inputPath = inputPath;

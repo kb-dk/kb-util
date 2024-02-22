@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -620,6 +621,7 @@ class YAMLTest {
     @Test
     public void testGetMultiple() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        System.out.println("resolving done");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
                                                 "Thyra", "Gunhild", "Margrethe");
 
@@ -725,6 +727,18 @@ class YAMLTest {
         List<Object> extractedNames =  yaml.visit("name", yaml);
         assertEquals(1, extractedNames.size());
         assertTrue(extractedNames.contains("doe"));
+    }
+
+    @Test
+    public void testNewTraverserSingleAsterix() throws IOException {
+        YAML test = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+
+        String yPath = "*.somestring";
+
+        List<Object> result = test.visit(yPath, test);
+        assertEquals(1, result.size());
+
+
     }
 
 }

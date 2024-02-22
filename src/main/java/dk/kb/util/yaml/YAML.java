@@ -699,7 +699,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
-    public List<Object> visit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public List<Object> oldVisit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
@@ -709,12 +709,10 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         List<String> pathElements = splitPath(path);
         YAML current = yaml;
-        current.setExtrapolate(true);
-        log.info("YAML is extrapolating: '{}'", isExtrapolating());
 
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         visitor.setInputPath(path);
-        visitor.setTopYaml(current);
+        //realTraverse(pathElements, current);
 
         traverseYaml("", current, visitor);
         // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
@@ -728,6 +726,94 @@ public class YAML extends LinkedHashMap<String, Object> {
         // TODO:
         // Investigate how JQ handles paths as: test.tuplesequence[*].*.name
         // Switch to new visit method in get
+    }
+
+    public List<Object> visit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
+        if (pathO == null) {
+            throw new NullPointerException("Failed to query config for null path");
+        }
+        String path = pathO.toString().trim();
+        if (path.startsWith(".")) {
+            path = path.substring(1);
+        }
+        List<String> yPath = splitPath(path);
+        YAML current = yaml;
+
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+
+        realTraverse(yPath, current, visitor);
+
+        // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
+        return visitor.extractedValues;
+
+        // The following is handled by the visitor:
+        // * / [*] / [] - Compares every child of the current node
+        // ** / [**]- Compares all children and following grandchildren for the current node
+        // [foo=bar] [foo!=bar] - working
+        //[last] - working
+        // TODO:
+        // Investigate how JQ handles paths as: test.tuplesequence[*].*.name
+        // Switch to new visit method in get
+    }
+
+    public void realTraverse(List<String> yPath, YAML yaml, MultipleValuesVisitor visitor) {
+
+        if (yPath.size() >= 1){
+            String currentPathElement = yPath.get(0);
+            //log.info("Current entry: '{}'", yaml);
+
+            log.info("traversing: '{}'", currentPathElement);
+            traverseHelper(yPath, yaml, visitor);
+        }
+
+    }
+
+    private static void removeTraversedEntry(List<String> yPath) {
+        if (!yPath.isEmpty()){
+            log.info("Removing entry '{}'", yPath.get(0));
+            yPath.remove(0);
+        }
+    }
+
+    private void traverseHelper(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
+         if (yaml instanceof Map) {
+             Map<?, ?> map = (Map<?, ?>) yaml;
+             if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
+                 log.info("to traverse");
+                 removeTraversedEntry(yPath);
+                 for (Map.Entry<?, ?> entry : map.entrySet()) {
+                     log.info("traversing entry with key: '{}'", entry.getKey());
+                     traverseHelper(yPath, entry.getValue(), visitor);
+                 }
+             } else if (!yPath.isEmpty() && yPath.get(0).equals("*")) {
+                 for (Map.Entry<?, ?> entry : map.entrySet()) {
+                     log.info("Doing single level traversal for: '{}' in map", entry.getKey());
+                     if (yPath.size() > 1) {
+                         removeTraversedEntry(yPath);
+                         traverseHelper(yPath, entry.getValue(), visitor);
+                     }
+                 }
+             } else {
+                 for (Map.Entry<?, ?> entry : map.entrySet()) {
+                     String key = entry.getKey().toString();
+                     Object value = entry.getValue();
+                     if (key.equals(yPath.get(0))){
+                         log.info("found a match for key: '{}' and yPath: '{}'", key, yPath.get(0));
+                         traverseHelper(yPath, value, visitor);
+                     }
+                 }
+             }
+
+
+        } else if (yaml instanceof List) {
+            List<?> list = (List<?>) yaml;
+            for (int i = 0; i < list.size(); i++) {
+                traverseHelper(yPath, list.get(i), visitor);
+            }
+        } else {
+            visitor.extractedValues.add(yaml);
+            //log.info("entry is: '{}'", yaml);
+        }
     }
 
     static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {
@@ -750,24 +836,37 @@ public class YAML extends LinkedHashMap<String, Object> {
             currentPath = currentPath.substring(1);
         }
         visitor.setCurrentPath(currentPath);
+        List<String> currentPathElements = splitPath(currentPath);
         Matcher isArray = YAML_ARRAY.matcher(currentPath);
+
+
+       // Handle lists and maps for getList, getSubMap and getMap
+       if ((yamlEntry instanceof Map || yamlEntry instanceof List) && visitor.inputPath.equals(currentPath)){
+           log.info("Current path is: '{}'", currentPath);
+           log.info("input path is: '{}'", visitor.inputPath);
+
+           visitor.visit(yamlEntry);
+       }
+
+       //Further traversal of the YAML if needed.
         // Do some simple checks to quickly determine if some parts of the yaml should be traversed
         if (currentPath.isEmpty() || visitor.inputPath.startsWith(currentPath) || isArray.find() ||
                 visitor.inputPath.startsWith("*") || visitor.inputPath.startsWith("**")){
+
             // Handle maps by appending .key to the current currentPath and then traversing again.
             if (yamlEntry instanceof Map) {
                 Map<?, ?> map = (Map<?, ?>) yamlEntry;
                 for (Map.Entry<?, ?> entry : map.entrySet()) {
                     String key = entry.getKey().toString();
                     Object value = entry.getValue();
-                    visitor.visit(extrapolate(map));
+                    //visitor.visit(extrapolate(map));
                     traverseYaml(currentPath + "." + key, extrapolate(value), visitor);
                 }
             // Handle lists by appending [i] to the current currentPath and then getting that value.
             } else if (yamlEntry instanceof List) {
                List<?> list = (List<?>) yamlEntry;
                for (int i = 0; i < list.size(); i++) {
-                   visitor.visit(extrapolate(list));
+                   //visitor.visit(extrapolate(list));
                    traverseYaml(currentPath + "[" + i + "]", extrapolate(list.get(i)), visitor);
                }
 
