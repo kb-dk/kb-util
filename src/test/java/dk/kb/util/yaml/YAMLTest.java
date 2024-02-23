@@ -681,4 +681,13 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         yaml.getMultiple("name");
     }
+
+    @Test
+    public void testResolveLayeredMultiRoot() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/multiroot.yaml");
+//        System.out.println(yaml);
+        assertEquals("zab", yaml.get("subtrees[2].item3.secondary.name"));
+        // TODO: Construct proper unit test from the branch DISC-754_refactor_getMultiple_v2
+    }
+
 }

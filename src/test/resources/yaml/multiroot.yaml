@@ -1,0 +1,65 @@
+# Test YAML for pinpointing a problem with multiple roots and loading of the YAML
+
+test:
+  somestring: Hello World
+  someint: 87
+  somedouble: 87.13
+  somebool: true
+  nested:
+    sublevel2string: sub1
+  arrayofstrings:
+    - a
+    - b
+    - c
+  arrayofints:
+    - 1
+    - 2
+  emptyList: []
+  name: fooz
+  tuplesequence:
+    - item1:
+        name: foo
+        age: 21
+    - item2:
+        name: bar
+        age: 12
+    - item3:
+        name: baz
+        age: 121
+  anotherlevel:
+    name:
+      a: 1
+      b: 2
+      c: 3
+      name: john
+  arrayofqueens:
+    - name: Thyra
+    - name: Gunhild
+    - name: Margrethe
+
+name: doe
+anothertest:
+  name: qux
+
+subtrees:
+  - item1:
+      primary:
+        name: foo
+        age: 21
+      secondary:
+        name: oof
+        age: 12
+  - item2:
+      primary:
+        name: bar
+        age: 12
+      secondary:
+        name: rab
+        age: 21
+  - item3:
+      primary:
+        name: baz
+        age: 121
+      secondary:
+        name: zab
+        age: 121
