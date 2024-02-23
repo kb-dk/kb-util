@@ -794,11 +794,19 @@ public class YAML extends LinkedHashMap<String, Object> {
                      }
                  }
              } else {
+                 //log.info("yaml entry is: '{}'", yaml);
                  for (Map.Entry<?, ?> entry : map.entrySet()) {
                      String key = entry.getKey().toString();
                      Object value = entry.getValue();
-                     if (key.equals(yPath.get(0))){
+                     log.info("yPath is: '{}', Key is: '{}' and value is: '{}'",yPath, key, value);
+
+                     if (key.equals(yPath.get(0)) && !(value instanceof Map)){
                          log.info("found a match for key: '{}' and yPath: '{}'", key, yPath.get(0));
+                         visitor.extractedValues.add(value);
+                     } else if (yPath.size() <= 1 && key.equals(yPath.get(0))) {
+                         log.info("Found a map match");
+                         visitor.extractedValues.add(value);
+                     } else {
                          traverseHelper(yPath, value, visitor);
                      }
                  }
@@ -806,13 +814,18 @@ public class YAML extends LinkedHashMap<String, Object> {
 
 
         } else if (yaml instanceof List) {
-            List<?> list = (List<?>) yaml;
-            for (int i = 0; i < list.size(); i++) {
-                traverseHelper(yPath, list.get(i), visitor);
-            }
+             log.info("Converting array to map: '{}'", yaml);
+             //If sub is a list, make it a map with the indexes as keys
+             List<Object> list = (List<Object>) yaml;
+             LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
+             for (int j = 0; j < list.size(); j++) {
+                 map.put(j + "", extrapolate(list.get(j)));
+             }
+             yaml = map;
+             traverseHelper(yPath, yaml, visitor);
         } else {
-            visitor.extractedValues.add(yaml);
-            //log.info("entry is: '{}'", yaml);
+            /*visitor.extractedValues.add(yaml);
+            log.info("Added entry: '{}' to extracted values.", yaml);*/
         }
     }
 
