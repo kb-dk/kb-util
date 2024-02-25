@@ -778,7 +778,20 @@ public class YAML extends LinkedHashMap<String, Object> {
     private void traverseHelper(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
          if (yaml instanceof Map) {
              Map<?, ?> map = (Map<?, ?>) yaml;
-             if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
+
+
+             yamlArrayInformation yamlArrayInfo = getYamlArrayInformation(yPath, 0);
+             if (yamlArrayInfo.arrayElementIndex != null) {
+                 YAML here = new YAML((Map<String, Object>) map);
+                 log.info("Here is '{}'", here);
+                 //Object sub = getSubYaml(yamlArrayInfo, here, 0, "");
+
+                 // Handle array lookup
+                 // foo.bar.[2] or foo.bar.[key=val]
+                 yaml = getArrayElement(yaml, yamlArrayInfo.arrayElementIndex, yamlArrayInfo.pathKey, yamlArrayInfo.fullPathElement, "");
+                 traverseHelper(yPath, yaml, visitor);
+                 log.info("Sub has an array element");
+             } else if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
                  log.info("to traverse");
                  removeTraversedEntry(yPath);
                  for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -806,12 +819,15 @@ public class YAML extends LinkedHashMap<String, Object> {
                      } else if (yPath.size() <= 1 && key.equals(yPath.get(0))) {
                          log.info("Found a map match");
                          visitor.extractedValues.add(value);
-                     } else {
+                     } else if (key.equals(yPath.get(0))){
+                        log.info("Current key is matching");
+                        removeTraversedEntry(yPath);
+                        traverseHelper(yPath, value, visitor);
+                     }else {
                          traverseHelper(yPath, value, visitor);
                      }
                  }
              }
-
 
         } else if (yaml instanceof List) {
              log.info("Converting array to map: '{}'", yaml);
