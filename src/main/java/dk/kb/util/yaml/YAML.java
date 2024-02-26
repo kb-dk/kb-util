@@ -699,34 +699,6 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
-    public List<Object> oldVisit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
-        if (pathO == null) {
-            throw new NullPointerException("Failed to query config for null path");
-        }
-        String path = pathO.toString().trim();
-        if (path.startsWith(".")) {
-            path = path.substring(1);
-        }
-        List<String> pathElements = splitPath(path);
-        YAML current = yaml;
-
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        visitor.setInputPath(path);
-        //realTraverse(pathElements, current);
-
-        traverseYaml("", current, visitor);
-        // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
-        return visitor.extractedValues;
-
-        // The following is handled by the visitor:
-        // * / [*] / [] - Compares every child of the current node
-        // ** / [**]- Compares all children and following grandchildren for the current node
-        // [foo=bar] [foo!=bar] - working
-        //[last] - working
-        // TODO:
-        // Investigate how JQ handles paths as: test.tuplesequence[*].*.name
-        // Switch to new visit method in get
-    }
 
     public List<Object> visit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
@@ -782,14 +754,19 @@ public class YAML extends LinkedHashMap<String, Object> {
 
              yamlArrayInformation yamlArrayInfo = getYamlArrayInformation(yPath, 0);
              if (yamlArrayInfo.arrayElementIndex != null) {
+             // Handle array lookup
                  YAML here = new YAML((Map<String, Object>) map);
                  log.info("Here is '{}'", here);
                  //Object sub = getSubYaml(yamlArrayInfo, here, 0, "");
 
-                 // Handle array lookup
                  // foo.bar.[2] or foo.bar.[key=val]
-                 yaml = getArrayElement(yaml, yamlArrayInfo.arrayElementIndex, yamlArrayInfo.pathKey, yamlArrayInfo.fullPathElement, "");
-                 traverseHelper(yPath, yaml, visitor);
+                 Object arrayElement = getArrayElement(yaml, yamlArrayInfo.arrayElementIndex, yamlArrayInfo.pathKey, yamlArrayInfo.fullPathElement, "");
+
+                 if (arrayElement != null){
+                     log.info("array Found '{}' in '{}'", arrayElement, yaml);
+                 }
+
+                 traverseHelper(yPath, arrayElement, visitor);
                  log.info("Sub has an array element");
              } else if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
                  log.info("to traverse");
@@ -857,55 +834,6 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "Unable to request " + i + "'th sub-element: '" + yamlArrayInfo.pathKey + "'", path);
         }
         return sub;
-    }
-
-    private static final Pattern YAML_ARRAY = Pattern.compile("^(.*?)\\[");
-   private void traverseYaml(String currentPath, Object yamlEntry, MultipleValuesVisitor visitor) {
-        if (currentPath.startsWith(".")) {
-            currentPath = currentPath.substring(1);
-        }
-        visitor.setCurrentPath(currentPath);
-        List<String> currentPathElements = splitPath(currentPath);
-        Matcher isArray = YAML_ARRAY.matcher(currentPath);
-
-
-       // Handle lists and maps for getList, getSubMap and getMap
-       if ((yamlEntry instanceof Map || yamlEntry instanceof List) && visitor.inputPath.equals(currentPath)){
-           log.info("Current path is: '{}'", currentPath);
-           log.info("input path is: '{}'", visitor.inputPath);
-
-           visitor.visit(yamlEntry);
-       }
-
-       //Further traversal of the YAML if needed.
-        // Do some simple checks to quickly determine if some parts of the yaml should be traversed
-        if (currentPath.isEmpty() || visitor.inputPath.startsWith(currentPath) || isArray.find() ||
-                visitor.inputPath.startsWith("*") || visitor.inputPath.startsWith("**")){
-
-            // Handle maps by appending .key to the current currentPath and then traversing again.
-            if (yamlEntry instanceof Map) {
-                Map<?, ?> map = (Map<?, ?>) yamlEntry;
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    String key = entry.getKey().toString();
-                    Object value = entry.getValue();
-                    //visitor.visit(extrapolate(map));
-                    traverseYaml(currentPath + "." + key, extrapolate(value), visitor);
-                }
-            // Handle lists by appending [i] to the current currentPath and then getting that value.
-            } else if (yamlEntry instanceof List) {
-               List<?> list = (List<?>) yamlEntry;
-               for (int i = 0; i < list.size(); i++) {
-                   //visitor.visit(extrapolate(list));
-                   traverseYaml(currentPath + "[" + i + "]", extrapolate(list.get(i)), visitor);
-               }
-
-            // Visit scalar values with the MutlipleValuesVisitor
-            // and check that the currentPath matches
-            // then adding the scalar to extracted values if paths match.
-            } else {
-                visitor.visit(extrapolate(yamlEntry));
-            }
-        }
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
