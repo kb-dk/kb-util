@@ -812,7 +812,6 @@ public class YAML extends LinkedHashMap<String, Object> {
             Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
             final String arrayElementIndex;
             if (matcher.matches()) { // foo.bar[2]
-                log.info("Found a match");
                 arrayElementIndex = matcher.group(2);
             } else {
                 arrayElementIndex = null;
@@ -821,28 +820,24 @@ public class YAML extends LinkedHashMap<String, Object> {
             if (arrayElementIndex != null){
                 switch (arrayElementIndex) {
                     case "*":
-                        log.info("Found an asterix match");
+                        // Set yPath entry to *.
                         yPath.set(0, arrayElementIndex);
-                        //convertListToMapAndTraverse(yPath, visitor, list, map);
-                        break;
+                        convertListToMapAndTraverse(yPath, visitor, list, map);
                     case "":
-                        log.info("Found an empty index, that matches an asterix");
+                        // Set yPath entry to * as [] and [*] are to be treated equal.
                         yPath.set(0, "*");
-                        //convertListToMapAndTraverse(yPath, visitor, list, map);
-                        break;
+                        convertListToMapAndTraverse(yPath, visitor, list, map);
                     case "last":
-                        log.info("entry should be the last one");
+                        // Set yPath entry to the last index of the list.
+                        yPath.set(0, String.valueOf(list.size()-1));
+                        convertListToMapAndTraverse(yPath, visitor, list, map);
+                    default:
+                        // Set yPath entry as index number
                         yPath.set(0, arrayElementIndex);
-                        //convertListToMapAndTraverse(yPath, visitor, list, map);
-                        break;
+                        convertListToMapAndTraverse(yPath, visitor, list, map);
                 }
             }
 
-            convertListToMapAndTraverse(yPath, visitor, list, map);
-
-            // Stjerne
-            // Tom
-            // last
             // TODO: Conditional
         } else {
             /*visitor.extractedValues.add(yaml);
