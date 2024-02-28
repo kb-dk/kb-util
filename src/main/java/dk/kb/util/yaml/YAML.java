@@ -87,13 +87,13 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     private static final long serialVersionUID = -5211961549015821195L;
 
-    
+
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
     private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
 
     boolean extrapolateSystemProperties = false;
     private List<StringSubstitutor> substitutors = null;
-    
+
     /**
      * Creates an empty YAML.
      */
@@ -125,7 +125,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML(Map<String, Object> map) {
         this.putAll(map);
     }
-    
+
     /**
      * Creates a YAML wrapper around the given map.
      * Changes to the map will be reflected in the YAML instance and vice versa.
@@ -147,7 +147,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param substitutors explicit specification of substitutors. Typically used for creating submaps.
      */
     YAML(Map<String, Object> map, boolean extrapolateSystemProperties,
-                List<StringSubstitutor> substitutors) {
+         List<StringSubstitutor> substitutors) {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
         this.putAll(map);
         this.substitutors = substitutors;
@@ -169,7 +169,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML getSubMap(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         return getSubMap(path, false);
     }
-    
+
     /**
      * Resolves the YAML sub map at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: {@code foo.bar}
@@ -190,7 +190,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
         }
-        
+
         if (!(found instanceof Map)) {
             throw new InvalidTypeException(
                     "Expected a Map for path but got '" + found.getClass().getName() + "'", path);
@@ -200,9 +200,9 @@ public class YAML extends LinkedHashMap<String, Object> {
             result = (Map<String, Object>) found;
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + found + "' to Map<String, Object>", path,
-                                           e);
+                    e);
         }
-        
+
         if (maintainKeys) {
             result = result.entrySet().stream().collect(Collectors.toMap(
                     entry -> path + "." + entry.getKey(),
@@ -214,7 +214,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         //       This is needed for path substitution
         return new YAML(result, extrapolateSystemProperties, getSubstitutors());
     }
-    
+
     /**
      * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: {@code foo.bar}
@@ -234,7 +234,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
         }
-        
+
         if (!(found instanceof List)) {
             throw new InvalidTypeException(
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
@@ -245,7 +245,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException("Exception casting '" + found + "' to List<T>", path, e);
         }
     }
-    
+
     /**
      * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -263,7 +263,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultList;
         }
     }
-    
+
     /**
      * Resolves the list of sub YAMLs at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -282,7 +282,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
         }
-        
+
         if (!(found instanceof List)) {
             throw new InvalidTypeException(
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
@@ -298,7 +298,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         //       This is needed for path substitution
         return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties, getSubstitutors())).collect(Collectors.toList());
     }
-    
+
     /**
      * Resolves the Short at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -318,7 +318,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException("Exception casting '" + o + "' to Short", path, e);
         }
     }
-    
+
     /**
      * Resolves the Short at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -335,7 +335,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultValue;
         }
     }
-    
+
     /**
      * Resolves the integer at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -356,7 +356,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException("Exception casting '" + o + "' to Integer", path, e);
         }
     }
-    
+
     /**
      * Resolves the Integer at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -381,7 +381,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultValue;
         }
     }
-    
+
     /**
      * Resolves the Long at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -401,7 +401,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException("Exception casting '" + o + "' to Long", path, e);
         }
     }
-    
+
     /**
      * Resolves the Long at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -418,7 +418,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultValue;
         }
     }
-    
+
     /**
      * Resolves the double at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -438,7 +438,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException("Exception casting '" + o + "' to Double", path, e);
         }
     }
-    
+
     /**
      * Resolves the double at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -455,7 +455,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultValue;
         }
     }
-    
+
     /**
      * Resolves the float at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -475,7 +475,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             throw new InvalidTypeException("Exception casting '" + o + "' to Float", path, e);
         }
     }
-    
+
     /**
      * Resolves the float at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -491,7 +491,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultValue;
         }
     }
-    
+
     /**
      * Resolves the boolean at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -507,7 +507,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         Object o = get(path);
         return Boolean.valueOf(o.toString());
     }
-    
+
     /**
      * Resolves the boolean at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -520,12 +520,12 @@ public class YAML extends LinkedHashMap<String, Object> {
     @NotNull
     public Boolean getBoolean(String path, Boolean defaultValue) throws NullPointerException {
         try {
-           return getBoolean(path);
+            return getBoolean(path);
         } catch (NotFoundException | InvalidTypeException e) {
             return defaultValue;
         }
     }
-    
+
     /**
      * Resolves the string at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -541,7 +541,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public String getString(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         return get(path).toString();
     }
-    
+
     /**
      * Resolves the string at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -612,7 +612,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /* **************************** Path-supporting overrides ************************************ */
-    
+
     /**
      * Used internally by {@link #oldGet} to avoid endless recursion.
      *
@@ -622,7 +622,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     private Object getSuper(String key) {
         return super.get(key);
     }
-    
+
     /**
      * Checks if a value is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
@@ -640,7 +640,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return false;
         }
     }
-    
+
     /**
      * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either
      * <ul>
@@ -713,7 +713,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
 
-        realTraverse(yPath, current, visitor);
+        traverse(yPath, current, visitor);
 
         // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
         return visitor.extractedValues;
@@ -728,98 +728,135 @@ public class YAML extends LinkedHashMap<String, Object> {
         // Switch to new visit method in get
     }
 
-    public void realTraverse(List<String> yPath, YAML yaml, MultipleValuesVisitor visitor) {
+
+    /**
+     * Method which recursively traverses a YAML file for entries that match the keys from {@code yPath}.
+     * @param yPath path in YAML file. The path is split into a list for each level/part of the path.
+     * @param yaml a YAML object containing the full YAML which is to be traversed.
+     * @param visitor which collects entries that match the input path.
+     */
+    public void traverse(List<String> yPath, YAML yaml, MultipleValuesVisitor visitor) {
 
         if (yPath.size() >= 1){
             String currentPathElement = yPath.get(0);
             //log.info("Current entry: '{}'", yaml);
+            log.info("YAML has keyset: '{}'", yaml.keySet());
 
             log.info("traversing: '{}'", currentPathElement);
             traverseHelper(yPath, yaml, visitor);
         }
 
+
+
     }
 
-    private static void removeTraversedEntry(List<String> yPath) {
-        if (!yPath.isEmpty()){
-            log.info("Removing entry '{}'", yPath.get(0));
-            yPath.remove(0);
-        }
+    private static List<String> removeTraversedEntry(List<String> yPath) {
+        return yPath.subList(1, yPath.size());
+
     }
+
+
+    private boolean containsPlaceholders(List<String> yPath){
+        String yPathElement = yPath.get(0);
+        return yPathElement.equals("*") || yPathElement.equals("**") || yPathElement.contains("[]") ||
+                yPathElement.contains("[*]") || yPathElement.contains("[**]");
+    }
+
 
     private void traverseHelper(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
-         if (yaml instanceof Map) {
-             Map<?, ?> map = (Map<?, ?>) yaml;
 
+        if (yaml instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) yaml;
+            List<String> shortenedPath = removeTraversedEntry(yPath);
 
-             yamlArrayInformation yamlArrayInfo = getYamlArrayInformation(yPath, 0);
-             if (yamlArrayInfo.arrayElementIndex != null) {
-             // Handle array lookup
-                 YAML here = new YAML((Map<String, Object>) map);
-                 log.info("Here is '{}'", here);
-                 //Object sub = getSubYaml(yamlArrayInfo, here, 0, "");
+            if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
+                log.info("to traverse");
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    traverseHelper(yPath, entry.getValue(), visitor);
+                    log.info("traversing entry with key: '{}'", entry.getKey());
+                    traverseHelper(shortenedPath, entry.getValue(), visitor);
+                }
+            } else if (!yPath.isEmpty() && yPath.get(0).equals("*")) {
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    log.info("Doing single level traversal for: '{}' in map", entry.getKey());
+                    if (yPath.size() > 1) {
+                        traverseHelper(shortenedPath, entry.getValue(), visitor);
+                    } else {
+                        visitor.visit(entry.getValue());
+                    }
+                }
+            } else {
+                //log.info("yaml entry is: '{}'", yaml);
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    String key = entry.getKey().toString();
+                    Object value = entry.getValue();
+                    log.info("yPath is: '{}', Key is: '{}' and value is: '{}'",yPath, key, value);
 
-                 // foo.bar.[2] or foo.bar.[key=val]
-                 Object arrayElement = getArrayElement(yaml, yamlArrayInfo.arrayElementIndex, yamlArrayInfo.pathKey, yamlArrayInfo.fullPathElement, "");
-
-                 if (arrayElement != null){
-                     log.info("array Found '{}' in '{}'", arrayElement, yaml);
-                 }
-
-                 traverseHelper(yPath, arrayElement, visitor);
-                 log.info("Sub has an array element");
-             } else if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
-                 log.info("to traverse");
-                 removeTraversedEntry(yPath);
-                 for (Map.Entry<?, ?> entry : map.entrySet()) {
-                     log.info("traversing entry with key: '{}'", entry.getKey());
-                     traverseHelper(yPath, entry.getValue(), visitor);
-                 }
-             } else if (!yPath.isEmpty() && yPath.get(0).equals("*")) {
-                 for (Map.Entry<?, ?> entry : map.entrySet()) {
-                     log.info("Doing single level traversal for: '{}' in map", entry.getKey());
-                     if (yPath.size() > 1) {
-                         removeTraversedEntry(yPath);
-                         traverseHelper(yPath, entry.getValue(), visitor);
-                     }
-                 }
-             } else {
-                 //log.info("yaml entry is: '{}'", yaml);
-                 for (Map.Entry<?, ?> entry : map.entrySet()) {
-                     String key = entry.getKey().toString();
-                     Object value = entry.getValue();
-                     log.info("yPath is: '{}', Key is: '{}' and value is: '{}'",yPath, key, value);
-
-                     if (key.equals(yPath.get(0)) && !(value instanceof Map)){
-                         log.info("found a match for key: '{}' and yPath: '{}'", key, yPath.get(0));
-                         visitor.extractedValues.add(value);
-                     } else if (yPath.size() <= 1 && key.equals(yPath.get(0))) {
-                         log.info("Found a map match");
-                         visitor.extractedValues.add(value);
-                     } else if (key.equals(yPath.get(0))){
-                        log.info("Current key is matching");
-                        removeTraversedEntry(yPath);
-                        traverseHelper(yPath, value, visitor);
-                     }else {
-                         traverseHelper(yPath, value, visitor);
-                     }
-                 }
-             }
-
+                    if (yPath.size() == 1){
+                        if (key.equals(yPath.get(0))){
+                            visitor.extractedValues.add(value);
+                        }
+                    } else {
+                        if (key.equals(yPath.get(0))){
+                            traverseHelper(shortenedPath, value, visitor);
+                        }
+                    }
+                }
+            }
         } else if (yaml instanceof List) {
-             log.info("Converting array to map: '{}'", yaml);
-             //If sub is a list, make it a map with the indexes as keys
-             List<Object> list = (List<Object>) yaml;
-             LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
-             for (int j = 0; j < list.size(); j++) {
-                 map.put(j + "", extrapolate(list.get(j)));
-             }
-             yaml = map;
-             traverseHelper(yPath, yaml, visitor);
+            log.info("Working on list");
+            List<Object> list = (List<Object>) yaml;
+            LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
+
+            //
+            Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
+            final String arrayElementIndex;
+            if (matcher.matches()) { // foo.bar[2]
+                log.info("Found a match");
+                arrayElementIndex = matcher.group(2);
+            } else {
+                arrayElementIndex = null;
+            }
+
+            if (arrayElementIndex != null){
+                switch (arrayElementIndex) {
+                    case "*":
+                        log.info("Found an asterix match");
+                        yPath.set(0, arrayElementIndex);
+                        //convertListToMapAndTraverse(yPath, visitor, list, map);
+                        break;
+                    case "":
+                        log.info("Found an empty index, that matches an asterix");
+                        yPath.set(0, "*");
+                        //convertListToMapAndTraverse(yPath, visitor, list, map);
+                        break;
+                    case "last":
+                        log.info("entry should be the last one");
+                        yPath.set(0, arrayElementIndex);
+                        //convertListToMapAndTraverse(yPath, visitor, list, map);
+                        break;
+                }
+            }
+
+            convertListToMapAndTraverse(yPath, visitor, list, map);
+
+            // Stjerne
+            // Tom
+            // last
+            // TODO: Conditional
         } else {
             /*visitor.extractedValues.add(yaml);
             log.info("Added entry: '{}' to extracted values.", yaml);*/
         }
+    }
+
+    private void convertListToMapAndTraverse(List<String> yPath, MultipleValuesVisitor visitor, List<Object> list, LinkedHashMap<String, Object> map) {
+        Object yaml;
+        for (int j = 0; j < list.size(); j++) {
+            map.put(j + "", extrapolate(list.get(j)));
+        }
+        yaml = map;
+        traverseHelper(yPath, yaml, visitor);
     }
 
     static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {
@@ -831,7 +868,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         if (sub == null) {
             throw new NotFoundException(
-                    "Unable to request " + i + "'th sub-element: '" + yamlArrayInfo.pathKey + "'", path);
+                    "Unable to request current sub-element: '" + yamlArrayInfo.pathKey + "'", "path");
         }
         return sub;
     }
@@ -848,7 +885,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         List<String> pathElements = splitPath(path);
         YAML current = yaml;
         for (int i = 0; i < pathElements.size(); i++) {
-            yamlArrayInformation yamlArrayInfo = getYamlArrayInformation(pathElements, i);
+            yamlArrayInformation yamlArrayInfo = getYamlArrayInformation(pathElements, 0);
             Object sub = getSubYaml(yamlArrayInfo, current, i, path);
 
             // Handle array lookup
@@ -860,7 +897,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
                 return extrapolate(sub);
             } //Otherwise, we require that it is a map so we can continue to query
-            
+
             //If sub is a list, make it a map with the indexes as keys
             if (sub instanceof List) {
                 List<Object> list = (List<Object>) sub;
@@ -886,17 +923,20 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     static yamlArrayInformation getYamlArrayInformation(List<String> pathElements, int i) {
+        //Get the current level in the YAML.
         String fullPathElement = pathElements.get(i);
         Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
         final String pathKey;
         final String arrayElementIndex;
         if (matcher.matches()) { // foo.bar[2]
+            log.info("Found a match");
             pathKey = matcher.group(1);
             arrayElementIndex = matcher.group(2);
         } else {
             pathKey = fullPathElement;
             arrayElementIndex = null;
         }
+        //log.info("Pathkey is: '{}'", pathKey);
         return new yamlArrayInformation(fullPathElement, pathKey, arrayElementIndex);
     }
 
@@ -919,11 +959,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Conditional matching requires the elements in the {@code collection} to be maps, for looking up the key to match.
      * The first element that satisfies the conditional is returned.
-     * @param collection a list or a map containing maps.
+     *
+     * @param collection      a list or a map containing maps.
      * @param arrayElementKey the key for looking up an element.
-     * @param pathKey the key for the {@code collection}. Used for error messages.
+     * @param pathKey         the key for the {@code collection}. Used for error messages.
      * @param fullPathElement extended version of the {@code pathKey}. Used for error messages.
-     * @param path the full path expression. Used for error messages.
+     * @param path            the full path expression. Used for error messages.
      * @return the first element in the collection that satisfies the given index or condition.
      */
     public Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
@@ -935,7 +976,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         } else {
             throw new InvalidTypeException(String.format(
                     Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
-                    fullPathElement, pathKey, collection.getClass().getSimpleName()), path);
+                    fullPathElement, pathKey, collection.getClass().getSimpleName()), "path");
         }
 
         // Check for & handle conditional: foo.bar[zoo=baz]
@@ -951,7 +992,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                     orElseThrow(() -> new IndexOutOfBoundsException(String.format(
                             Locale.ENGLISH,
                             "The collection conditional %s %s %s could not be satisfied for path element %s in path %s",
-                            key, mustMatch ? "=" : "!=", value, fullPathElement, path))
+                            key, mustMatch ? "=" : "!=", value, fullPathElement, "path"))
                     );
         }
 
@@ -968,7 +1009,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (index >= subCollection.size()) {
             throw new IndexOutOfBoundsException(String.format(
                     Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
-                    index, subCollection.size(), fullPathElement, path));
+                    index, subCollection.size(), fullPathElement, "path"));
         }
         return subCollection.stream().skip(index).findFirst().orElseThrow(
                 () -> new RuntimeException("This should not happen..."));
@@ -1084,6 +1125,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     private List<String> splitPath(String path) {
         List<String> tokens = new ArrayList<>();
+        // Ensure all path elements are separated by a singular dot
+        path = path.replaceAll("([^.])\\[", "$1.[");
         Matcher matcher = QUOTE_DOT_SPLIT.matcher(path);
         while (matcher.find()) {
             // Getting group(0) would not remove quote characters so a check for capturing group is needed
@@ -1095,7 +1138,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
 
     /* **************************** Fetching YAML ************************************ */
-    
+
     /**
      * Resolve the given YAML configuration.
      * <p>
@@ -1119,7 +1162,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             IOException, FileNotFoundException, MalformedURLException, NullPointerException, InvalidPathException {
         return resolveConfig(configName, null);
     }
-    
+
     /**
      * Resolve the given YAML configuration.
      * <p>
@@ -1197,7 +1240,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     public static YAML parse(Path... yamlPaths) throws IOException {
         return parse(Arrays.stream(yamlPaths).map(Path::toFile).toArray(File[]::new));
     }
-    
+
     /**
      * Parse the given Files as a single YAML, effectively concatenating all files.
      * It is possible to use cross references between the individual files.
@@ -1245,7 +1288,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
         }
     }
-    
+
     /**
      * Resolve the given YAML configurations and present a merged YAML from that.
      * <p>
@@ -1435,7 +1478,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 throw new IllegalArgumentException(
                         pre + ": Attempting to merge value type " + extra.getClass() + " to type " + base.getClass());
             }
-            
+
             LinkedHashMap<Object, Object> bYAML = (LinkedHashMap<Object, Object>) base;
             LinkedHashMap<Object, Object> eYAML = (LinkedHashMap<Object, Object>) extra;
             eYAML.forEach((key, value) -> {
@@ -1481,7 +1524,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         base.put(key, mergeEntry(path + "." + key, base.get(key), value, defaultMA, listMA));
     }
-    
+
     /**
      * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
      * @return this YAML, not a copy
@@ -1490,7 +1533,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
         return this;
     }
-    
+
     /**
      * If the YAML will extrapolate the current values of System.getProperties() in the values returned
      * @return true if extrapolation is enabled
@@ -1498,15 +1541,15 @@ public class YAML extends LinkedHashMap<String, Object> {
     public boolean isExtrapolating() {
         return extrapolateSystemProperties;
     }
-    
+
     /**
      * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
      */
     public void setExtrapolate(boolean extrapolateSystemProperties) {
         this.extrapolateSystemProperties = extrapolateSystemProperties;
     }
-    
-    
+
+
     public String toString(){
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setIndentWithIndicator(true);
