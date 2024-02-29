@@ -751,97 +751,143 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     private static List<String> removeTraversedEntry(List<String> yPath) {
-        return yPath.subList(1, yPath.size());
+        if (yPath.isEmpty()){
+            return yPath;
+        } else {
+            return yPath.subList(1, yPath.size());
+        }
 
-    }
-
-
-    private boolean containsPlaceholders(List<String> yPath){
-        String yPathElement = yPath.get(0);
-        return yPathElement.equals("*") || yPathElement.equals("**") || yPathElement.contains("[]") ||
-                yPathElement.contains("[*]") || yPathElement.contains("[**]");
     }
 
 
     private void traverseHelper(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
-
         if (yaml instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) yaml;
-            List<String> shortenedPath = removeTraversedEntry(yPath);
-
-            if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
-                log.info("to traverse");
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    traverseHelper(yPath, entry.getValue(), visitor);
-                    log.info("traversing entry with key: '{}'", entry.getKey());
-                    traverseHelper(shortenedPath, entry.getValue(), visitor);
-                }
-            } else if (!yPath.isEmpty() && yPath.get(0).equals("*")) {
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    log.info("Doing single level traversal for: '{}' in map", entry.getKey());
-                    if (yPath.size() > 1) {
-                        traverseHelper(shortenedPath, entry.getValue(), visitor);
-                    } else {
-                        visitor.visit(entry.getValue());
-                    }
-                }
-            } else {
-                //log.info("yaml entry is: '{}'", yaml);
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    String key = entry.getKey().toString();
-                    Object value = entry.getValue();
-                    log.info("yPath is: '{}', Key is: '{}' and value is: '{}'",yPath, key, value);
-
-                    if (yPath.size() == 1){
-                        if (key.equals(yPath.get(0))){
-                            visitor.extractedValues.add(value);
-                        }
-                    } else {
-                        if (key.equals(yPath.get(0))){
-                            traverseHelper(shortenedPath, value, visitor);
-                        }
-                    }
-                }
-            }
+            traverseMap(yPath, (Map<?, ?>) yaml, visitor);
         } else if (yaml instanceof List) {
-            log.info("Working on list");
-            List<Object> list = (List<Object>) yaml;
-            LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
-
-            //
-            Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
-            final String arrayElementIndex;
-            if (matcher.matches()) { // foo.bar[2]
-                arrayElementIndex = matcher.group(2);
-            } else {
-                arrayElementIndex = null;
-            }
-
-            if (arrayElementIndex != null){
-                switch (arrayElementIndex) {
-                    case "*":
-                        // Set yPath entry to *.
-                        yPath.set(0, arrayElementIndex);
-                        convertListToMapAndTraverse(yPath, visitor, list, map);
-                    case "":
-                        // Set yPath entry to * as [] and [*] are to be treated equal.
-                        yPath.set(0, "*");
-                        convertListToMapAndTraverse(yPath, visitor, list, map);
-                    case "last":
-                        // Set yPath entry to the last index of the list.
-                        yPath.set(0, String.valueOf(list.size()-1));
-                        convertListToMapAndTraverse(yPath, visitor, list, map);
-                    default:
-                        // Set yPath entry as index number
-                        yPath.set(0, arrayElementIndex);
-                        convertListToMapAndTraverse(yPath, visitor, list, map);
-                }
-            }
+            traverseList(yPath, yaml, visitor);
 
             // TODO: Conditional
         } else {
             /*visitor.extractedValues.add(yaml);
             log.info("Added entry: '{}' to extracted values.", yaml);*/
+        }
+    }
+
+    private void traverseList(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
+        log.info("Working on list");
+        List<Object> list = (List<Object>) yaml;
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
+
+        //
+        Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
+        final String arrayElementIndex;
+        if (matcher.matches()) { // foo.bar[2]
+            arrayElementIndex = matcher.group(2);
+        } else {
+            arrayElementIndex = null;
+        }
+
+        log.info("yPath is: '{}' and index value is: '{}'", yPath.get(0), arrayElementIndex);
+
+        if (arrayElementIndex != null){
+            switch (arrayElementIndex) {
+                case "*":
+                    // Set yPath entry to *.
+                    yPath.set(0, arrayElementIndex);
+                    convertListToMapAndTraverse(yPath, visitor, list, map);
+                case "":
+                    // Set yPath entry to * as [] and [*] are to be treated equal.
+                    yPath.set(0, "*");
+                    convertListToMapAndTraverse(yPath, visitor, list, map);
+                case "last":
+                    // Set yPath entry to the last index of the list.
+                    yPath.set(0, String.valueOf(list.size()-1));
+                    convertListToMapAndTraverse(yPath, visitor, list, map);
+                default:
+                    // Set yPath entry as index number
+                    yPath.set(0, arrayElementIndex);
+                    convertListToMapAndTraverse(yPath, visitor, list, map);
+            }
+        } else {
+            for (Object entry: list) {
+                traverseHelper(yPath, entry, visitor);
+            }
+        }
+    }
+
+    private void traverseMap(List<String> yPath, Map<?, ?> yaml, MultipleValuesVisitor visitor) {
+        // Quick fix cleaning entries as [foo=bar] to foo=bar.
+        removeBracketsFromPathElement(yPath);
+
+        Map<?, ?> map = yaml;
+        List<String> shortenedPath = removeTraversedEntry(yPath);
+        Matcher conditionalMatch;
+        if (!yPath.isEmpty()){
+            conditionalMatch = ARRAY_CONDITIONAL.matcher(yPath.get(0));
+        } else {
+            conditionalMatch = ARRAY_CONDITIONAL.matcher("");
+        }
+
+        if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                traverseHelper(yPath, entry.getValue(), visitor);
+                traverseHelper(shortenedPath, entry.getValue(), visitor);
+            }
+        } else if (!yPath.isEmpty() && yPath.get(0).equals("*")) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                if (yPath.size() > 1) {
+                    traverseHelper(shortenedPath, entry.getValue(), visitor);
+                } else {
+                    visitor.visit(entry.getValue());
+                }
+            }
+        } else if (conditionalMatch.matches()) {
+            String key = conditionalMatch.group(1);
+            boolean mustMatch = conditionalMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
+            String value = conditionalMatch.group(3);
+
+            log.info("CONDITIONAL: Key is: '{}', match is: '{}', value is: '{}'", key, mustMatch, value);
+
+            List<Object> matchingObjects = new ArrayList<>();
+            for (Map.Entry<?,?> entry :map.entrySet()) {
+                matchingObjects.add(conditionalGet(entry.getValue(), key, value, mustMatch));
+            }
+            matchingObjects = matchingObjects.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
+            log.info("result is: '{}' and shortenedPath is: '{}'", matchingObjects, shortenedPath);
+            if (yPath.size() <= 1){
+                for (Object result: matchingObjects) {
+                    log.info("Result is: " + result.getClass());
+                    visitor.visit(result);
+                }
+            } else {
+                for (Object result: matchingObjects) {
+                    traverseHelper(shortenedPath, result, visitor);
+                }
+            }
+        } else {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                String key = entry.getKey().toString();
+                Object value = entry.getValue();
+                log.info("yPath is: '{}', Key is: '{}' and value is: '{}'", yPath, key, value);
+
+                if (yPath.size() == 1){
+                    if (key.equals(yPath.get(0))){
+                        visitor.extractedValues.add(value);
+                    }
+                } else {
+                    if (key.equals(yPath.get(0))){
+                        traverseHelper(shortenedPath, value, visitor);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void removeBracketsFromPathElement(List<String> yPath) {
+        if (!yPath.isEmpty() && yPath.get(0).startsWith("[") && yPath.get(0).endsWith("]")){
+            String cleaned = yPath.get(0).substring(1, yPath.get(0).length()-1);
+            yPath.set(0, cleaned);
         }
     }
 
