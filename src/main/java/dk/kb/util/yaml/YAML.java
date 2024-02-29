@@ -716,7 +716,14 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
 
-        traverse(yPath, current, visitor);
+        if (yPath.size() >= 1){
+            String currentPathElement = yPath.get(0);
+            //log.info("Current entry: '{}'", yaml);
+            log.info("YAML has keyset: '{}'", yaml.keySet());
+
+            log.info("traversing: '{}'", currentPathElement);
+            traverse(yPath, yaml, visitor);
+        }
 
         // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
         return visitor.extractedValues;
@@ -732,27 +739,6 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
 
-    /**
-     * Method which recursively traverses a YAML file for entries that match the keys from {@code yPath}.
-     * @param yPath path in YAML file. The path is split into a list for each level/part of the path.
-     * @param yaml a YAML object containing the full YAML which is to be traversed.
-     * @param visitor which collects entries that match the input path.
-     */
-    public void traverse(List<String> yPath, YAML yaml, MultipleValuesVisitor visitor) {
-
-        if (yPath.size() >= 1){
-            String currentPathElement = yPath.get(0);
-            //log.info("Current entry: '{}'", yaml);
-            log.info("YAML has keyset: '{}'", yaml.keySet());
-
-            log.info("traversing: '{}'", currentPathElement);
-            traverseHelper(yPath, yaml, visitor);
-        }
-
-
-
-    }
-
     private static List<String> removeTraversedEntry(List<String> yPath) {
         if (yPath.isEmpty()){
             return yPath;
@@ -763,25 +749,45 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
 
-    private void traverseHelper(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
+    /**
+     * Method which recursively traverses a YAML file for entries that match the keys from {@code yPath}.
+     * @param yPath path in YAML file. The path is split into a list for each level/part of the path.
+     * @param yaml a YAML object containing the full YAML which is to be traversed.
+     * @param visitor which collects entries that match the input path.
+     */
+    private void traverse(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
         if (yaml instanceof Map) {
             traverseMap(yPath, yaml, visitor);
         } else if (yaml instanceof List) {
             traverseList(yPath, yaml, visitor);
-
-            // TODO: Conditional
         } else {
             /*visitor.extractedValues.add(yaml);
             log.info("Added entry: '{}' to extracted values.", yaml);*/
         }
     }
 
+    /**
+     * Traverse a YAML List recursively and collect matching paths to the input visitor.
+     * The implementation supports retrieval of multiple matching results.
+     * <p> <br>
+     * It supports placeholders such as foo[] and foo[*], which both of them returns all elements in this list.
+     * This can be used in conjunction with further traversal such as foo[].bar. The implementation also supports the
+     * syntax foo[last], which will return the last element in the list. Standard index based lookup such as foo[2] is
+     * also supported. The implementation supports dot-array syntax as well. This means that the queries foo[bar] and
+     * foo.[bar] returns the same value.
+     * <p> <br>
+     * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
+     * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
+     * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
+     *              delivered through the {@link #visit(Object path, YAML yaml)}-method.
+     * @param yaml the current place in the YAML file being traversed. This should be an instance of a List.
+     * @param visitor used to collect values that match the given path. This visitor only collects values to its
+     *                internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
+     */
     private void traverseList(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
         log.info("Working on list");
         List<Object> list = (List<Object>) yaml;
-        LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
 
-        //
         Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
         final String arrayElementIndex;
         if (matcher.matches()) { // foo.bar[2]
@@ -791,33 +797,53 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
 
         log.info("yPath is: '{}' and index value is: '{}'", yPath.get(0), arrayElementIndex);
-
         if (arrayElementIndex != null){
             switch (arrayElementIndex) {
                 case "*":
                     // Set yPath entry to *.
                     yPath.set(0, arrayElementIndex);
-                    convertListToMapAndTraverse(yPath, visitor, list, map);
+                    convertListToMapAndTraverse(yPath, visitor, list);
                 case "":
                     // Set yPath entry to * as [] and [*] are to be treated equal.
                     yPath.set(0, "*");
-                    convertListToMapAndTraverse(yPath, visitor, list, map);
+                    convertListToMapAndTraverse(yPath, visitor, list);
                 case "last":
                     // Set yPath entry to the last index of the list.
                     yPath.set(0, String.valueOf(list.size()-1));
-                    convertListToMapAndTraverse(yPath, visitor, list, map);
+                    convertListToMapAndTraverse(yPath, visitor, list);
                 default:
                     // Set yPath entry as index number
                     yPath.set(0, arrayElementIndex);
-                    convertListToMapAndTraverse(yPath, visitor, list, map);
+                    convertListToMapAndTraverse(yPath, visitor, list);
             }
         } else {
+            // TODO: This might be de dublicating issue. either convert to map maybe or done something else. I though
+            // about something when entering the train today (29. feb 2024)
             for (Object entry: list) {
-                traverseHelper(yPath, entry, visitor);
+                traverse(yPath, entry, visitor);
             }
         }
     }
 
+    /**
+     * Traverse a YAML List recursively and collect matching paths to the input visitor.
+     * The implementation supports retrieval of multiple matching results.
+     * <p> <br>
+     * YAML maps can be queried in multiple ways and with different placeholders as well. The implementation supports
+     * the syntax foo.*.bar, which returns all matches for 'bar' a single level below 'foo'. Eg: this would match paths
+     * such as foo.zoo.bar and foo.fooz.bar, but not a path such as foo.fooz.zoo.bar
+     * <p>
+     * The implementation also supports the syntax foo.**.bar, which returns all bar's that are below 'foo' in the hierarchy.
+     * This path would match all the following values: 'foo.zoo.bar', 'foo.fooz.zoo.bar' and 'foo.anything.bar'.
+     * <p>
+     * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
+     * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
+     * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
+     *              delivered through the {@link #visit(Object path, YAML yaml)}-method.
+     * @param yaml the current place in the YAML file being traversed. This should be an instance of a Map.
+     * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
+     *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
+     */
     private void traverseMap(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
         // Quick fix cleaning entries as [foo=bar] to foo=bar.
         removeBracketsFromPathElement(yPath);
@@ -833,13 +859,13 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
             for (Map.Entry<?, ?> entry : map.entrySet()) {
-                traverseHelper(yPath, entry.getValue(), visitor);
-                traverseHelper(shortenedPath, entry.getValue(), visitor);
+                traverse(yPath, entry.getValue(), visitor);
+                traverse(shortenedPath, entry.getValue(), visitor);
             }
         } else if (!yPath.isEmpty() && yPath.get(0).equals("*")) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (yPath.size() > 1) {
-                    traverseHelper(shortenedPath, entry.getValue(), visitor);
+                    traverse(shortenedPath, entry.getValue(), visitor);
                 } else {
                     visitor.visit(entry.getValue());
                 }
@@ -863,7 +889,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 }
             } else {
                 for (Object result: matchingObjects) {
-                    traverseHelper(shortenedPath, result, visitor);
+                    traverse(shortenedPath, result, visitor);
                 }
             }
         } else {
@@ -879,13 +905,21 @@ public class YAML extends LinkedHashMap<String, Object> {
                     }
                 } else {
                     if (key.equals(yPath.get(0))){
-                        traverseHelper(shortenedPath, value, visitor);
+                        traverse(shortenedPath, value, visitor);
                     }
                 }
             }
         }
     }
 
+
+    /**
+     * If the first element in a list starts with '[' and ends with ']' remove the brackets from the string. The brackets
+     * are used to describe a conditional lookup in a YAML map and needs to be removed before the traversal can be
+     * continued.
+     * @param yPath list of path elements, where the first element is the current element of the YAML traversal, which
+     *              is checked for '[' and ']'.
+     */
     private static void removeBracketsFromPathElement(List<String> yPath) {
         if (!yPath.isEmpty() && yPath.get(0).startsWith("[") && yPath.get(0).endsWith("]")){
             String cleaned = yPath.get(0).substring(1, yPath.get(0).length()-1);
@@ -893,13 +927,23 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-    private void convertListToMapAndTraverse(List<String> yPath, MultipleValuesVisitor visitor, List<Object> list, LinkedHashMap<String, Object> map) {
+    /**
+     * Convert a YAML list to a YAML map containing all elements, where the key is the index and continue the traversal
+     * of the YAML structure through the {@link #traverse(List, Object, MultipleValuesVisitor)}-method.
+     * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
+     *              delivered through the {@link #visit(Object path, YAML yaml)}-method.
+     * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
+     *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
+     * @param list the YAML list which is to be converted to a YAML map.
+     */
+    private void convertListToMapAndTraverse(List<String> yPath, MultipleValuesVisitor visitor, List<Object> list) {
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
         Object yaml;
         for (int j = 0; j < list.size(); j++) {
             map.put(j + "", extrapolate(list.get(j)));
         }
         yaml = map;
-        traverseHelper(yPath, yaml, visitor);
+        traverse(yPath, yaml, visitor);
     }
 
     static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {
