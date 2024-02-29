@@ -616,13 +616,14 @@ class YAMLTest {
 
     @Test
     public void testGetMultiple() throws IOException {
+        // This visits everything called name. Therefore, it currently returns 16 elements where 15 of these are scalars and a single one is a map itself.
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john",
                 "Thyra", "Gunhild", "Margrethe");
 
         List<Object> extractedNames = yaml.visit("**.name", yaml);
         System.out.println(extractedNames);
-        assertEquals(15, extractedNames.size());
+        assertEquals(16, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
 
@@ -645,6 +646,7 @@ class YAMLTest {
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
         List<Object> extractedNames = yaml.visit("test.tuplesequence[].*.name", yaml);
+        System.out.println(extractedNames);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
         assertFalse(extractedNames.contains("fooz"));
