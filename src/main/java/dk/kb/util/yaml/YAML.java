@@ -765,7 +765,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     private void traverseHelper(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
         if (yaml instanceof Map) {
-            traverseMap(yPath, (Map<?, ?>) yaml, visitor);
+            traverseMap(yPath, yaml, visitor);
         } else if (yaml instanceof List) {
             traverseList(yPath, yaml, visitor);
 
@@ -818,11 +818,11 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-    private void traverseMap(List<String> yPath, Map<?, ?> yaml, MultipleValuesVisitor visitor) {
+    private void traverseMap(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
         // Quick fix cleaning entries as [foo=bar] to foo=bar.
         removeBracketsFromPathElement(yPath);
 
-        Map<?, ?> map = yaml;
+        Map<?, ?> map = (Map<?, ?>) yaml;
         List<String> shortenedPath = removeTraversedEntry(yPath);
         Matcher conditionalMatch;
         if (!yPath.isEmpty()){
@@ -850,7 +850,6 @@ public class YAML extends LinkedHashMap<String, Object> {
             String value = conditionalMatch.group(3);
 
             log.info("CONDITIONAL: Key is: '{}', match is: '{}', value is: '{}'", key, mustMatch, value);
-
             List<Object> matchingObjects = new ArrayList<>();
             for (Map.Entry<?,?> entry :map.entrySet()) {
                 matchingObjects.add(conditionalGet(entry.getValue(), key, value, mustMatch));
@@ -860,7 +859,6 @@ public class YAML extends LinkedHashMap<String, Object> {
             log.info("result is: '{}' and shortenedPath is: '{}'", matchingObjects, shortenedPath);
             if (yPath.size() <= 1){
                 for (Object result: matchingObjects) {
-                    log.info("Result is: " + result.getClass());
                     visitor.visit(result);
                 }
             } else {
@@ -876,6 +874,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
                 if (yPath.size() == 1){
                     if (key.equals(yPath.get(0))){
+                        log.info("here we are, ypath is: '{}'", yPath.get(0));
                         visitor.extractedValues.add(value);
                     }
                 } else {
