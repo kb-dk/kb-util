@@ -371,13 +371,16 @@ public class YAML extends LinkedHashMap<String, Object> {
         Object o;
         try {
             o = get(path);
-        } catch (NotFoundException | InvalidTypeException e) {
+        } catch (NotFoundException | InvalidTypeException  e) {
             return defaultValue;
         }
         try {
             return Integer.valueOf(o.toString());
         } catch (NumberFormatException e) {
             log.warn("Unable to parse '" + o.toString() + "' as Integer", o);
+            return defaultValue;
+        } catch (NullPointerException e){
+            log.warn("No value has been found for path: '" + path +"'");
             return defaultValue;
         }
     }
@@ -672,7 +675,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         List<Object> result = visit(path, this);
 
         if (result.isEmpty()){
-            return null;
+            throw new NotFoundException("Cant find object at path:", path.toString());
         } else {
             return extrapolate(result.get(0));
         }
