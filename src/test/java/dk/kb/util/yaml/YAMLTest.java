@@ -632,6 +632,7 @@ class YAMLTest {
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
         List<Object> extractedNames = yaml.visit("test.tuplesequence[*].*.name", yaml);
+        System.out.println(extractedNames);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
         assertFalse(extractedNames.contains("fooz"));
@@ -653,7 +654,7 @@ class YAMLTest {
     @Test
     public void testConditionalArrayLookupInVisit() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> extractedNames = yaml.visit("test.arrayofqueens[name=Thyra]", yaml);
+        List<Object> extractedNames = yaml.visit("test.arrayofqueens[name=Thyra].name", yaml);
         assertEquals(1, extractedNames.size());
         assertTrue(extractedNames.contains("Thyra"));
     }
@@ -661,7 +662,7 @@ class YAMLTest {
     @Test
     public void testNegativeConditionalArrayLookupInVisit() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> extractedNames = yaml.visit("test.arrayofqueens[name!=Thyra]", yaml);
+        List<Object> extractedNames = yaml.visit("test.arrayofqueens[name!=Thyra].name", yaml);
         assertEquals(2, extractedNames.size());
         assertFalse(extractedNames.contains("Thyra"));
     }
@@ -688,7 +689,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
         List<Object> extractedNames = yaml.visit("test.tuplesequence[*].*.name", yaml);
-
+        System.out.println(extractedNames);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
