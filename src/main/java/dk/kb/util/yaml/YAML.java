@@ -726,8 +726,12 @@ public class YAML extends LinkedHashMap<String, Object> {
         // TODO: Investigate how JQ handles paths as: test.tuplesequence[*].*.name
     }
 
-
-    //TODO: JAVADOC
+    /**
+     * Create a list from the inputted list of yPath elements. The new list contains all values of the input list
+     * except the first entry.
+     * @param yPath list of YAML path elements, which the returned list is created from.
+     * @return a sublist of yPath, where the first value is removed.
+     */
     private static List<String> removeTraversedEntry(List<String> yPath) {
         if (yPath.isEmpty()){
             return yPath;
@@ -770,7 +774,6 @@ public class YAML extends LinkedHashMap<String, Object> {
      *                internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      */
     private void traverseList(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
-        log.info("Working on list");
         List<Object> list = (List<Object>) yaml;
 
         Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
@@ -856,11 +859,9 @@ public class YAML extends LinkedHashMap<String, Object> {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = entry.getKey().toString();
                 Object value = entry.getValue();
-                log.info("yPath is: '{}', Key is: '{}' and value is: '{}'", yPath, key, value);
 
                 if (yPath.size() == 1){
                     if (key.equals(yPath.get(0))){
-                        log.info("here we are, ypath is: '{}'", yPath.get(0));
                         visitor.extractedValues.add(value);
                     }
                 } else {
@@ -877,7 +878,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         boolean mustMatch = conditionalMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
         String value = conditionalMatch.group(3);
 
-        log.info("CONDITIONAL: Key is: '{}', match is: '{}', value is: '{}'", key, mustMatch, value);
         List<Object> matchingObjects = new ArrayList<>();
         for (Map.Entry<?,?> entry : map.entrySet()) {
             matchingObjects.add(conditionalGet(entry.getValue(), key, value, mustMatch));
@@ -887,7 +887,6 @@ public class YAML extends LinkedHashMap<String, Object> {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        log.info("result is: '{}' and shortenedPath is: '{}'", matchingObjects, shortenedPath);
         if (yPath.size() <= 1){
             for (Object matchingEntry: matchingObjects) {
                 visitor.visit(matchingEntry);

@@ -198,7 +198,6 @@ class YAMLTest {
     @Test
     public void testIntArrayExtrapolatedContent() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        System.out.println(yaml);
         List<Integer> ints = yaml.getList("arrayofints");
         assertTrue(ints.get(0) >= 11,
                 "Arrays of integers should be supported. Expected first element to be >= 11, but got array " + ints);
@@ -622,7 +621,6 @@ class YAMLTest {
                 "Thyra", "Gunhild", "Margrethe");
 
         List<Object> extractedNames = yaml.visit("**.name", yaml);
-        System.out.println(extractedNames);
         assertEquals(16, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
@@ -633,7 +631,6 @@ class YAMLTest {
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
         List<Object> extractedNames = yaml.visit("test.tuplesequence[*].*.name", yaml);
-        System.out.println(extractedNames);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
         assertFalse(extractedNames.contains("fooz"));
@@ -646,7 +643,6 @@ class YAMLTest {
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
         List<Object> extractedNames = yaml.visit("test.tuplesequence[].*.name", yaml);
-        System.out.println(extractedNames);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
         assertFalse(extractedNames.contains("fooz"));
@@ -691,7 +687,6 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
         List<Object> extractedNames = yaml.visit("test.tuplesequence[*].*.name", yaml);
-        System.out.println(extractedNames);
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
