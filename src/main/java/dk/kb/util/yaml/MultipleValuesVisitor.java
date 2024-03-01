@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 
 public class MultipleValuesVisitor implements YAMLVisitor {
-    private static final Logger log = LoggerFactory.getLogger(MultipleValuesVisitor.class);
+    /*private static final Logger log = LoggerFactory.getLogger(MultipleValuesVisitor.class);
 
     private static final Pattern CURRENT_KEY = Pattern.compile("([^.\\[\\]]+)$");
     private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
@@ -20,18 +20,12 @@ public class MultipleValuesVisitor implements YAMLVisitor {
     private static final Pattern INTEGER_LOOKUP = Pattern.compile("(\\d+)");
     private static final Pattern LAST_LOOKUP = Pattern.compile("(last)");
 
-    private static final String PLACEHOLDER = "*";
+    private static final String PLACEHOLDER = "*";*/
     List<Object> extractedValues = new ArrayList<>();
-    List<String> matchingPaths = new ArrayList<>();
+    /*List<String> matchingPaths = new ArrayList<>();
     List<String> inputPathElements = new ArrayList<>();
     String inputPath;
-    String currentPath;
-
-
-    public MultipleValuesVisitor(String inputPath){
-        this.inputPath = inputPath;
-        this.inputPathElements = splitPath(inputPath);
-    }
+    String currentPath;*/
 
     public MultipleValuesVisitor(){}
 
@@ -70,7 +64,7 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         }*/
     }
 
-
+/*
     public void setInputPath(String inputPath) {
         this.inputPath = inputPath;
         this.inputPathElements = splitPath(inputPath);
@@ -80,13 +74,13 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         this.currentPath = currentPath;
     }
 
-    /**
+    *//**
      * Converts the current path to a list of path elements, to make placeholders work.
      * @param path current path in the YAML.
      * @param inputPathElements the path searched for in the YAML split by dots.
      * @param yamlEntry the value of the current place in the YAML.
      * @return a boolean for a match between input path and current path.
-     */
+     *//*
     private boolean compareCurrentPathToInput(String path, List<String> inputPathElements, Object yamlEntry) {
         List<String> currentPathElements = splitPath(path);
 
@@ -94,13 +88,13 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         return isMatchingPath;
     }
 
-    /**
+    *//**
      * Compares two paths split by dots. This implementation makes room for placeholders such as .* and .** in YAML paths.
      * @param listWithPlaceholder List that can contain placeholders as * and **.
      * @param listWithValuesFromYaml list containing current path in YAML.
      * @param yamlEntry the value at the current entry.
      * @return true if the paths match, false if not.
-     */
+     *//*
     public boolean compareStringLists(List<String> listWithPlaceholder, List<String> listWithValuesFromYaml, Object yamlEntry) {
         int index1 = 0;
         int index2 = 0;
@@ -209,12 +203,12 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         return index1 == listWithPlaceholder.size() && index2 == listWithValuesFromYaml.size();
     }
 
-    /**
+    *//**
      * Splits the given path on {@code .}, with support for quoting with single {@code '} and double {@code "} quotes.
      * {@code foo.bar."baz.zoo".'eni.meni' -> [foo, bar, baz.zoo, eni.meni]}.
      * @param path a YAML path with dots {@code .} as dividers.
      * @return the path split on {@code .}.
-     */
+     *//*
     private List<String> splitPath(String path) {
         List<String> tokens = new ArrayList<>();
         Matcher matcher = QUOTE_DOT_SPLIT.matcher(path);
@@ -224,5 +218,5 @@ public class MultipleValuesVisitor implements YAMLVisitor {
         }
         return tokens;
     }
-    private final Pattern QUOTE_DOT_SPLIT = Pattern.compile("[\"']([^\"']*)[\"']|([^.]+)");
+    private final Pattern QUOTE_DOT_SPLIT = Pattern.compile("[\"']([^\"']*)[\"']|([^.]+)");*/
 }
