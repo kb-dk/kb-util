@@ -684,16 +684,8 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
-        List<String> inputPathElements = splitPath(path);
 
-        boolean toTraverse = inputPathElements.stream()
-                .anyMatch(element -> element.equals("*") || element.contains("[*]"));
-
-        if (toTraverse) {
-            return yaml.visit(path, this);
-        } else {
-            return List.of(oldGet(path0, yaml));
-        }
+        return yaml.visit(path, this);
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
@@ -719,6 +711,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
 
+    //TODO: JAVADOC
     private static List<String> removeTraversedEntry(List<String> yPath) {
         if (yPath.isEmpty()){
             return yPath;
@@ -739,9 +732,6 @@ public class YAML extends LinkedHashMap<String, Object> {
             traverseMap(yPath, yaml, visitor);
         } else if (yaml instanceof List) {
             traverseList(yPath, yaml, visitor);
-        } else {
-            /*visitor.extractedValues.add(yaml);
-            log.info("Added entry: '{}' to extracted values.", yaml);*/
         }
     }
 
@@ -928,7 +918,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         traverse(yPath, yaml, visitor);
     }
 
-    static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {
+    /*static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {
         Object sub;
         if (yamlArrayInfo.pathKey.isEmpty()) {
             sub = current;
@@ -940,10 +930,10 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "Unable to request current sub-element: '" + yamlArrayInfo.pathKey + "'", "path");
         }
         return sub;
-    }
+    }*/
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
-    private Object oldGet(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
+    /*private Object oldGet(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
@@ -989,9 +979,9 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
         }
         return current;
-    }
+    }*/
 
-    static yamlArrayInformation getYamlArrayInformation(List<String> pathElements, int i) {
+    /*static yamlArrayInformation getYamlArrayInformation(List<String> pathElements, int i) {
         //Get the current level in the YAML.
         String fullPathElement = pathElements.get(i);
         Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
@@ -1007,9 +997,9 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         //log.info("Pathkey is: '{}'", pathKey);
         return new yamlArrayInformation(fullPathElement, pathKey, arrayElementIndex);
-    }
+    }*/
 
-    static class yamlArrayInformation {
+    /*static class yamlArrayInformation {
         public final String fullPathElement;
         public final String pathKey;
         public final String arrayElementIndex;
@@ -1019,7 +1009,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             this.pathKey = pathKey;
             this.arrayElementIndex = arrayElementIndex;
         }
-    }
+    }*/
 
     /**
      * Extract an element in the given {@code collection}, where {@code arrayElementDesignation} specifies the element,
@@ -1036,7 +1026,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param path            the full path expression. Used for error messages.
      * @return the first element in the collection that satisfies the given index or condition.
      */
-    public Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
+    /*public Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
         final Collection<?> subCollection;
         if (collection instanceof List) {
             subCollection = (List<?>) collection;
@@ -1082,7 +1072,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         return subCollection.stream().skip(index).findFirst().orElseThrow(
                 () -> new RuntimeException("This should not happen..."));
-    }
+    }*/
 
     /**
      * Checks if the conditional is satisfied for the given element and if so returns it.
