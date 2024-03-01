@@ -566,24 +566,34 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolves all values related to a given key, from a YAML structure. All values that have the specified key are
      * returned as part of a list.
+     * @deprecated
+     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML)} instead.
      * @param key the key to look for in the input YAML.
      * @return a list of all values that can be cast to strings.
      */
+    @Deprecated
     public List<Object> getMultiple(String key){
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor(key);
-        visitor.visit(this);
-        return visitor.extractedValues;
+        String correctedPath = "**." + key;
+        return visit(correctedPath, this);
     }
 
     /**
      * Resolves all values related to a given key, from a part of a YAML structure. All values that are children of the
      * input {@code yamlPath} and are specified with the input {@code key} are returned as a list.
+     * @deprecated
+     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML)} instead.
      * @param yamlPath the specific part of a YAML file, that is to be queried for values.
      * @param key all values that are associated with this key are added to the returned list.
      * @return a list of all scalar values that are associated with the input key.
      */
+    @Deprecated
     public List<Object> getMultipleFromSubYaml(String yamlPath, String key){
-        if (this.get(yamlPath) instanceof List){
+        String combinedPath = yamlPath + "[*].*." + key;
+
+        return visit(combinedPath, this);
+
+
+        /*if (this.get(yamlPath) instanceof List){
             return getMultipleFromSubYamlList(yamlPath, key);
         } else if (this.get(yamlPath) instanceof Iterable){
             YAML subYaml = this.getSubMap(yamlPath);
@@ -595,23 +605,29 @@ public class YAML extends LinkedHashMap<String, Object> {
             // Therefore, there is no need to use the visitor.
             Object subYaml = this.get(yamlPath);
             return List.of(subYaml.toString());
-        }
+        }*/
     }
 
     /**
      * Helper for the method {@link #getMultipleFromSubYaml(String, String)} used to visit a list-part of a YAML file.
      * This method gets a list from the {@code yamlPath} and looks for values that are associated with the input {@code key}.
+     * @deprecated
+     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML)} instead.
      * @param yamlPath to a list in the overall YAML being parsed.
      * @param key to extract values for.
      * @return a new list of all values, that are represented in the YAML List by the input {@code key}.
      */
+    @Deprecated
     private List<Object> getMultipleFromSubYamlList(String yamlPath, String key) {
-        List<YAML> yamlList = this.getYAMLList(yamlPath);
+        String combinedPath = yamlPath + "[*].*." + key;
+        return visit(combinedPath, this);
+
+        /*List<YAML> yamlList = this.getYAMLList(yamlPath);
         MultipleValuesVisitor visitor = new MultipleValuesVisitor(yamlPath);
         for (YAML yamlPart : yamlList) {
             visitor.visit(yamlPart);
         }
-        return visitor.extractedValues;
+        return visitor.extractedValues;*/
     }
 
     /* **************************** Path-supporting overrides ************************************ */
@@ -622,9 +638,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param key the key to look up.
      * @return the value for the key or null if the key is not present in the map.
      */
-    private Object getSuper(String key) {
+    /*private Object getSuper(String key) {
         return super.get(key);
-    }
+    }*/
 
     /**
      * Checks if a value is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
@@ -848,7 +864,6 @@ public class YAML extends LinkedHashMap<String, Object> {
                         visitor.extractedValues.add(value);
                     }
                 } else {
-                    log.info("Continuing traversal");
                     if (key.equals(yPath.get(0))){
                         traverse(shortenedPath, value, visitor);
                     }
