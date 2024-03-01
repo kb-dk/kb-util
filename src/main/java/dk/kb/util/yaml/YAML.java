@@ -668,12 +668,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Override
     @NotNull
     public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
-        /*List<Object> result = getMultiple(path, this);
-        return result.get(0);*/
-
-
         List<Object> result = visit(path, this);
-
         if (result.isEmpty()){
             throw new NotFoundException("Cant find object at path:", path.toString());
         } else {
@@ -712,30 +707,15 @@ public class YAML extends LinkedHashMap<String, Object> {
             path = path.substring(1);
         }
         List<String> yPath = splitPath(path);
-        YAML current = yaml;
 
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
 
-        if (yPath.size() >= 1){
-            String currentPathElement = yPath.get(0);
-            //log.info("Current entry: '{}'", yaml);
-            log.info("YAML has keyset: '{}'", yaml.keySet());
-
-            log.info("traversing: '{}'", currentPathElement);
+        if (!yPath.isEmpty()){
             traverse(yPath, yaml, visitor);
         }
 
-        // THIS RETURN STATEMENT IMPLEMENTS THE TRAVERSAL
         return visitor.extractedValues;
-
-        // The following is handled by the visitor:
-        // * / [*] / [] - Compares every child of the current node
-        // ** / [**]- Compares all children and following grandchildren for the current node
-        // [foo=bar] [foo!=bar] - working
-        //[last] - working
-        // TODO:
-        // Investigate how JQ handles paths as: test.tuplesequence[*].*.name
-        // Switch to new visit method in get
+        // TODO: Investigate how JQ handles paths as: test.tuplesequence[*].*.name
     }
 
 
@@ -745,7 +725,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         } else {
             return yPath.subList(1, yPath.size());
         }
-
     }
 
 
@@ -796,32 +775,26 @@ public class YAML extends LinkedHashMap<String, Object> {
             arrayElementIndex = null;
         }
 
-        log.info("yPath is: '{}' and index value is: '{}'", yPath.get(0), arrayElementIndex);
         if (arrayElementIndex != null){
             switch (arrayElementIndex) {
                 case "*":
-                    // Set yPath entry to *.
-                    yPath.set(0, arrayElementIndex);
-                    convertListToMapAndTraverse(yPath, visitor, list);
                 case "":
                     // Set yPath entry to * as [] and [*] are to be treated equal.
                     yPath.set(0, "*");
                     convertListToMapAndTraverse(yPath, visitor, list);
+                    break;
                 case "last":
                     // Set yPath entry to the last index of the list.
                     yPath.set(0, String.valueOf(list.size()-1));
                     convertListToMapAndTraverse(yPath, visitor, list);
+                    break;
                 default:
                     // Set yPath entry as index number
                     yPath.set(0, arrayElementIndex);
                     convertListToMapAndTraverse(yPath, visitor, list);
             }
         } else {
-            // TODO: This might be de dublicating issue. either convert to map maybe or done something else. I though
-            // about something when entering the train today (29. feb 2024)
-            for (Object entry: list) {
-                traverse(yPath, entry, visitor);
-            }
+            convertListToMapAndTraverse(yPath, visitor,list);
         }
     }
 
@@ -850,6 +823,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         Map<?, ?> map = (Map<?, ?>) yaml;
         List<String> shortenedPath = removeTraversedEntry(yPath);
+
         Matcher conditionalMatch;
         if (!yPath.isEmpty()){
             conditionalMatch = ARRAY_CONDITIONAL.matcher(yPath.get(0));
@@ -871,27 +845,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 }
             }
         } else if (conditionalMatch.matches()) {
-            String key = conditionalMatch.group(1);
-            boolean mustMatch = conditionalMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
-            String value = conditionalMatch.group(3);
-
-            log.info("CONDITIONAL: Key is: '{}', match is: '{}', value is: '{}'", key, mustMatch, value);
-            List<Object> matchingObjects = new ArrayList<>();
-            for (Map.Entry<?,?> entry :map.entrySet()) {
-                matchingObjects.add(conditionalGet(entry.getValue(), key, value, mustMatch));
-            }
-            matchingObjects = matchingObjects.stream().filter(Objects::nonNull).collect(Collectors.toList());
-
-            log.info("result is: '{}' and shortenedPath is: '{}'", matchingObjects, shortenedPath);
-            if (yPath.size() <= 1){
-                for (Object result: matchingObjects) {
-                    visitor.visit(result);
-                }
-            } else {
-                for (Object result: matchingObjects) {
-                    traverse(shortenedPath, result, visitor);
-                }
-            }
+            conditionalTraverse(yPath, visitor, conditionalMatch, map, shortenedPath);
         } else {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = entry.getKey().toString();
@@ -904,10 +858,38 @@ public class YAML extends LinkedHashMap<String, Object> {
                         visitor.extractedValues.add(value);
                     }
                 } else {
+                    log.info("Continuing traversal");
                     if (key.equals(yPath.get(0))){
                         traverse(shortenedPath, value, visitor);
                     }
                 }
+            }
+        }
+    }
+
+    private void conditionalTraverse(List<String> yPath, MultipleValuesVisitor visitor, Matcher conditionalMatch, Map<?, ?> map, List<String> shortenedPath) {
+        String key = conditionalMatch.group(1);
+        boolean mustMatch = conditionalMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
+        String value = conditionalMatch.group(3);
+
+        log.info("CONDITIONAL: Key is: '{}', match is: '{}', value is: '{}'", key, mustMatch, value);
+        List<Object> matchingObjects = new ArrayList<>();
+        for (Map.Entry<?,?> entry : map.entrySet()) {
+            matchingObjects.add(conditionalGet(entry.getValue(), key, value, mustMatch));
+        }
+
+        matchingObjects = matchingObjects.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        log.info("result is: '{}' and shortenedPath is: '{}'", matchingObjects, shortenedPath);
+        if (yPath.size() <= 1){
+            for (Object matchingEntry: matchingObjects) {
+                visitor.visit(matchingEntry);
+            }
+        } else {
+            for (Object matchingEntry: matchingObjects) {
+                traverse(shortenedPath, matchingEntry, visitor);
             }
         }
     }
