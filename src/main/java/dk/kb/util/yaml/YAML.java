@@ -591,21 +591,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         String combinedPath = yamlPath + "[*].*." + key;
 
         return visit(combinedPath, this);
-
-
-        /*if (this.get(yamlPath) instanceof List){
-            return getMultipleFromSubYamlList(yamlPath, key);
-        } else if (this.get(yamlPath) instanceof Iterable){
-            YAML subYaml = this.getSubMap(yamlPath);
-            MultipleValuesVisitor visitor = new MultipleValuesVisitor(yamlPath);
-            visitor.visit(subYaml);
-            return visitor.extractedValues;
-        } else {
-            // If the loop gets to here, then the value isn't iterable, and it is therefore a scalar/atomic value.
-            // Therefore, there is no need to use the visitor.
-            Object subYaml = this.get(yamlPath);
-            return List.of(subYaml.toString());
-        }*/
     }
 
     /**
@@ -621,26 +606,9 @@ public class YAML extends LinkedHashMap<String, Object> {
     private List<Object> getMultipleFromSubYamlList(String yamlPath, String key) {
         String combinedPath = yamlPath + "[*].*." + key;
         return visit(combinedPath, this);
-
-        /*List<YAML> yamlList = this.getYAMLList(yamlPath);
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor(yamlPath);
-        for (YAML yamlPart : yamlList) {
-            visitor.visit(yamlPart);
-        }
-        return visitor.extractedValues;*/
     }
 
     /* **************************** Path-supporting overrides ************************************ */
-
-    /**
-     * Used internally by {@link #oldGet} to avoid endless recursion.
-     *
-     * @param key the key to look up.
-     * @return the value for the key or null if the key is not present in the map.
-     */
-    /*private Object getSuper(String key) {
-        return super.get(key);
-    }*/
 
     /**
      * Checks if a value is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
@@ -931,162 +899,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         yaml = map;
         traverse(yPath, yaml, visitor);
     }
-
-    /*static Object getSubYaml(yamlArrayInformation yamlArrayInfo, YAML current, int i, String path) {
-        Object sub;
-        if (yamlArrayInfo.pathKey.isEmpty()) {
-            sub = current;
-        } else {
-            sub = current.getSuper(yamlArrayInfo.pathKey);
-        }
-        if (sub == null) {
-            throw new NotFoundException(
-                    "Unable to request current sub-element: '" + yamlArrayInfo.pathKey + "'", "path");
-        }
-        return sub;
-    }*/
-
-    // The real implementation of get(path), made flexible so that the entry YAML can be specified
-    /*private Object oldGet(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
-        if (pathO == null) {
-            throw new NullPointerException("Failed to query config for null path");
-        }
-        String path = pathO.toString().trim();
-        if (path.startsWith(".")) {
-            path = path.substring(1);
-        }
-        List<String> pathElements = splitPath(path);
-        YAML current = yaml;
-        for (int i = 0; i < pathElements.size(); i++) {
-            yamlArrayInformation yamlArrayInfo = getYamlArrayInformation(pathElements, 0);
-            Object sub = getSubYaml(yamlArrayInfo, current, i, path);
-
-            // Handle array lookup
-
-            if (yamlArrayInfo.arrayElementIndex != null) { // foo.bar.[2] or foo.bar.[key=val]
-                sub = getArrayElement(sub, yamlArrayInfo.arrayElementIndex, yamlArrayInfo.pathKey, yamlArrayInfo.fullPathElement, path);
-            }
-
-            if (i == pathElements.size() - 1) { //If this is the final pathElement, just return it
-                return extrapolate(sub);
-            } //Otherwise, we require that it is a map so we can continue to query
-
-            //If sub is a list, make it a map with the indexes as keys
-            if (sub instanceof List) {
-                List<Object> list = (List<Object>) sub;
-                LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
-                for (int j = 0; j < list.size(); j++) {
-                    map.put(j + "", extrapolate(list.get(j)));
-                }
-                sub = map;
-            }
-            if (!(sub instanceof Map)) {
-                throw new InvalidTypeException(
-                        "The " + i + "'th sub-element ('" + yamlArrayInfo.pathKey + "') was not a Map but a " +
-                                sub.getClass().getSimpleName(), path);
-            }
-            try { //Update current as the sub we have found
-                current = new YAML((Map<String, Object>) sub, extrapolateSystemProperties, getSubstitutors());
-            } catch (ClassCastException e) {
-                throw new InvalidTypeException(
-                        "Expected a Map<String, Object> for path but got ClassCastException", path, e);
-            }
-        }
-        return current;
-    }*/
-
-    /*static yamlArrayInformation getYamlArrayInformation(List<String> pathElements, int i) {
-        //Get the current level in the YAML.
-        String fullPathElement = pathElements.get(i);
-        Matcher matcher = ARRAY_ELEMENT.matcher(fullPathElement);
-        final String pathKey;
-        final String arrayElementIndex;
-        if (matcher.matches()) { // foo.bar[2]
-            log.info("Found a match");
-            pathKey = matcher.group(1);
-            arrayElementIndex = matcher.group(2);
-        } else {
-            pathKey = fullPathElement;
-            arrayElementIndex = null;
-        }
-        //log.info("Pathkey is: '{}'", pathKey);
-        return new yamlArrayInformation(fullPathElement, pathKey, arrayElementIndex);
-    }*/
-
-    /*static class yamlArrayInformation {
-        public final String fullPathElement;
-        public final String pathKey;
-        public final String arrayElementIndex;
-
-        public yamlArrayInformation(String fullPathElement, String pathKey, String arrayElementIndex) {
-            this.fullPathElement = fullPathElement;
-            this.pathKey = pathKey;
-            this.arrayElementIndex = arrayElementIndex;
-        }
-    }*/
-
-    /**
-     * Extract an element in the given {@code collection}, where {@code arrayElementDesignation} specifies the element,
-     * either as direct index {@code 0, 1, 3...}, the keyword {@code last} or as conditional {@code key=value} or
-     * {@code key!=value}.
-     * <p>
-     * Conditional matching requires the elements in the {@code collection} to be maps, for looking up the key to match.
-     * The first element that satisfies the conditional is returned.
-     *
-     * @param collection      a list or a map containing maps.
-     * @param arrayElementKey the key for looking up an element.
-     * @param pathKey         the key for the {@code collection}. Used for error messages.
-     * @param fullPathElement extended version of the {@code pathKey}. Used for error messages.
-     * @param path            the full path expression. Used for error messages.
-     * @return the first element in the collection that satisfies the given index or condition.
-     */
-    /*public Object getArrayElement(Object collection, String arrayElementKey, String pathKey, String fullPathElement, String path) {
-        final Collection<?> subCollection;
-        if (collection instanceof List) {
-            subCollection = (List<?>) collection;
-        } else if (collection instanceof Map) {
-            subCollection = ((Map<?, ?>) collection).values();
-        } else {
-            throw new InvalidTypeException(String.format(
-                    Locale.ENGLISH, "Key %s requested but the element %s was of type %s instead of Collection",
-                    fullPathElement, pathKey, collection.getClass().getSimpleName()), "path");
-        }
-
-        // Check for & handle conditional: foo.bar[zoo=baz]
-        Matcher arrayMatch = ARRAY_CONDITIONAL.matcher(arrayElementKey);
-        if (arrayMatch.matches()) {
-            String key = arrayMatch.group(1);
-            boolean mustMatch = arrayMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
-            String value = arrayMatch.group(3);
-            return subCollection.stream().
-                    map(element -> conditionalGet(element, key, value, mustMatch)).
-                    filter(Objects::nonNull).
-                    findFirst().
-                    orElseThrow(() -> new IndexOutOfBoundsException(String.format(
-                            Locale.ENGLISH,
-                            "The collection conditional %s %s %s could not be satisfied for path element %s in path %s",
-                            key, mustMatch ? "=" : "!=", value, fullPathElement, "path"))
-                    );
-        }
-
-        // Index based lookup: foo.bar[3] or foo.bar[last]
-        int index;
-        try {
-            index = "last".equals(arrayElementKey) ?
-                    subCollection.size() - 1 :
-                    Integer.parseInt(arrayElementKey);
-        } catch (NumberFormatException e) {
-            throw new NumberFormatException(
-                    "Expected integer, 'last' or conditional for array lookup but got '" + arrayElementKey + "'");
-        }
-        if (index >= subCollection.size()) {
-            throw new IndexOutOfBoundsException(String.format(
-                    Locale.ENGLISH, "The index %d is >= collection size %d for path element %s in path %s",
-                    index, subCollection.size(), fullPathElement, "path"));
-        }
-        return subCollection.stream().skip(index).findFirst().orElseThrow(
-                () -> new RuntimeException("This should not happen..."));
-    }*/
 
     /**
      * Checks if the conditional is satisfied for the given element and if so returns it.
