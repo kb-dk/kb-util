@@ -851,7 +851,12 @@ public class YAML extends LinkedHashMap<String, Object> {
                 traverse(yPath, entry.getValue(), visitor);
                 traverse(shortenedPath, entry.getValue(), visitor);
             }
-        } else if (yPath.get(0).equals("*")) {
+        } else if (yPath.get(0).equals("**") && yPath.size() == 1) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                visitor.visit(entry.getValue());
+            }
+        }
+        else if (yPath.get(0).equals("*")) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (yPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
