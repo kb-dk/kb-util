@@ -747,7 +747,7 @@ class YAMLTest {
     @Test
     public void testWildcardList() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> actual = yaml.getMultiple("lasting.**");
+        List<Object> actual = yaml.visit("lasting.**", yaml);
         assertEquals("[foo, baz, boom]", actual.toString(),
                 "Using double wildcard with lists should return all elements");
     }
@@ -755,12 +755,37 @@ class YAMLTest {
     @Test
     public void testWildcardLast() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> actual = yaml.getMultiple("lasting.*.one[last]");
+        List<Object> actual = yaml.visit("lasting.*.one[last]", yaml);
         assertEquals("[foo, boom]", actual.toString(),
                 "Using [last] with multiple should not mix indexes");
     }
 
-    // TODO: Add test for extracting list with extrapolate
+    @Test
+    public void testGetDirectPathSubstitution() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
+                .extrapolate(true);
+        Object actual = yaml.get("ypath.direct");
+        assertEquals("foo", actual.toString(),
+                "Path substitution should work for get direct path");
+    }
+
+    @Test
+    public void testGetPathSubstitution() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
+                .extrapolate(true);
+        Object actual = yaml.get("ypath.sublist.*");
+        assertEquals("foo", actual.toString(),
+                "Path substitution should work for get with wildcard extraction of lists");
+    }
+
+    @Test
+    public void testVisitPathSubstitution() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
+                .extrapolate(true);
+        List<Object> actual = yaml.visit("ypath.sublist.*", yaml);
+        assertEquals("[foo]", actual.toString(),
+                "Path substitution should work for visit with wildcard extraction of lists");
+    }
 
     @Test
     public void testGetMultipleOld() throws IOException {

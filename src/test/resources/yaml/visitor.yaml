@@ -75,3 +75,9 @@ lasting:
     sub:
       - bar
       - boom
+
+ypath:
+  major: foo
+  sublist:
+    - ${path:ypath.major}
+  direct: ${path:ypath.major}
