@@ -913,7 +913,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      *              is checked for '[' and ']'.
      */
     private static void removeBracketsFromPathElement(List<String> yPath) {
-        if (!yPath.isEmpty() && yPath.get(0).startsWith("[") && yPath.get(0).endsWith("]")){
+        Matcher arrayMatcher = ARRAY_ELEMENT.matcher(yPath.get(0));
+
+        if (arrayMatcher.matches()){
             String cleaned = yPath.get(0).substring(1, yPath.get(0).length()-1);
             yPath.set(0, cleaned);
         }
@@ -921,7 +923,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Convert a YAML list to a YAML map containing all elements, where the key is the index and continue the traversal
-     * of the YAML structure through the {@link #traverse(List, Object, MultipleValuesVisitor)}-method.
+     * of the YAML structure through the {@link #traverse(List, Object, YAMLVisitor)}-method.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
      *              delivered through the {@link #visit(Object path, YAML yaml)}-method.
      * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
