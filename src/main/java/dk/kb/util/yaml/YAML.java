@@ -749,13 +749,13 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Traverse a YAML List recursively and collect matching paths to the input visitor.
      * The implementation supports retrieval of multiple matching results.
-     * <p> <br>
+     * <p>
      * It supports placeholders such as foo[] and foo[*], which both of them returns all elements in this list.
      * This can be used in conjunction with further traversal such as foo[].bar. The implementation also supports the
      * syntax foo[last], which will return the last element in the list. Standard index based lookup such as foo[2] is
      * also supported. The implementation supports dot-array syntax as well. This means that the queries foo[bar] and
      * foo.[bar] returns the same value.
-     * <p> <br>
+     * <p>
      * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
      * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
