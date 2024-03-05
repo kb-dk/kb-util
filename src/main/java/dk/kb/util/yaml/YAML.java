@@ -664,6 +664,25 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
+    /**
+     * Resolves Objects which match the given path in the YAML. Path elements are separated by {@code .} and can be either
+     * <ul>
+     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
+     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
+     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
+     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
+     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
+     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
+     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
+     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
+     *  </ul>
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
+     * <p>
+     *
+     * @param path0 path to the Objects.
+     * @param yaml which is traversed for {@code path0}.
+     * @return a list of matching objects. Will never return null, will rather throw exceptions
+     */
     public List<Object> getMultiple(Object path0, YAML yaml) {
         if (path0 == null) {
             throw new NullPointerException("Failed to query config for null path");
@@ -714,7 +733,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
 
     /**
-     * Method which recursively traverses a YAML file for entries that match the keys from {@code yPath}.
+     * Recursively traverse a YAML file for entries that match the keys from {@code yPath}.
      * @param yPath path in YAML file. The path is split into a list for each level/part of the path.
      * @param yaml a YAML object containing the full YAML which is to be traversed.
      * @param visitor which collects entries that match the input path.
