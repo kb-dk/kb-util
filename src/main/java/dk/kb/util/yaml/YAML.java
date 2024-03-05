@@ -372,15 +372,16 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             o = get(path);
         } catch (NotFoundException | InvalidTypeException  e) {
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
         try {
             return Integer.valueOf(o.toString());
         } catch (NumberFormatException e) {
-            log.warn("Unable to parse '" + o.toString() + "' as Integer", o);
+            log.info("Unable to parse '" + o.toString() + "' as Integer", o);
             return defaultValue;
         } catch (NullPointerException e){
-            log.warn("No value has been found for path: '" + path +"'");
+            log.info("No value has been found for path: '" + path +"'");
             return defaultValue;
         }
     }
@@ -525,6 +526,9 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             return getBoolean(path);
         } catch (NotFoundException | InvalidTypeException e) {
+            return defaultValue;
+        } catch (NullPointerException e){
+            log.info("No value has been found for path: '{}'.", path);
             return defaultValue;
         }
     }
