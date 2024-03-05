@@ -62,3 +62,16 @@ subtrees:
       secondary:
         name: zab
         age: 121
+
+integerkeys:
+  1: foo
+  2: bar
+
+lasting:
+  one:
+    sub:
+      - foo
+  two:
+    sub:
+      - bar
+      - boom
