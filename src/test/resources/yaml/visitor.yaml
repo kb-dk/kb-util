@@ -80,4 +80,7 @@ ypath:
   major: foo
   sublist:
     - ${path:ypath.major}
+  sublist2:
+    - submap:
+        ref: ${path:ypath.major}
   direct: ${path:ypath.major}

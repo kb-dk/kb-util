@@ -788,6 +788,15 @@ class YAMLTest {
     }
 
     @Test
+    public void testVisitPathSubstitutionSubmap() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
+                .extrapolate(true);
+        List<Object> actual = yaml.visit("ypath.sublist2[last].submap.ref", yaml);
+        assertEquals("[foo]", actual.toString(),
+                "Path substitution should work for visit trhough list down to map");
+    }
+
+    @Test
     public void testGetMultipleOld() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
