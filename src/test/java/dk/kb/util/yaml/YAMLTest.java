@@ -13,17 +13,11 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 class YAMLTest {
     @SuppressWarnings("ConstantConditions")
@@ -721,6 +715,53 @@ class YAMLTest {
         List<Object> result = test.visit(yPath, test);
         assertEquals(1, result.size());
     }
+
+    @Test
+    public void testNonexplicitListGet() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        Object listO = yaml.get("test.arrayofstrings");
+        assertTrue(listO instanceof List, "The extracted type should be a list");
+    }
+
+    @Test
+    public void testExplicitListSkipping() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        Object listO = yaml.get("test.tuplesequence.[].item2.name");
+        assertEquals("bar", listO, "");
+    }
+
+    @Test
+    public void testDoubleWildcardLast() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        assertEquals(1, yaml.get("test.anotherlevel.name.**"),
+                "Double wildcard at the end of the path");
+    }
+
+    @Test
+    public void testIllegalImplicitListSkipping() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        assertThrows(NotFoundException.class, () -> yaml.get("test.tuplesequence.item2.name"),
+                "Requesting a submap from a list withput explicit list handling should fail");
+    }
+
+    @Test
+    public void testWildcardList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<Object> actual = yaml.getMultiple("lasting.**");
+        assertEquals("[foo, baz, boom]", actual.toString(),
+                "Using double wildcard with lists should return all elements");
+    }
+
+    @Test
+    public void testWildcardLast() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<Object> actual = yaml.getMultiple("lasting.*.one[last]");
+        assertEquals("[foo, boom]", actual.toString(),
+                "Using [last] with multiple should not mix indexes");
+    }
+
+    // TODO: Add test for extracting list with extrapolate
+
     @Test
     public void testGetMultipleOld() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
