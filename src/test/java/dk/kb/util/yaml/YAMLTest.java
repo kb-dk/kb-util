@@ -797,6 +797,15 @@ class YAMLTest {
     }
 
     @Test
+    public void testVisitPathSubstitutionConditional() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
+                .extrapolate(true);
+        List<Object> actual = yaml.visit("ypath.maps[order=first].value", yaml);
+        assertEquals("[foo]", actual.toString(),
+                "Path substitution should work for visit using conditionals");
+    }
+
+    @Test
     public void testGetMultipleOld() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
