@@ -738,9 +738,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yaml a YAML object containing the full YAML which is to be traversed.
      * @param visitor which collects entries that match the input path.
      */
-    private void traverse(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
+    private void traverse(List<String> yPath, Object yaml, YAMLVisitor visitor) {
         if (yaml instanceof Map) {
-            traverseMap(yPath, yaml, visitor);
+            traverseMap(yPath, yaml, (MultipleValuesVisitor) visitor);
         } else if (yaml instanceof List) {
             traverseList(yPath, yaml, visitor);
         }
@@ -764,7 +764,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param visitor used to collect values that match the given path. This visitor only collects values to its
      *                internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      */
-    private void traverseList(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
+    private void traverseList(List<String> yPath, Object yaml, YAMLVisitor visitor) {
         List<Object> list = (List<Object>) yaml;
 
         Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
@@ -864,7 +864,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-    private void conditionalTraverse(List<String> yPath, MultipleValuesVisitor visitor, Matcher conditionalMatch, Map<?, ?> map, List<String> shortenedPath) {
+    private void conditionalTraverse(List<String> yPath, YAMLVisitor visitor, Matcher conditionalMatch, Map<?, ?> map, List<String> shortenedPath) {
         String key = conditionalMatch.group(1);
         boolean mustMatch = conditionalMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
         String value = conditionalMatch.group(3);
@@ -913,7 +913,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      * @param list the YAML list which is to be converted to a YAML map.
      */
-    private void convertListToMapAndTraverse(List<String> yPath, MultipleValuesVisitor visitor, List<Object> list) {
+    private void convertListToMapAndTraverse(List<String> yPath, YAMLVisitor visitor, List<Object> list) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
         Object yaml;
         for (int j = 0; j < list.size(); j++) {
