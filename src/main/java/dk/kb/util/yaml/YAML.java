@@ -731,6 +731,22 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
+    /**
+     * Create a new instance of the input list of yPath elements, where the first element has been substituted.
+     * @param yPath list of elements from a YAML path.
+     * @param newEntry a new entry, which is to replace the first entry in {@code yPath}.
+     * @return a new List containing all values from yPath, except the first, which has been substituted with {@code newEntry}.
+     */
+    private static List<String> replaceFirstEntryInYPath(List<String> yPath, String newEntry){
+        if (yPath.isEmpty()){
+            return yPath;
+        } else {
+            List<String> updatedList = new ArrayList<>(yPath);
+            updatedList.set(0, newEntry);
+            return updatedList;
+        }
+    }
+
 
     /**
      * Recursively traverse a YAML file for entries that match the keys from {@code yPath}.
@@ -780,18 +796,18 @@ public class YAML extends LinkedHashMap<String, Object> {
                 case "*":
                 case "":
                     // Set yPath entry to * as [] and [*] are to be treated equal.
-                    yPath.set(0, "*");
-                    convertListToMapAndTraverse(yPath, visitor, list);
+                    List<String> asterixYPath = replaceFirstEntryInYPath(yPath, "*");
+                    convertListToMapAndTraverse(asterixYPath, visitor, list);
                     break;
                 case "last":
                     // Set yPath entry to the last index of the list.
-                    yPath.set(0, String.valueOf(list.size()-1));
-                    convertListToMapAndTraverse(yPath, visitor, list);
+                    List<String> lastYPath = replaceFirstEntryInYPath(yPath, String.valueOf(list.size()-1));
+                    convertListToMapAndTraverse(lastYPath, visitor, list);
                     break;
                 default:
                     // Set yPath entry as index number
-                    yPath.set(0, arrayElementIndex);
-                    convertListToMapAndTraverse(yPath, visitor, list);
+                    List<String> indexYPath = replaceFirstEntryInYPath(yPath, arrayElementIndex);
+                    convertListToMapAndTraverse(indexYPath, visitor, list);
             }
         } else {
             convertListToMapAndTraverse(yPath, visitor,list);
@@ -818,25 +834,24 @@ public class YAML extends LinkedHashMap<String, Object> {
      *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      */
     private void traverseMap(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
+        if (yPath.isEmpty()) {
+            return;
+        }
+
         // Quick fix cleaning entries as [foo=bar] to foo=bar.
         removeBracketsFromPathElement(yPath);
 
         Map<?, ?> map = (Map<?, ?>) yaml;
         List<String> shortenedPath = removeTraversedEntry(yPath);
 
-        Matcher conditionalMatch;
-        if (!yPath.isEmpty()){
-            conditionalMatch = ARRAY_CONDITIONAL.matcher(yPath.get(0));
-        } else {
-            conditionalMatch = ARRAY_CONDITIONAL.matcher("");
-        }
+        Matcher conditionalMatch = ARRAY_CONDITIONAL.matcher(yPath.get(0));
 
-        if (!yPath.isEmpty() && yPath.get(0).equals("**") && yPath.size() > 1){
+        if (yPath.get(0).equals("**") && yPath.size() > 1){
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 traverse(yPath, entry.getValue(), visitor);
                 traverse(shortenedPath, entry.getValue(), visitor);
             }
-        } else if (!yPath.isEmpty() && yPath.get(0).equals("*")) {
+        } else if (yPath.get(0).equals("*")) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (yPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
