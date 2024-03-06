@@ -660,7 +660,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (result.isEmpty()){
             throw new NotFoundException("Cant find object at path:", path.toString());
         } else {
-            return extrapolate(result.get(0));
+            return result.get(0);
         }
     }
 
@@ -853,7 +853,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
         } else if (yPath.get(0).equals("**") && yPath.size() == 1) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
-                visitor.visit(entry.getValue());
+                visitor.visit(extrapolate(entry.getValue()));
             }
         }
         else if (yPath.get(0).equals("*")) {
@@ -861,7 +861,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 if (yPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
                 } else {
-                    visitor.visit(entry.getValue());
+                    visitor.visit(extrapolate(entry.getValue()));
                 }
             }
         } else if (conditionalMatch.matches()) {
@@ -873,7 +873,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
                 if (yPath.size() == 1){
                     if (key.equals(yPath.get(0))){
-                        visitor.extractedValues.add(value);
+                        visitor.extractedValues.add(extrapolate(value));
                     }
                 } else {
                     if (key.equals(yPath.get(0))){
@@ -941,6 +941,8 @@ public class YAML extends LinkedHashMap<String, Object> {
         for (int j = 0; j < list.size(); j++) {
             map.put(j + "", extrapolate(list.get(j)));
         }
+        YAML testYaml = new YAML(map, extrapolateSystemProperties, getSubstitutors());
+        log.info(String.valueOf(testYaml));
         yaml = map;
         traverse(yPath, yaml, visitor);
     }
