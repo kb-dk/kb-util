@@ -332,6 +332,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             return getShort(path);
         } catch (NotFoundException | InvalidTypeException e) {
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
     }
@@ -378,10 +379,10 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             return Integer.valueOf(o.toString());
         } catch (NumberFormatException e) {
-            log.info("Unable to parse '" + o.toString() + "' as Integer", o);
+            log.debug("Unable to parse '" + o.toString() + "' as Integer", o);
             return defaultValue;
         } catch (NullPointerException e){
-            log.info("No value has been found for path: '" + path +"'");
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
     }
@@ -419,6 +420,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             return getLong(path);
         } catch (NotFoundException | InvalidTypeException e) {
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
     }
@@ -456,6 +458,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             return getDouble(path);
         } catch (NotFoundException | InvalidTypeException e) {
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
     }
@@ -492,6 +495,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             return getFloat(path);
         } catch (NotFoundException | InvalidTypeException e) {
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
     }
@@ -525,10 +529,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     public Boolean getBoolean(String path, Boolean defaultValue) throws NullPointerException {
         try {
             return getBoolean(path);
-        } catch (NotFoundException | InvalidTypeException e) {
-            return defaultValue;
-        } catch (NullPointerException e){
-            log.info("No value has been found for path: '{}'.", path);
+        } catch (NotFoundException | InvalidTypeException | NullPointerException e) {
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
     }
@@ -563,6 +565,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         try {
             return getString(path);
         } catch (NotFoundException | InvalidTypeException e) {
+            log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
     }
