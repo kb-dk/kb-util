@@ -643,6 +643,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
      * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
      * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
+     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
+     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
+     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
      *  </ul> 
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      * <p>
