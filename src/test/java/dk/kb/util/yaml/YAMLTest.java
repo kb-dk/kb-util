@@ -755,7 +755,7 @@ class YAMLTest {
     @Test
     public void testWildcardLast() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> actual = yaml.visit("lasting.*.one[last]", yaml);
+        List<Object> actual = yaml.visit("lasting.*.sub[last]", yaml);
         assertEquals("[foo, boom]", actual.toString(),
                 "Using [last] with multiple should not mix indexes");
     }

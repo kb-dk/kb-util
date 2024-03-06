@@ -854,7 +854,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         } else if (yPath.get(0).equals("**") && yPath.size() == 1) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (entry.getValue() instanceof Map || entry.getValue() instanceof List){
-                    log.info("traversing entry: '{}'", entry);
                     traverse(yPath, entry.getValue(), visitor);
                 } else {
                     visitor.visit(extrapolate(entry.getValue()));

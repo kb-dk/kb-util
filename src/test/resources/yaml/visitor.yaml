@@ -67,6 +67,8 @@ integerkeys:
   1: foo
   2: bar
 
+# lasting.*.one[last]
+# returner foo, boom
 lasting:
   one:
     sub:
