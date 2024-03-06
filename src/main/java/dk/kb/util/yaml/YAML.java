@@ -931,7 +931,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         Matcher arrayMatcher = ARRAY_ELEMENT.matcher(yPath.get(0));
 
         if (arrayMatcher.matches()){
-            String cleaned = yPath.get(0).substring(1, yPath.get(0).length()-1);
+            String cleaned = arrayMatcher.group(2);
             yPath.set(0, cleaned);
         }
     }
