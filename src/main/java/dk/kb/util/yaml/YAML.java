@@ -574,21 +574,23 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Resolves all values related to a given key, from a YAML structure. All values that have the specified key are
      * returned as part of a list.
      * @deprecated
-     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML)} instead.
+     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
      * @param key the key to look for in the input YAML.
      * @return a list of all values that can be cast to strings.
      */
     @Deprecated
     public List<Object> getMultiple(String key){
         String correctedPath = "**." + key;
-        return visit(correctedPath, this);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        visit(correctedPath, this, visitor);
+        return visitor.extractedValues;
     }
 
     /**
      * Resolves all values related to a given key, from a part of a YAML structure. All values that are children of the
      * input {@code yamlPath} and are specified with the input {@code key} are returned as a list.
      * @deprecated
-     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML)} instead.
+     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
      * @param yamlPath the specific part of a YAML file, that is to be queried for values.
      * @param key all values that are associated with this key are added to the returned list.
      * @return a list of all scalar values that are associated with the input key.
@@ -597,14 +599,16 @@ public class YAML extends LinkedHashMap<String, Object> {
     public List<Object> getMultipleFromSubYaml(String yamlPath, String key){
         String combinedPath = yamlPath + "[*].*." + key;
 
-        return visit(combinedPath, this);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        visit(combinedPath, this, visitor);
+        return visitor.extractedValues;
     }
 
     /**
      * Helper for the method {@link #getMultipleFromSubYaml(String, String)} used to visit a list-part of a YAML file.
      * This method gets a list from the {@code yamlPath} and looks for values that are associated with the input {@code key}.
      * @deprecated
-     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML)} instead.
+     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
      * @param yamlPath to a list in the overall YAML being parsed.
      * @param key to extract values for.
      * @return a new list of all values, that are represented in the YAML List by the input {@code key}.
@@ -612,7 +616,9 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Deprecated
     private List<Object> getMultipleFromSubYamlList(String yamlPath, String key) {
         String combinedPath = yamlPath + "[*].*." + key;
-        return visit(combinedPath, this);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        visit(combinedPath, this, visitor);
+        return visitor.extractedValues;
     }
 
     /* **************************** Path-supporting overrides ************************************ */
@@ -662,11 +668,13 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Override
     @NotNull
     public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
-        List<Object> result = visit(path, this);
-        if (result.isEmpty()){
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        visit(path, this, visitor);
+
+        if (visitor.extractedValues.isEmpty()){
             throw new NotFoundException("Cant find object at path:", path.toString());
         } else {
-            return result.get(0);
+            return visitor.extractedValues.get(0);
         }
     }
 
@@ -698,12 +706,14 @@ public class YAML extends LinkedHashMap<String, Object> {
             path = path.substring(1);
         }
 
-        return yaml.visit(path, this);
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        yaml.visit(path, this, visitor);
+        return visitor.extractedValues;
     }
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
 
-    public List<Object> visit(Object pathO, YAML yaml) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public void visit(Object pathO, YAML yaml, YAMLVisitor visitor) throws NotFoundException, InvalidTypeException, NullPointerException {
         if (pathO == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
@@ -713,13 +723,13 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         List<String> yPath = splitPath(path);
 
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        //MultipleValuesVisitor visitor = new MultipleValuesVisitor();
 
         if (!yPath.isEmpty()){
             traverse(yPath, yaml, visitor);
         }
 
-        return visitor.extractedValues;
+        //return visitor.extractedValues;
         // TODO: Investigate how JQ handles paths as: test.tuplesequence[*].*.name
     }
 
@@ -781,7 +791,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
      * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(Object path, YAML yaml)}-method.
+     *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a List.
      * @param visitor used to collect values that match the given path. This visitor only collects values to its
      *                internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
@@ -834,7 +844,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
      * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(Object path, YAML yaml)}-method.
+     *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a Map.
      * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
      *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
@@ -940,7 +950,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Convert a YAML list to a YAML map containing all elements, where the key is the index and continue the traversal
      * of the YAML structure through the {@link #traverse(List, Object, YAMLVisitor)}-method.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(Object path, YAML yaml)}-method.
+     *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
      *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      * @param list the YAML list which is to be converted to a YAML map.

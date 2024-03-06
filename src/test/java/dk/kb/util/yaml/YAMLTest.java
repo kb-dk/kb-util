@@ -610,24 +610,26 @@ class YAMLTest {
     @Test
     public void testGetMultiple() throws IOException {
         // This visits everything called name. Therefore, it currently returns 16 elements where 15 of these are scalars and a single one is a map itself.
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john",
                 "Thyra", "Gunhild", "Margrethe");
 
-        List<Object> extractedNames = yaml.visit("**.name", yaml);
-        assertEquals(16, extractedNames.size());
-        assertTrue(extractedNames.containsAll(testValues));
+        yaml.visit("**.name", yaml, visitor);
+        assertEquals(16, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.containsAll(testValues));
     }
 
     @Test
     public void testSubsetFromGetMultiple() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
 
-        List<Object> extractedNames = yaml.visit("test.tuplesequence[*].*.name", yaml);
-        assertEquals(3, extractedNames.size());
-        assertTrue(extractedNames.containsAll(testValues));
-        assertFalse(extractedNames.contains("fooz"));
+        yaml.visit("test.tuplesequence[*].*.name", yaml, visitor);
+        assertEquals(3, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.containsAll(testValues));
+        assertFalse(visitor.extractedValues.contains("fooz"));
 
     }
 
@@ -635,85 +637,93 @@ class YAMLTest {
     public void testSubsetFromGetMultipleEmptyBrackets() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
-
-        List<Object> extractedNames = yaml.visit("test.tuplesequence[].*.name", yaml);
-        assertEquals(3, extractedNames.size());
-        assertTrue(extractedNames.containsAll(testValues));
-        assertFalse(extractedNames.contains("fooz"));
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        yaml.visit("test.tuplesequence[].*.name", yaml, visitor);
+        assertEquals(3, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.containsAll(testValues));
+        assertFalse(visitor.extractedValues.contains("fooz"));
 
     }
 
     @Test
     public void testConditionalArrayLookupInVisit() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> extractedNames = yaml.visit("test.arrayofqueens[name=Thyra].name", yaml);
-        assertEquals(1, extractedNames.size());
-        assertTrue(extractedNames.contains("Thyra"));
+        yaml.visit("test.arrayofqueens[name=Thyra].name", yaml, visitor);
+        assertEquals(1, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.contains("Thyra"));
     }
 
     @Test
     public void testNegativeConditionalArrayLookupInVisit() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> extractedNames = yaml.visit("test.arrayofqueens[name!=Thyra].name", yaml);
-        assertEquals(2, extractedNames.size());
-        assertFalse(extractedNames.contains("Thyra"));
+        yaml.visit("test.arrayofqueens[name!=Thyra].name", yaml, visitor);
+        assertEquals(2, visitor.extractedValues.size());
+        assertFalse(visitor.extractedValues.contains("Thyra"));
     }
 
     @Test
     public void testIndexBasedLookupInVisit() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> extractedNames = yaml.visit("test.arrayofqueens[0].name", yaml);
-        assertEquals(1, extractedNames.size());
-        assertTrue(extractedNames.contains("Thyra"));
+        yaml.visit("test.arrayofqueens[0].name", yaml, visitor);
+        assertEquals(1, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.contains("Thyra"));
     }
 
     @Test
     public void testLastLookupInVisit() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> extractedNames = yaml.visit("test.arrayofqueens[last].name", yaml);
-        assertEquals(1, extractedNames.size());
-        assertTrue(extractedNames.contains("Margrethe"));
+        yaml.visit("test.arrayofqueens[last].name", yaml, visitor);
+        assertEquals(1, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.contains("Margrethe"));
 
     }
 
     @Test
     public void testGetMultipleFromSubYaml() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("foo", "bar", "baz");
-        List<Object> extractedNames = yaml.visit("test.tuplesequence[*].*.name", yaml);
-        assertEquals(3, extractedNames.size());
-        assertTrue(extractedNames.containsAll(testValues));
+        yaml.visit("test.tuplesequence[*].*.name", yaml, visitor);
+        assertEquals(3, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.containsAll(testValues));
     }
 
     // The YAML structure has subtrees under the sequence.
     // The task here is to get all 'name's under 'primary', but not those under 'secondary'
     @Test
     public void testSequenceWithSubtrees() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> expectedNames = Arrays.asList("foo", "bar", "baz");
-        List<Object> extractedNames = yaml.visit("subtrees[*].*.primary.name", yaml);
+        yaml.visit("subtrees[*].*.primary.name", yaml, visitor);
 
-        assertEquals(expectedNames, extractedNames);
+        assertEquals(expectedNames, visitor.extractedValues);
     }
 
 
     @Test
     public void testGetMultipleFromSubYamlOnScalar() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
 
-        List<Object> extractedNames = yaml.visit("anothertest.name", yaml);
-        assertEquals(1, extractedNames.size());
-        assertTrue(extractedNames.contains("qux"));
+        yaml.visit("anothertest.name", yaml, visitor);
+        assertEquals(1, visitor.extractedValues.size());
+        assertTrue(visitor.extractedValues.contains("qux"));
     }
 
     @Test
     public void testNewTraverserSingleAsterix() throws IOException {
         YAML test = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
 
         String yPath = "*.somestring";
 
-        List<Object> result = test.visit(yPath, test);
-        assertEquals(1, result.size());
+        test.visit(yPath, test, visitor);
+        assertEquals(1, visitor.extractedValues.size());
     }
 
     @Test
@@ -746,17 +756,19 @@ class YAMLTest {
 
     @Test
     public void testWildcardList() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> actual = yaml.visit("lasting.**", yaml);
-        assertEquals("[foo, bar, boom]", actual.toString(),
+        yaml.visit("lasting.**", yaml, visitor);
+        assertEquals("[foo, bar, boom]", visitor.extractedValues.toString(),
                 "Using double wildcard with lists should return all elements");
     }
 
     @Test
     public void testWildcardLast() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<Object> actual = yaml.visit("lasting.*.sub[last]", yaml);
-        assertEquals("[foo, boom]", actual.toString(),
+        yaml.visit("lasting.*.sub[last]", yaml, visitor);
+        assertEquals("[foo, boom]", visitor.extractedValues.toString(),
                 "Using [last] with multiple should not mix indexes");
     }
 
@@ -780,19 +792,21 @@ class YAMLTest {
 
     @Test
     public void testVisitPathSubstitution() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
                 .extrapolate(true);
-        List<Object> actual = yaml.visit("ypath.sublist.*", yaml);
-        assertEquals("[foo]", actual.toString(),
+        yaml.visit("ypath.sublist.*", yaml, visitor);
+        assertEquals("[foo]", visitor.extractedValues.toString(),
                 "Path substitution should work for visit with wildcard extraction of lists");
     }
 
     @Test
     public void testVisitPathSubstitutionSubmap() throws IOException {
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
                 .extrapolate(true);
-        List<Object> actual = yaml.visit("ypath.sublist2[last].submap.ref", yaml);
-        assertEquals("[foo]", actual.toString(),
+        yaml.visit("ypath.sublist2[last].submap.ref", yaml, visitor);
+        assertEquals("[foo]", visitor.extractedValues.toString(),
                 "Path substitution should work for visit trhough list down to map");
     }
 
@@ -800,8 +814,9 @@ class YAMLTest {
     public void testVisitPathSubstitutionConditional() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
                 .extrapolate(true);
-        List<Object> actual = yaml.visit("ypath.maps[order=first].value", yaml);
-        assertEquals("[foo]", actual.toString(),
+        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        yaml.visit("ypath.maps[order=first].value", yaml, visitor);
+        assertEquals("[foo]", visitor.extractedValues.toString(),
                 "Path substitution should work for visit using conditionals");
     }
 
