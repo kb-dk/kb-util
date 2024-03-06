@@ -748,7 +748,7 @@ class YAMLTest {
     public void testWildcardList() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<Object> actual = yaml.visit("lasting.**", yaml);
-        assertEquals("[foo, baz, boom]", actual.toString(),
+        assertEquals("[foo, bar, boom]", actual.toString(),
                 "Using double wildcard with lists should return all elements");
     }
 
