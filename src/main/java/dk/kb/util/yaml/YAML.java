@@ -815,8 +815,6 @@ public class YAML extends LinkedHashMap<String, Object> {
                 case "last":
                     // Set yPath entry to the last index of the list.
                     YPath lastYPath = yPath.replaceFirst(String.valueOf(list.size() - 1));
-                    log.info("first list size is: '{}'", list.size());
-                    log.info(lastYPath.getFirst());
                     convertListToMapAndTraverse(lastYPath, visitor, list);
                     break;
                 default:
@@ -854,48 +852,49 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
 
         // Quick fix cleaning entries as [foo=bar] to foo=bar.
-        removeBracketsFromPathElement(yPath);
+        YPath cleanedYPath = removeBracketsFromPathElement(yPath);
+        log.info(yPath.getFirst());
 
         Map<?, ?> map = (Map<?, ?>) yaml;
-        YPath shortenedPath = yPath.removeFirst();
+        YPath shortenedPath = cleanedYPath.removeFirst();
 
-        Matcher conditionalMatch = ARRAY_CONDITIONAL.matcher(yPath.getFirst());
+        Matcher conditionalMatch = ARRAY_CONDITIONAL.matcher(cleanedYPath.getFirst());
 
-        if (yPath.getFirst().equals("**") && yPath.size() > 1){
+        if (cleanedYPath.getFirst().equals("**") && cleanedYPath.size() > 1){
             for (Map.Entry<?, ?> entry : map.entrySet()) {
-                traverse(yPath, entry.getValue(), visitor);
+                traverse(cleanedYPath, entry.getValue(), visitor);
                 traverse(shortenedPath, entry.getValue(), visitor);
             }
-        } else if (yPath.getFirst().equals("**") && yPath.size() == 1) {
+        } else if (cleanedYPath.getFirst().equals("**") && cleanedYPath.size() == 1) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (entry.getValue() instanceof Map || entry.getValue() instanceof List){
-                    traverse(yPath, entry.getValue(), visitor);
+                    traverse(cleanedYPath, entry.getValue(), visitor);
                 } else {
                     visitor.visit(extrapolate(entry.getValue()));
                 }
             }
         }
-        else if (yPath.getFirst().equals("*")) {
+        else if (cleanedYPath.getFirst().equals("*")) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
-                if (yPath.size() > 1) {
+                if (cleanedYPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
                 } else {
                     visitor.visit(extrapolate(entry.getValue()));
                 }
             }
         } else if (conditionalMatch.matches()) {
-            conditionalTraverse(yPath, visitor, conditionalMatch, map, shortenedPath);
+            conditionalTraverse(cleanedYPath, visitor, conditionalMatch, map, shortenedPath);
         } else {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = entry.getKey().toString();
                 Object value = entry.getValue();
 
-                if (yPath.size() == 1){
-                    if (key.equals(yPath.getFirst())){
+                if (cleanedYPath.size() == 1){
+                    if (key.equals(cleanedYPath.getFirst())){
                         visitor.extractedValues.add(extrapolate(value));
                     }
                 } else {
-                    if (key.equals(yPath.getFirst())){
+                    if (key.equals(cleanedYPath.getFirst())){
                         traverse(shortenedPath, value, visitor);
                     }
                 }
@@ -939,12 +938,26 @@ public class YAML extends LinkedHashMap<String, Object> {
     private static YPath removeBracketsFromPathElement(YPath yPath) {
         Matcher arrayMatcher = ARRAY_ELEMENT.matcher(yPath.getFirst());
 
+        log.info("Before modifying: '{}'", yPath.getFirst());
+
         if (arrayMatcher.matches()){
             String cleaned = arrayMatcher.group(2);
             YPath replacedYPath = yPath.replaceFirst(cleaned);
+
+            log.info("After modifying: '{}'", replacedYPath.getFirst());
+
+            String intermediary = replacedYPath.getFirst();
+            intermediary = intermediary.replaceAll("[\\[\\]]", "");
+            log.info("Intermediary after replacement: '{}'", intermediary);
+
             return replacedYPath;
         } else {
-            return  yPath;
+            String intermediary = yPath.getFirst();
+            intermediary = intermediary.replaceAll("[\\[\\]]", "");
+            log.info("Intermediary after replacement: '{}'", intermediary);
+
+
+            return yPath.replaceFirst(intermediary);
         }
     }
 
