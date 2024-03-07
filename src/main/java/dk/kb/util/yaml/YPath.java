@@ -120,6 +120,13 @@ public class YPath {
 
     }
 
+    public boolean firstEquals(String value){
+        return this.getFirst().equals(value);
+    }
+
+    public boolean isLast(){
+        return this.yPath.size() == 1;
+    }
 
     /**
      * Get the size of the internal YPath element.

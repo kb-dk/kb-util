@@ -820,19 +820,18 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         // Quick fix cleaning entries as [foo=bar] to foo=bar.
         YPath cleanedYPath = YPath.removeBracketsFromPathElement(yPath);
-        log.info(yPath.getFirst());
 
         Map<?, ?> map = (Map<?, ?>) yaml;
         YPath shortenedPath = cleanedYPath.removeFirst();
 
         Matcher conditionalMatch = ARRAY_CONDITIONAL.matcher(cleanedYPath.getFirst());
 
-        if (cleanedYPath.getFirst().equals("**") && cleanedYPath.size() > 1){
+        if (cleanedYPath.firstEquals("**") && !cleanedYPath.isLast()){
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 traverse(cleanedYPath, entry.getValue(), visitor);
                 traverse(shortenedPath, entry.getValue(), visitor);
             }
-        } else if (cleanedYPath.getFirst().equals("**") && cleanedYPath.size() == 1) {
+        } else if (cleanedYPath.firstEquals("**") && cleanedYPath.isLast()) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (entry.getValue() instanceof Map || entry.getValue() instanceof List){
                     traverse(cleanedYPath, entry.getValue(), visitor);
@@ -841,7 +840,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 }
             }
         }
-        else if (cleanedYPath.getFirst().equals("*")) {
+        else if (cleanedYPath.firstEquals("*")) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (cleanedYPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
@@ -883,7 +882,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        if (yPath.size() <= 1){
+        if (yPath.isLast()){
             for (Object matchingEntry: matchingObjects) {
                 visitor.visit(matchingEntry);
             }
