@@ -99,6 +99,27 @@ public class YPath {
     }
     private final Pattern QUOTE_DOT_SPLIT = Pattern.compile("[\"']([^\"']*)[\"']|([^.]+)");
 
+    /**
+     * If the first element in a list starts with '[' and ends with ']' remove the brackets from the string. The brackets
+     * are used to describe a conditional lookup in a YAML map and needs to be removed before the traversal can be
+     * continued.
+     * @param yPath list of path elements, where the first element is the current element of the YAML traversal, which
+     *              is checked for '[' and ']'.
+     */
+    public static YPath removeBracketsFromPathElement(YPath yPath) {
+        Matcher arrayMatcher = YAML.ARRAY_ELEMENT.matcher(yPath.getFirst());
+
+        if (arrayMatcher.matches()){
+            String cleaned = arrayMatcher.group(2);
+            YPath replacedYPath = yPath.replaceFirst(cleaned);
+
+            return replacedYPath;
+        }
+
+        return yPath;
+
+    }
+
 
     /**
      * Get the size of the internal YPath element.

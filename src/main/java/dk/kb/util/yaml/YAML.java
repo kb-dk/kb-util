@@ -88,7 +88,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     private static final long serialVersionUID = -5211961549015821195L;
 
 
-    private static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
+    public static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
     private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
 
     boolean extrapolateSystemProperties = false;
@@ -819,7 +819,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
 
         // Quick fix cleaning entries as [foo=bar] to foo=bar.
-        YPath cleanedYPath = removeBracketsFromPathElement(yPath);
+        YPath cleanedYPath = YPath.removeBracketsFromPathElement(yPath);
         log.info(yPath.getFirst());
 
         Map<?, ?> map = (Map<?, ?>) yaml;
@@ -894,26 +894,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-
-    /**
-     * If the first element in a list starts with '[' and ends with ']' remove the brackets from the string. The brackets
-     * are used to describe a conditional lookup in a YAML map and needs to be removed before the traversal can be
-     * continued.
-     * @param yPath list of path elements, where the first element is the current element of the YAML traversal, which
-     *              is checked for '[' and ']'.
-     */
-    private static YPath removeBracketsFromPathElement(YPath yPath) {
-        Matcher arrayMatcher = ARRAY_ELEMENT.matcher(yPath.getFirst());
-
-        if (arrayMatcher.matches()){
-            String cleaned = arrayMatcher.group(2);
-            YPath replacedYPath = yPath.replaceFirst(cleaned);
-
-            return replacedYPath;
-        } else {
-            return yPath;
-        }
-    }
 
     /**
      * Convert a YAML list to a YAML map containing all elements, where the key is the index and continue the traversal
