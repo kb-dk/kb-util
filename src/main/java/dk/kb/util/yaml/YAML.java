@@ -731,37 +731,6 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Create a list from the inputted list of yPath elements. The new list contains all values of the input list
-     * except the first entry.
-     * @param yPath list of YAML path elements, which the returned list is created from.
-     * @return a sublist of yPath, where the first value is removed.
-     */
-    private static List<String> removeTraversedEntry(List<String> yPath) {
-        if (yPath.isEmpty()){
-            return yPath;
-        } else {
-            return yPath.subList(1, yPath.size());
-        }
-    }
-
-    /**
-     * Create a new instance of the input list of yPath elements, where the first element has been substituted.
-     * @param yPath list of elements from a YAML path.
-     * @param newEntry a new entry, which is to replace the first entry in {@code yPath}.
-     * @return a new List containing all values from yPath, except the first, which has been substituted with {@code newEntry}.
-     */
-    private static List<String> replaceFirstEntryInYPath(List<String> yPath, String newEntry){
-        if (yPath.isEmpty()){
-            return yPath;
-        } else {
-            List<String> updatedList = new ArrayList<>(yPath);
-            updatedList.set(0, newEntry);
-            return updatedList;
-        }
-    }
-
-
-    /**
      * Recursively traverse a YAML file for entries that match the keys from {@code yPath}.
      * @param yPath path in YAML file. The path is split into a list for each level/part of the path.
      * @param yaml a YAML object containing the full YAML which is to be traversed.
@@ -1317,13 +1286,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         return compound;
     }
 
-    private static InputStream openStream(Path path) {
-        try {
-            return path.toUri().toURL().openStream();
-        } catch (IOException e) {
-            throw new RuntimeException("IOException opening stream for '" + path + "'", e);
-        }
-    }
     private static InputStream openStream(File file) {
         try {
             return file.toPath().toUri().toURL().openStream();
