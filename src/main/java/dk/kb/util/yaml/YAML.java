@@ -738,7 +738,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     private void traverse(YPath yPath, Object yaml, YAMLVisitor visitor) {
         if (yaml instanceof Map) {
-            traverseMap(yPath, yaml, (MultipleValuesVisitor) visitor);
+            traverseMap(yPath, yaml, visitor);
         } else if (yaml instanceof List) {
             traverseList(yPath, yaml, visitor);
         }
@@ -759,8 +759,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
      *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a List.
-     * @param visitor used to collect values that match the given path. This visitor only collects values to its
-     *                internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
+     * @param visitor used to collect values that match the given path.
      */
     private void traverseList(YPath yPath, Object yaml, YAMLVisitor visitor) {
         List<Object> list = (List<Object>) yaml;
@@ -812,10 +811,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
      *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a Map.
-     * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
-     *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
+     * @param visitor used to collect values that match the given path.
      */
-    private void traverseMap(YPath yPath, Object yaml, MultipleValuesVisitor visitor) {
+    private void traverseMap(YPath yPath, Object yaml, YAMLVisitor visitor) {
         if (yPath.isEmpty()) {
             return;
         }
@@ -860,7 +858,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
                 if (cleanedYPath.size() == 1){
                     if (key.equals(cleanedYPath.getFirst())){
-                        visitor.extractedValues.add(extrapolate(value));
+                        visitor.visit(extrapolate(value));
                     }
                 } else {
                     if (key.equals(cleanedYPath.getFirst())){
