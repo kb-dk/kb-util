@@ -721,15 +721,12 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
-        List<String> yPath = splitPath(path);
-
-        //MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+        YPath yPath = new YPath(path);
 
         if (!yPath.isEmpty()){
             traverse(yPath, yaml, visitor);
         }
 
-        //return visitor.extractedValues;
         // TODO: Investigate how JQ handles paths as: test.tuplesequence[*].*.name
     }
 
@@ -770,7 +767,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yaml a YAML object containing the full YAML which is to be traversed.
      * @param visitor which collects entries that match the input path.
      */
-    private void traverse(List<String> yPath, Object yaml, YAMLVisitor visitor) {
+    private void traverse(YPath yPath, Object yaml, YAMLVisitor visitor) {
         if (yaml instanceof Map) {
             traverseMap(yPath, yaml, (MultipleValuesVisitor) visitor);
         } else if (yaml instanceof List) {
@@ -796,10 +793,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param visitor used to collect values that match the given path. This visitor only collects values to its
      *                internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      */
-    private void traverseList(List<String> yPath, Object yaml, YAMLVisitor visitor) {
+    private void traverseList(YPath yPath, Object yaml, YAMLVisitor visitor) {
         List<Object> list = (List<Object>) yaml;
 
-        Matcher matcher = ARRAY_ELEMENT.matcher(yPath.get(0));
+        Matcher matcher = ARRAY_ELEMENT.matcher(yPath.getFirst());
         final String arrayElementIndex;
         if (matcher.matches()) { // foo.bar[2]
             arrayElementIndex = matcher.group(2);
@@ -812,21 +809,23 @@ public class YAML extends LinkedHashMap<String, Object> {
                 case "*":
                 case "":
                     // Set yPath entry to * as [] and [*] are to be treated equal.
-                    List<String> asterixYPath = replaceFirstEntryInYPath(yPath, "*");
+                    YPath asterixYPath = yPath.replaceFirst("*");
                     convertListToMapAndTraverse(asterixYPath, visitor, list);
                     break;
                 case "last":
                     // Set yPath entry to the last index of the list.
-                    List<String> lastYPath = replaceFirstEntryInYPath(yPath, String.valueOf(list.size()-1));
+                    YPath lastYPath = yPath.replaceFirst(String.valueOf(list.size() - 1));
+                    log.info("first list size is: '{}'", list.size());
+                    log.info(lastYPath.getFirst());
                     convertListToMapAndTraverse(lastYPath, visitor, list);
                     break;
                 default:
                     // Set yPath entry as index number
-                    List<String> indexYPath = replaceFirstEntryInYPath(yPath, arrayElementIndex);
+                    YPath indexYPath = yPath.replaceFirst(arrayElementIndex);
                     convertListToMapAndTraverse(indexYPath, visitor, list);
             }
         } else {
-            convertListToMapAndTraverse(yPath, visitor,list);
+            convertListToMapAndTraverse(yPath, visitor, list);
         }
     }
 
@@ -849,7 +848,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
      *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      */
-    private void traverseMap(List<String> yPath, Object yaml, MultipleValuesVisitor visitor) {
+    private void traverseMap(YPath yPath, Object yaml, MultipleValuesVisitor visitor) {
         if (yPath.isEmpty()) {
             return;
         }
@@ -858,16 +857,16 @@ public class YAML extends LinkedHashMap<String, Object> {
         removeBracketsFromPathElement(yPath);
 
         Map<?, ?> map = (Map<?, ?>) yaml;
-        List<String> shortenedPath = removeTraversedEntry(yPath);
+        YPath shortenedPath = yPath.removeFirst();
 
-        Matcher conditionalMatch = ARRAY_CONDITIONAL.matcher(yPath.get(0));
+        Matcher conditionalMatch = ARRAY_CONDITIONAL.matcher(yPath.getFirst());
 
-        if (yPath.get(0).equals("**") && yPath.size() > 1){
+        if (yPath.getFirst().equals("**") && yPath.size() > 1){
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 traverse(yPath, entry.getValue(), visitor);
                 traverse(shortenedPath, entry.getValue(), visitor);
             }
-        } else if (yPath.get(0).equals("**") && yPath.size() == 1) {
+        } else if (yPath.getFirst().equals("**") && yPath.size() == 1) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (entry.getValue() instanceof Map || entry.getValue() instanceof List){
                     traverse(yPath, entry.getValue(), visitor);
@@ -876,7 +875,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 }
             }
         }
-        else if (yPath.get(0).equals("*")) {
+        else if (yPath.getFirst().equals("*")) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (yPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
@@ -892,11 +891,11 @@ public class YAML extends LinkedHashMap<String, Object> {
                 Object value = entry.getValue();
 
                 if (yPath.size() == 1){
-                    if (key.equals(yPath.get(0))){
+                    if (key.equals(yPath.getFirst())){
                         visitor.extractedValues.add(extrapolate(value));
                     }
                 } else {
-                    if (key.equals(yPath.get(0))){
+                    if (key.equals(yPath.getFirst())){
                         traverse(shortenedPath, value, visitor);
                     }
                 }
@@ -904,7 +903,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-    private void conditionalTraverse(List<String> yPath, YAMLVisitor visitor, Matcher conditionalMatch, Map<?, ?> map, List<String> shortenedPath) {
+    private void conditionalTraverse(YPath yPath, YAMLVisitor visitor, Matcher conditionalMatch, Map<?, ?> map, YPath shortenedPath) {
         String key = conditionalMatch.group(1);
         boolean mustMatch = conditionalMatch.group(2).equals("="); // The Pattern ensures only "!=" or "=" is in the group
         String value = conditionalMatch.group(3);
@@ -937,34 +936,49 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yPath list of path elements, where the first element is the current element of the YAML traversal, which
      *              is checked for '[' and ']'.
      */
-    private static void removeBracketsFromPathElement(List<String> yPath) {
-        Matcher arrayMatcher = ARRAY_ELEMENT.matcher(yPath.get(0));
+    private static YPath removeBracketsFromPathElement(YPath yPath) {
+        Matcher arrayMatcher = ARRAY_ELEMENT.matcher(yPath.getFirst());
 
         if (arrayMatcher.matches()){
             String cleaned = arrayMatcher.group(2);
-            yPath.set(0, cleaned);
+            YPath replacedYPath = yPath.replaceFirst(cleaned);
+            return replacedYPath;
+        } else {
+            return  yPath;
         }
     }
 
     /**
      * Convert a YAML list to a YAML map containing all elements, where the key is the index and continue the traversal
-     * of the YAML structure through the {@link #traverse(List, Object, YAMLVisitor)}-method.
+     * of the YAML structure through the {@link #traverse(YPath, Object, YAMLVisitor)}-method.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
      *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
      *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
      * @param list the YAML list which is to be converted to a YAML map.
      */
-    private void convertListToMapAndTraverse(List<String> yPath, YAMLVisitor visitor, List<Object> list) {
+    private void convertListToMapAndTraverse(YPath yPath, YAMLVisitor visitor, List<Object> list) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
+        /*log.info("Current yPath element is: '{}'", yPath.getFirst());
+        log.info("list size is: '{}', yPath is: '{}'", list.size(), yPath.getFirst());*/
         Object yaml;
         for (int j = 0; j < list.size(); j++) {
             map.put(j + "", extrapolate(list.get(j)));
         }
-        YAML testYaml = new YAML(map, extrapolateSystemProperties, getSubstitutors());
-        log.info(String.valueOf(testYaml));
         yaml = map;
         traverse(yPath, yaml, visitor);
+    }
+    private void convertListToMapAndTraverseLast(YPath yPath, YAMLVisitor visitor, List<Object> list) {
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
+        YPath lastPath = new YPath(yPath);
+        lastPath = lastPath.replaceFirst(String.valueOf(list.size() - 1));
+
+        Object yaml;
+        for (int j = 0; j < list.size(); j++) {
+            map.put(j + "", extrapolate(list.get(j)));
+        }
+        yaml = map;
+        traverse(lastPath, yaml, visitor);
     }
 
     /**
