@@ -938,26 +938,13 @@ public class YAML extends LinkedHashMap<String, Object> {
     private static YPath removeBracketsFromPathElement(YPath yPath) {
         Matcher arrayMatcher = ARRAY_ELEMENT.matcher(yPath.getFirst());
 
-        log.info("Before modifying: '{}'", yPath.getFirst());
-
         if (arrayMatcher.matches()){
             String cleaned = arrayMatcher.group(2);
             YPath replacedYPath = yPath.replaceFirst(cleaned);
 
-            log.info("After modifying: '{}'", replacedYPath.getFirst());
-
-            String intermediary = replacedYPath.getFirst();
-            intermediary = intermediary.replaceAll("[\\[\\]]", "");
-            log.info("Intermediary after replacement: '{}'", intermediary);
-
             return replacedYPath;
         } else {
-            String intermediary = yPath.getFirst();
-            intermediary = intermediary.replaceAll("[\\[\\]]", "");
-            log.info("Intermediary after replacement: '{}'", intermediary);
-
-
-            return yPath.replaceFirst(intermediary);
+            return yPath;
         }
     }
 
@@ -972,26 +959,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     private void convertListToMapAndTraverse(YPath yPath, YAMLVisitor visitor, List<Object> list) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
-        /*log.info("Current yPath element is: '{}'", yPath.getFirst());
-        log.info("list size is: '{}', yPath is: '{}'", list.size(), yPath.getFirst());*/
         Object yaml;
         for (int j = 0; j < list.size(); j++) {
             map.put(j + "", extrapolate(list.get(j)));
         }
         yaml = map;
         traverse(yPath, yaml, visitor);
-    }
-    private void convertListToMapAndTraverseLast(YPath yPath, YAMLVisitor visitor, List<Object> list) {
-        LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
-        YPath lastPath = new YPath(yPath);
-        lastPath = lastPath.replaceFirst(String.valueOf(list.size() - 1));
-
-        Object yaml;
-        for (int j = 0; j < list.size(); j++) {
-            map.put(j + "", extrapolate(list.get(j)));
-        }
-        yaml = map;
-        traverse(lastPath, yaml, visitor);
     }
 
     /**
@@ -1094,27 +1067,6 @@ public class YAML extends LinkedHashMap<String, Object> {
     private final Pattern INTEGRAL_MATCHER = Pattern.compile("[0-9]+");
     private final Pattern FLOAT_MATCHER = Pattern.compile("[0-9]*[.][0-9]*"); // Leading digit optional: .2 is ok
     private final Pattern BOOLEAN_MATCHER = Pattern.compile("true|false");
-
-
-    /**
-     * Splits the given path on {@code .}, with support for quoting with single {@code '} and double {@code "} quotes.
-     * {@code foo.bar."baz.zoo".'eni.meni' -> [foo, bar, baz.zoo, eni.meni]}.
-     * @param path a YAML path with dots {@code .} as dividers.
-     * @return the path split on {@code .}.
-     */
-    private List<String> splitPath(String path) {
-        List<String> tokens = new ArrayList<>();
-        // Ensure all path elements are separated by a singular dot
-        path = path.replaceAll("([^.])\\[", "$1.[");
-        Matcher matcher = QUOTE_DOT_SPLIT.matcher(path);
-        while (matcher.find()) {
-            // Getting group(0) would not remove quote characters so a check for capturing group is needed
-            tokens.add(matcher.group(1) == null ? matcher.group(2) : matcher.group(1));
-        }
-        return tokens;
-    }
-    private final Pattern QUOTE_DOT_SPLIT = Pattern.compile("[\"']([^\"']*)[\"']|([^.]+)");
-
 
     /* **************************** Fetching YAML ************************************ */
 
