@@ -120,10 +120,20 @@ public class YPath {
 
     }
 
+    /**
+     * Evaluate if the input {@code value} is equal to the first entry in YPath.
+     * @param value the value which is compared to the first entry in the YPath
+     * @return true if equal, false if not.
+     */
     public boolean firstEquals(String value){
         return this.getFirst().equals(value);
     }
 
+    /**
+     * Evaluate if the current YPath object only contains a single value.
+     * This happens a lot during traversal to see if a match is found.
+     * @return true if the YPath contains a single element. Otherwise return false
+     */
     public boolean isLast(){
         return this.yPath.size() == 1;
     }

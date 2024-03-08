@@ -604,23 +604,6 @@ public class YAML extends LinkedHashMap<String, Object> {
         return visitor.extractedValues;
     }
 
-    /**
-     * Helper for the method {@link #getMultipleFromSubYaml(String, String)} used to visit a list-part of a YAML file.
-     * This method gets a list from the {@code yamlPath} and looks for values that are associated with the input {@code key}.
-     * @deprecated
-     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
-     * @param yamlPath to a list in the overall YAML being parsed.
-     * @param key to extract values for.
-     * @return a new list of all values, that are represented in the YAML List by the input {@code key}.
-     */
-    @Deprecated
-    private List<Object> getMultipleFromSubYamlList(String yamlPath, String key) {
-        String combinedPath = yamlPath + "[*].*." + key;
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        visit(combinedPath, this, visitor);
-        return visitor.extractedValues;
-    }
-
     /* **************************** Path-supporting overrides ************************************ */
 
     /**
@@ -734,7 +717,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Recursively traverse a YAML file for entries that match the keys from {@code yPath}.
      * @param yPath path in YAML file. The path is split into a list for each level/part of the path.
      * @param yaml a YAML object containing the full YAML which is to be traversed.
-     * @param visitor which collects entries that match the input path.
+     * @param visitor which visits entries that match the input path.
      */
     private void traverse(YPath yPath, Object yaml, YAMLVisitor visitor) {
         if (yaml instanceof Map) {
@@ -759,7 +742,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
      *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a List.
-     * @param visitor used to collect values that match the given path.
+     * @param visitor used to visit values that match the given path.
      */
     private void traverseList(YPath yPath, Object yaml, YAMLVisitor visitor) {
         List<Object> list = (List<Object>) yaml;
@@ -811,7 +794,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
      *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a Map.
-     * @param visitor used to collect values that match the given path.
+     * @param visitor used to visit matching paths.
      */
     private void traverseMap(YPath yPath, Object yaml, YAMLVisitor visitor) {
         if (yPath.isEmpty()) {
@@ -899,8 +882,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * of the YAML structure through the {@link #traverse(YPath, Object, YAMLVisitor)}-method.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
      *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
-     * @param visitor used to collect values that match the given path. The only function of this visitor is to collect
-     *               values to its internal list of extracted values: {@link MultipleValuesVisitor#extractedValues}.
+     * @param visitor used to visit values that match the given path.
      * @param list the YAML list which is to be converted to a YAML map.
      */
     private void convertListToMapAndTraverse(YPath yPath, YAMLVisitor visitor, List<Object> list) {
