@@ -59,27 +59,42 @@ import java.util.stream.Collectors;
  *
  * System properties can be used in the YAML values with the syntax {@code ${environment.variable}}
  * if it has been activated with {@link #setExtrapolate(boolean)}. The default is NOT to extrapolate.
- *
+ * <p>
  * If extrapolation is enabled, system property values can be used as YAML values, such as
  * {@code greeting: "Running with {myapp.threads} threads"}
  * User controlled properties can be specified for the application from command line
  * {@code java -Dmyapp.threads=4 -jar myapp.jar}, container configuration or similar.
- *
+ * <p>
  * A list of locally available system properties can be obtained with {@code System.getProperties().list(System.out)}
  * but only some of them are guaranteed to be set. See https://howtodoinjava.com/java/basics/java-system-properties/
  * Commonly used properties are {@code user.name} and {@code user.home}.
- *
+ * <p>
  * Due to limitations of the Generics implementation in Java, using system properties as list values
  * involves fixed conversions: Integral numbers are treated as Integers, floating point numbers as Doubles.
- *
+ * <p>
  * Note: Besides system environment, it is possible to use other substitutions, such as environment variables using
  * the syntax {@code ${env:USERNAME}}. See the JavaDoc for {@link StringSubstitutor} for examples. Where possible,
  * use system environment as that is the least unstable across platforms.
- *
+ * <p>
  * Note 2: Nested fallbacks is somewhat possible, but works poorly with prefixed lookups. As {@code sys:} is implicit
  * a working "provide the value either as system properties or environment variables" definition can be written as
  * {@code ${env:USERNAME:-${user.name:-igiveup}}} where switching {@code env:USERNAME} and {@code user.name} will not
  * work.
+ * <p>
+ * The getter-methods uses {@code yPath}s as input. {@code yPath} stands for YAML-path is a subset of the paths
+ * used for extracting values from JSON structures using <a href="https://github.com/jqlang/jq">jq</a>.
+ * The path elements are dot-separated ({@code .} and supports
+ * <ul>
+ * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
+ * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
+ * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
+ * <li>{@code key.[subkey=value]} for the map elements in a list where their value for the subkey matches, e.g. "foo.[bar=baz]"</li>
+ * <li>{@code key.[subkey!=value]} for the map elements in a list where their value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
+ * <li>{@code key.[*].zoo} for all values of zoo in a map</li>
+ * <li>{@code key.*.zoo} for all values of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
+ * <li>{@code key.**.zoo} for all value in the structure with the key zoo.</li>
+ * </ul>
+ * Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
  */
 public class YAML extends LinkedHashMap<String, Object> {
 
@@ -660,19 +675,9 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolve the Object at the given path in this YAML. Path elements are separated by {@code .} and can be either
-     * <ul>
-     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
-     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
-     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
-     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
-     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
-     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
-     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
-     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
-     *  </ul> 
-     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
-     * @param yPath path for the Object. If {@code yPath} is empty, the full YAML is returned.
+     * Resolve the Object at the given path in this YAML.
+     * @param yPath path for the entry. See the class Javadoc for {@code yPath} syntax.
+     *              If {@code yPath} is empty, the full YAML is returned.
      * @return the Object. Will never return null, will rather throw exceptions.
      * @throws NotFoundException     if {@code yPath} cannot be found.
      * @throws InvalidTypeException  if {@code yPath} was invalid (i.e. if treated a value as a map).
@@ -702,19 +707,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolves Objects which match the given path in this YAML. Path elements are separated by {@code .} and can be either
-     * <ul>
-     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
-     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
-     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
-     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
-     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
-     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
-     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
-     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
-     *  </ul>
-     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
-     * @param yPath path to the entries in this YAML.
+     * Resolves Objects which match the given path in this YAML.
+     * @param yPath path to the entries in this YAML. See the class Javadoc for {@code yPath} syntax.
      * @return a list of matching objects. If there are no matches, the empty list will be returned.
      * @see #get(Object yPath)
      * @see #getMultiple(String, YAML)
@@ -725,20 +719,9 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolves Objects which match the given path in the YAML. Path elements are separated by {@code .} and can be either
-     * <ul>
-     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
-     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
-     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
-     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
-     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
-     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
-     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
-     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
-     *  </ul>
-     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
-     * @param yPath path to the entries in the {@code yaml}.
-     * @param yaml which is traversed for {@code path0}.
+     * Resolves Objects which match the given path in the YAML.
+     * @param yPath path to the entries in the {@code yaml}. See the class Javadoc for {@code yPath} syntax.
+     * @param yaml which is traversed for {@code yPath}.
      * @return a list of matching objects. If there are no matches, the empty list will be returned.
      * @see #get(Object yPath)
      * @see #getMultiple(String)
@@ -763,20 +746,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Follows the <a href="https://en.wikipedia.org/wiki/Visitor_pattern">Visitor Pattern</a>, performing a callback
      * with the node value to {@code visitor} for all nodes matching {@code yPath} in {@code yaml}.
-     * Path elements are separated by {@code .} and can be
-     * <ul>
-     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
-     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
-     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
-     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
-     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
-     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
-     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
-     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
-     *  </ul>
-     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
-     * @param yPath path to the entries in the {@code yaml}.
-     * @param yaml which is traversed for {@code path0}.
+     * @param yPath path to the entries in the {@code yaml}. See the class Javadoc for {@code yPath} syntax.
+     * @param yaml which is traversed for {@code yPath}.
      * @param visitor {@link YAMLVisitor#visit(Object element)} will be called for all elements in {@code yaml}
      *        matching {@code yPath}
      * @see #getMultiple(String)
@@ -786,7 +757,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (yPath == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
-        String path = yPath.toString().trim();
+        String path = yPath.trim();
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
