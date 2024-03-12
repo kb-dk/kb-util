@@ -1,0 +1,11 @@
+# Different representations of null (keyword null, tilde ~ and empty value)
+nullvalue: null
+tildevalue: ~
+emptyvalue:
+defaultnull: ${nonexisting.property:null}
+nulllist:
+  - foo
+  - null
+  - ~
+  -
+  - bar
