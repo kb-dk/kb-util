@@ -956,4 +956,16 @@ class YAMLTest {
                 "Enabling extrapolation with a failing substitution should fail with an exception");
     }
 
+    // List<YAML> yamls1 = getYAMLList("foo")
+    // and
+    // List<YAML> yamls1 = getList("foo")
+    // should both work
+    @Test
+    public void testGetImplicitYAMLList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
+        List<YAML> explicit = yaml.getYAMLList("test.tuplesequence");
+        List<YAML> implicit = yaml.getList("test.tuplesequence");
+        assertEquals(explicit.toString(), implicit.toString(),
+                "Explicit and implicit List<YAML> retrieval should be the same");
+    }
 }

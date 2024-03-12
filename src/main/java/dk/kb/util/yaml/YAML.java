@@ -90,6 +90,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     public static final Pattern ARRAY_ELEMENT = Pattern.compile("^([^\\[]*)\\[([^]]*)]$");
     private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
+    private static final YAML EMPTY = new YAML();
 
     boolean extrapolateSystemProperties = false;
     private List<StringSubstitutor> substitutors = null;
@@ -155,6 +156,24 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolves the YAML sub map at the given path in the YAML. Supports {@code .} for path separation,
      * Sample path: {@code foo.bar}
+     * <p>
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
+     * <p>
+     * This method is equal to {@link #getSubMap(String)}. {@code getYAML} is preferred dut to clearer semantics.
+     * @param path path for the sub map.
+     * @return the map at the path
+     * @throws NotFoundException    if the path could not be found
+     * @throws InvalidTypeException if the value cannot be parsed as a List of YAMLs
+     * @throws NullPointerException if the path is null
+     */
+    public YAML getYAML(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
+        return getSubMap(path, false);
+    }
+
+    /**
+     * Resolves the YAML sub map at the given path in the YAML. Supports {@code .} for path separation,
+     * Sample path: {@code foo.bar}
+     * <p>
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      *
      * @param path path for the sub map.
@@ -218,9 +237,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: {@code foo.bar}
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
-     *
      * @param path path for the list.
-     * @param <T> the type of elements in the list
+     * @param <T> the type of elements in the list.
+     *           Valid types are atomics ({@code Integer}, {@code Boolean} etc), {@code String} and {@code YAML}.
      * @return the list at the path
      * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List
@@ -229,6 +248,17 @@ public class YAML extends LinkedHashMap<String, Object> {
     @SuppressWarnings("unchecked")
     @NotNull
     public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
+        try {
+            // The cast to test checks if T is YAML, in which case the designated getYAMLList is called
+            // It is ugly, but no better test for T == YAML is known. See e.g.
+            // https://stackoverflow.com/questions/182636/how-to-determine-the-class-of-a-generic-type
+            // https://stackoverflow.com/questions/73982858/java-generics-reflection-get-classt-from-generic-returns-typevariableimpl-ins
+            T test = (T)EMPTY;
+            return (List<T>)getYAMLList(path);
+        } catch (ClassCastException e) {
+            // Do nothing as this just mean that T is not YAML
+        }
+
         Object found = get(path);
         if (found == null) {
             throw new NotFoundException("Path gives a null value", path);
@@ -266,13 +296,16 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolves the list of sub YAMLs at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: foo.bar
-     *
+     * <p>
+     * Note: If the result is assigned to a generified List, this is equivalent to
+     * {@code List<YAML> yamls = superyaml.getList("foo")}.
      * @param path path for the list.
      * @return the list of sub YAMLs at the path
      * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List of YAMLs
      * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
      * @throws NullPointerException if the path is null
+     * @see #getList(String yPath)
      */
     @SuppressWarnings("unchecked")
     @NotNull
