@@ -4,8 +4,9 @@ test:
   someint: ${java.specification.version}
   somedouble: ${java.class.version}
   somebool: true
-  exceptionimplicit: ${nonexisting.property}
-  exceptionenv: ${env:NOT_HERE}
+  # Removed 20240312 as extrapolation has changed to being up front instead of request time
+#  exceptionimplicit: ${nonexisting.property}
+#  exceptionenv: ${env:NOT_HERE}
   fallback: ${nonexisting.property:-mydefault}
   envfallback: ${sys:NOT_DEFINED:-envdefault}
   nestedfallback: ${nonexisting:-${user.home:-dontreach}}

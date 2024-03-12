@@ -107,13 +107,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
      * Use {@link #resolveLayeredConfigs} for treating YAML files as overlays when loading.
-     * @param resourceName glob for YAML files.
+     * @param resourceNames globs for YAML files.
      * @throws IOException if the files could not be loaded or parsed.
      * @see #resolveLayeredConfigs(String...)
      * @see #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, String...)
      */
-    public YAML(String resourceName) throws IOException {
-        this.putAll(YAML.resolveMultiConfig(resourceName));
+    public YAML(String... resourceNames) throws IOException {
+        putAll(YAML.resolveMultiConfig(resourceNames));
     }
 
     /**
@@ -123,7 +123,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param map a map presumable delivered by SnakeYAML.
      */
     public YAML(Map<String, Object> map) {
-        this.putAll(map);
+        putAll(map);
     }
 
     /**
@@ -134,8 +134,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param extrapolateSystemProperties should system properties be extrapolated in values
      */
     public YAML(Map<String, Object> map, boolean extrapolateSystemProperties) {
-        this.extrapolateSystemProperties = extrapolateSystemProperties;
-        this.putAll(map);
+        putAll(map);
+        setExtrapolate(extrapolateSystemProperties);
     }
 
     /**
@@ -146,11 +146,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param extrapolateSystemProperties should system properties be extrapolated in values
      * @param substitutors explicit specification of substitutors. Typically used for creating submaps.
      */
-    YAML(Map<String, Object> map, boolean extrapolateSystemProperties,
-         List<StringSubstitutor> substitutors) {
-        this.extrapolateSystemProperties = extrapolateSystemProperties;
+    YAML(Map<String, Object> map, boolean extrapolateSystemProperties, List<StringSubstitutor> substitutors) {
         this.putAll(map);
         this.substitutors = substitutors;
+        setExtrapolate(extrapolateSystemProperties);
     }
 
     /**
@@ -655,7 +654,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         visit(path, this, visitor);
 
         if (visitor.extractedValues.isEmpty()){
-            throw new NotFoundException("Cant find object at path:", path.toString());
+            throw new NotFoundException("Cannot find object at path", path.toString());
         } else {
             return visitor.extractedValues.get(0);
         }
@@ -819,7 +818,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 if (entry.getValue() instanceof Map || entry.getValue() instanceof List){
                     traverse(cleanedYPath, entry.getValue(), visitor);
                 } else {
-                    visitor.visit(extrapolate(entry.getValue()));
+                    visitor.visit(entry.getValue());
                 }
             }
         }
@@ -828,7 +827,7 @@ public class YAML extends LinkedHashMap<String, Object> {
                 if (cleanedYPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
                 } else {
-                    visitor.visit(extrapolate(entry.getValue()));
+                    visitor.visit(entry.getValue());
                 }
             }
         } else if (conditionalMatch.matches()) {
@@ -840,7 +839,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
                 if (cleanedYPath.size() == 1){
                     if (key.equals(cleanedYPath.getFirst())){
-                        visitor.visit(extrapolate(value));
+                        visitor.visit(value);
                     }
                 } else {
                     if (key.equals(cleanedYPath.getFirst())){
@@ -889,7 +888,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
         Object yaml;
         for (int j = 0; j < list.size(); j++) {
-            map.put(j + "", extrapolate(list.get(j)));
+            map.put(j + "", list.get(j));
         }
         yaml = map;
         traverse(yPath, yaml, visitor);
@@ -948,21 +947,6 @@ public class YAML extends LinkedHashMap<String, Object> {
                 value == null || !value.toString().equals(expected);
     }
 
-
-    Object extrapolate(Object sub) {
-        if (sub == null || !isExtrapolating()){
-            return sub;
-        }
-        if (sub instanceof String) {
-            return substitute((String) sub);
-        }
-        if (sub instanceof List<?>) {
-            List<?> objects = (List<?>) sub;
-            return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
-        }
-        return sub;
-    }
-
     /**
      * Attempts to guess the type of atomic elements: {@code 123} is int, {@code true} is boolean, {@code 1.2} is double
      * and String is the fallback.
@@ -993,7 +977,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         return sub;
     }
     private final Pattern INTEGRAL_MATCHER = Pattern.compile("[0-9]+");
-    private final Pattern FLOAT_MATCHER = Pattern.compile("[0-9]*[.][0-9]*"); // Leading digit optional: .2 is ok
+    private final Pattern FLOAT_MATCHER = Pattern.compile("[0-9]*[.][0-9]+"); // Leading digit optional: .2 is ok
     private final Pattern BOOLEAN_MATCHER = Pattern.compile("true|false");
 
     /* **************************** Fetching YAML ************************************ */
@@ -1066,12 +1050,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     public static YAML parse(InputStream yamlStream) {
         Object raw = new Yaml().load(yamlStream);
         if (raw instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<String,Object> map = (Map<String,Object>) raw;
-            //Get a classcast exception here, and not someplace later https://stackoverflow.com/a/509288
+            // Get a classcast exception here, and not someplace later https://stackoverflow.com/a/509288
             for (String s : map.keySet());
             for (Object o : map.values());
 
@@ -1317,7 +1302,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     public static YAML merge(YAML base, YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
         base.substitutors = null; // Clear existing substitutors. They will be re-created for the merged YAML
-        return (YAML)mergeEntry("", base, extra, defaultMA, listMA);
+        YAML merged = (YAML)mergeEntry("", base, extra, defaultMA, listMA);
+        return base.isExtrapolating() ? merged.extrapolateAll() : merged;
     }
 
     @SuppressWarnings("unchecked")
@@ -1378,30 +1364,99 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
-     * @return this YAML, not a copy
+     * Iterates the full YAML, performing extrapolation on all leafs.
+     * See the Javadoc for {@link YAML} for a description of extrapolation.
+     * <p>
+     * Once enabled, extrapolation cannot be undone: Setting this to {@code false} after it has been set to {@code true}
+     * will throw an exception.
+     * @return this YAML, not a copy.
      */
     public YAML extrapolate(boolean extrapolateSystemProperties) {
+        if (this.extrapolateSystemProperties && !extrapolateSystemProperties) {
+            throw new IllegalArgumentException(
+                    "Attempted to set extrapolateSystemProperties to false when it has already been set to true");
+        }
         this.extrapolateSystemProperties = extrapolateSystemProperties;
+        if (extrapolateSystemProperties) {
+            extrapolateAll();
+        }
         return this;
     }
 
     /**
-     * If the YAML will extrapolate the current values of System.getProperties() in the values returned
-     * @return true if extrapolation is enabled
+     * Iterate the full YAML structure and perform extrapolation on all leaf elements,
+     * if {@link #extrapolateSystemProperties} is {@code true}.
+     * <p>
+     * This is a destructive process as it replaces the Strings.
+     * <p>
+     * See the {@link YAML} documentation for the effect of extrapolation.
+     * @return this YAML, not a copy.
+     */
+    private YAML extrapolateAll() {
+        if (!extrapolateSystemProperties) {
+            log.info("extrapolateAll called with extrapolateSystemProperties == false. " +
+                    "No extrapolation will be performed");
+            return this;
+        }
+        log.info("Extrapolating all values with paths and system properties");
+        extrapolateAll(this);
+        return this;
+    }
+
+    /**
+     * Iterate the full given {@code yaml} structure and perform extrapolation on all leaf elements.
+     * <p>
+     * Warning: This is a destructive process as it replaces the Strings that uses substitution.
+     * <p>
+     * See the {@link YAML} documentation for the effect of extrapolation.
+     * @param yamlObject the starting point of the extrapolation.
+     * @return the extrapolated element.                   
+     */
+    @SuppressWarnings("unchecked")
+    private Object extrapolateAll(Object yamlObject) {
+        // This does not use the visit method as it needs to modify the structure underway
+
+        if (yamlObject instanceof Map) {
+            Map<Object, Object> map = (Map<Object, Object>)yamlObject;
+            map.replaceAll((key, value) -> extrapolateAll(value));
+            return map;
+        }
+
+        if (yamlObject instanceof List) {
+            List<Object> list = (List<Object>)yamlObject;
+            list.replaceAll(this::extrapolateAll);
+            return list;
+        }
+
+        if (yamlObject instanceof String) {
+            return extrapolateGuessType(yamlObject);
+        }
+
+        // Only possible entries are maps, lists, null and scalars
+        // Only String scalars are substituted
+        return yamlObject;
+    }
+
+    /**
+     * If the YAML extrapolates the current values of System.getProperties() in the values returned.
+     * @return true if extrapolation is enabled.
      */
     public boolean isExtrapolating() {
         return extrapolateSystemProperties;
     }
 
     /**
-     * Set the YAML to extrapolate the current values of System.getProperties() in the values returned
+     * Iterates the full YAML, performing extrapolation on all leafs.
+     * See the Javadoc for {@link YAML} for a description of extrapolation.
+     * <p>
+     * Once enabled, extrapolation cannot be undone: Setting this to {@code false} after it has been set to {@code true}
+     * will throw an exception.
      */
     public void setExtrapolate(boolean extrapolateSystemProperties) {
-        this.extrapolateSystemProperties = extrapolateSystemProperties;
+        extrapolate(extrapolateSystemProperties);
     }
 
-
+    @Override
     public String toString(){
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setIndentWithIndicator(true);
@@ -1433,14 +1488,25 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param s the String to substitute.
      * @return s substituted.
      */
-    synchronized String substitute(String s) {
-        for (StringSubstitutor substitutor: getSubstitutors()) {
-            s = substitutor.replace(s);
+    private String substitute(String s) {
+        String last = null;
+        String current = s;
+        int iterations = 0;
+        // When a path-substitution return a value, that value must also be substituted etc.
+        while (current != null && !current.equals(last)) {
+            last = current;
+            for (StringSubstitutor substitutor : getSubstitutors()) {
+                current = current == null ? null : substitutor.replace(current);
+            }
+            if (++iterations == 10) {
+                throw new IllegalStateException("Circular substitution chain detected for input value '" + s +
+                        ". Value after 10 iterations is '" + current + "'");
+            }
         }
-        return s;
+        return current;
     }
 
-    public List<StringSubstitutor> getSubstitutors() {
+    public synchronized List<StringSubstitutor> getSubstitutors() {
         if (substitutors == null) {
             substitutors = List.of(
                     // General prefix based
@@ -1455,6 +1521,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Substitutor that takes paths in the current YAML.
+     * This substitutor only accepts paths to scalars and cannot be used as generally as YAML's references.
      * See {@link PathLookup} for details on syntax and use.
      */
     static class PathSubstitutor {
@@ -1489,7 +1556,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             key = key.substring(1);
             try {
                 return yaml.get(key).toString();
-            } catch (NotFoundException e) {
+            } catch (NotFoundException|NullPointerException e) {
                 return null; // The framework will handle it if action needs to be taken
             }
         }

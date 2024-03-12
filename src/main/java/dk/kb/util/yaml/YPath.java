@@ -144,4 +144,9 @@ public class YPath {
     public int size() {
         return yPath.size();
     }
+
+    @Override
+    public String toString() {
+        return "YPath(" + yPath + ')';
+    }
 }
