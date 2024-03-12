@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Extended YAML-path syntax: `**` for matching any key at any depth 
+- YAML-path supporting [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) pattern for YAML
+- Fully generic `getMultiple` method, utilizing the Visitor implementation 
+
+### Changed
+- Leaf-key based `getMultiple` and `getMultipleFromSubYaml` in `YAML` are now deprecated as the extended YAML syntax cover these scenarios
+- YAML substitution now enabled per default and is done upon load
 
 
 ## [1.4.26](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.26)

@@ -2,6 +2,7 @@ package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -127,8 +128,9 @@ class YAMLTest {
     public void testKeptPathExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
 
-        assertEquals("nested.sublevel2string: ${user.name}\n", yaml.getSubMap("nested", true).toString(),
-                "When we get map with subkeys preserved, we should see the nested previs. Extrapolation does NOT happen on toString");
+        assertEquals("nested.sublevel2string: " + System.getProperties().getProperty("user.name") + "\n",
+                yaml.getSubMap("nested", true).toString(),
+                "When we get map with subkeys preserved, we should see the nested prefix");
     }
 
     @Test
@@ -153,7 +155,8 @@ class YAMLTest {
         fail("Requesting a non-existing String should result in a NotFoundException");
     }
 
-    @Test
+    // Test not relevant after 20240312 as extrapolation is done up front instead of per request
+    @Disabled
     public void testNonResolvableExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolate(true);
         try {
@@ -857,4 +860,98 @@ class YAMLTest {
         assertEquals(3, extractedNames.size());
         assertTrue(extractedNames.containsAll(testValues));
     }
+
+    // Switching to up front extrapolating in 20240311
+    @Test
+    public void testExtrapolatingDefaultNotEnabled() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
+        assertEquals("${path:ypath.major}", yaml.getString("test.somestring"),
+                "Default should be no extrapolation for test.somestring");
+    }
+
+    @Test
+    public void testExtrapolatingTypes() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
+        yaml.setExtrapolate(true);
+
+        assertEquals("foo", yaml.get("test.somestring"),
+                "Extrapolating to string should work for test.somestring");
+        assertEquals("foo", yaml.getString("test.somestring"),
+                "Extrapolating to int should work for explicit string request for test.somestring");
+
+        assertEquals(123, yaml.get("test.someint"),
+                "Extrapolating to int should work for test.someint");
+        assertEquals(123, yaml.getInteger("test.someint"),
+                "Extrapolating to int should work for explicit int request for test.someint");
+        assertEquals(123, yaml.getLong("test.someint"),
+                "Extrapolating to long should work for explicit long request for test.someint");
+
+        assertEquals(12.34, yaml.get("test.somedouble"),
+                "Extrapolating to double should work for test.somedouble");
+        assertEquals(12.34, yaml.getDouble("test.somedouble"),
+                "Extrapolating to double should work for explicit double request for test.somedouble");
+
+        assertEquals(true, yaml.get("test.somebool"),
+                "Extrapolating to boolean should work for test.somebool");
+        assertEquals(true, yaml.getBoolean("test.somebool"),
+                "Extrapolating to boolean should work for explicit boolean request for test.somebool");
+    }
+
+    @Test
+    public void testExtrapolatingIndirection() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
+        yaml.setExtrapolate(true);
+
+        assertEquals(System.getProperties().getProperty("user.name"), yaml.get("test.indirectstart"),
+                "Multi-level extrapolating hould work for test.indirectstart");
+    }
+
+    @Test
+    public void testExtrapolatingList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
+        yaml.setExtrapolate(true);
+
+        List<String> strList = yaml.getList("test.indirectstringlist");
+        assertEquals("[foo, oof]", strList.toString(), "Requesting test.indirectstringlist should yield a string list");
+
+        List<Integer> intList = yaml.getList("test.indirectnumberlist");
+        assertEquals("[123, 234]", intList.toString(), "Requesting test.indirectnumberlist should yield an int list");
+
+        List<Long> longList = yaml.getList("test.indirectnumberlist");
+        assertEquals("[123, 234]", longList.toString(), "Requesting test.indirectnumberlist should yield a long list");
+    }
+
+    @Test
+    public void testExtrapolatingMap() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
+        yaml.setExtrapolate(true);
+
+        YAML sub = yaml.getSubMap("test.indirectnumbermap");
+        assertEquals(123, sub.get("foo"), "Map entry for 'foo' should be as expected");
+        assertEquals(234, sub.get("bar"), "Map entry for 'bar' should be as expected");
+        assertEquals(123, sub.get("sub.subfoo"), "Map entry for 'sub.foo' should be as expected");
+    }
+
+    // Paths to structures are not implemented yet
+    @Disabled
+    public void testExtrapolatingEmptyList() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
+        yaml.setExtrapolate(true);
+
+        List<String> strList = yaml.getList("test.emptylist");
+        assertTrue(strList.isEmpty(),
+                "Requesting test.emptylist as string list should yield an empty string list");
+
+        List<Boolean> boolList = yaml.getList("test.emptylist");
+        assertTrue(boolList.isEmpty(),
+                "Requesting test.emptylist as boolean list should yield an empty boolean list");
+    }
+
+    @Test
+    public void testExtrapolatingFail() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation_fail.yaml");
+        assertThrowsExactly(IllegalArgumentException.class, () -> yaml.setExtrapolate(true),
+                "Enabling extrapolation with a failing substitution should fail with an exception");
+    }
+
 }
