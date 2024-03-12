@@ -569,27 +569,30 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
     }
 
-    /**
-     * Resolves all values related to a given key, from a YAML structure. All values that have the specified key are
-     * returned as part of a list.
-     * @deprecated
-     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
-     * @param key the key to look for in the input YAML.
-     * @return a list of all values that can be cast to strings.
-     */
-    @Deprecated
-    public List<Object> getMultiple(String key){
-        String correctedPath = "**." + key;
-        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        visit(correctedPath, this, visitor);
-        return visitor.extractedValues;
-    }
+    // TODO: Evaluate the redefinition of getMultiple
+    // The old getMultiple 
+
+//    /**
+//     * Resolves all values related to a given key, from a YAML structure. All values that have the specified key are
+//     * returned as part of a list.
+//     * @deprecated
+//     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
+//     * @param key the key to look for in the input YAML.
+//     * @return a list of all values that can be cast to strings.
+//     */
+//    @Deprecated
+//    public List<Object> getMultiple(String key){
+//        String correctedPath = "**." + key;
+//        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
+//        visit(correctedPath, this, visitor);
+//        return visitor.extractedValues;
+//    }
 
     /**
      * Resolves all values related to a given key, from a part of a YAML structure. All values that are children of the
      * input {@code yamlPath} and are specified with the input {@code key} are returned as a list.
      * @deprecated
-     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
+     * This is no longer the best method to visit values. Use {@link #visit(String, YAML, YAMLVisitor)} instead.
      * @param yamlPath the specific part of a YAML file, that is to be queried for values.
      * @param key all values that are associated with this key are added to the returned list.
      * @return a list of all scalar values that are associated with the input key.
@@ -624,7 +627,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * Resolves the Object at the given path in the YAML. Path elements are separated by {@code .} and can be either
+     * Resolve the Object at the given path in this YAML. Path elements are separated by {@code .} and can be either
      * <ul>
      * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
      * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
@@ -636,28 +639,56 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
      *  </ul> 
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
-     * <p>
-     * Returns this object if the path is empty
-     *
-     * @param path path for the Object.
-     * @return the Object. Will never return null, will rather throw exceptions
-     * @throws NotFoundException    if the path cannot be found
-     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
-     * @throws NullPointerException if the path0 is null
-     * @throws InvalidTypeException if the path was invalid (i.e. if treated a value as a map)
+     * @param yPath path for the Object. If {@code yPath} is empty, the full YAML is returned.
+     * @return the Object. Will never return null, will rather throw exceptions.
+     * @throws NotFoundException     if {@code yPath} cannot be found.
+     * @throws InvalidTypeException  if {@code yPath} was invalid (i.e. if treated a value as a map).
+     * @throws NullPointerException  if {@code yPath} is null.
+     * @throws InvalidTypeException  if {@code yPath} was invalid (i.e. if treated a value as a map).
+     * @throws IllegalStateException if {@code yPath} matches more than 1 value.
+     * @see #getMultiple(String)
+     * @see #getMultiple(String, YAML)
      */
     @SuppressWarnings("unchecked")
     @Override
     @NotNull
-    public Object get(Object path) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public Object get(Object yPath) throws NotFoundException, InvalidTypeException, NullPointerException {
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-        visit(path, this, visitor);
+        visit(yPath.toString(), this, visitor);
 
-        if (visitor.extractedValues.isEmpty()){
-            throw new NotFoundException("Cannot find object at path", path.toString());
-        } else {
-            return visitor.extractedValues.get(0);
+        if (visitor.extractedValues.isEmpty()) {
+            throw new NotFoundException("Cannot find object at path '", yPath.toString() + "'");
         }
+        if (visitor.extractedValues.size() > 1) {
+            throw new IllegalStateException(String.format(Locale.ROOT,
+                    "get('%s') found %d values when expecting 1. " +
+                            "If the first value out of multiple is wanted, the getMultiple method can be used",
+                    yPath, visitor.extractedValues.size()));
+        }
+        return visitor.extractedValues.get(0);
+    }
+
+    /**
+     * Resolves Objects which match the given path in this YAML. Path elements are separated by {@code .} and can be either
+     * <ul>
+     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
+     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
+     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
+     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
+     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
+     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
+     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
+     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
+     *  </ul>
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
+     * @param yPath path to the entries in this YAML.
+     * @return a list of matching objects. If there are no matches, the empty list will be returned.
+     * @see #get(Object yPath)
+     * @see #getMultiple(String, YAML)
+     * @see #visit(String, YAML, YAMLVisitor)
+     */
+    public List<Object> getMultiple(String yPath) {
+        return getMultiple(yPath, this);
     }
 
     /**
@@ -673,17 +704,18 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
      *  </ul>
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
-     * <p>
-     *
-     * @param path0 path to the Objects.
+     * @param yPath path to the entries in the {@code yaml}.
      * @param yaml which is traversed for {@code path0}.
-     * @return a list of matching objects. Will never return null, will rather throw exceptions
+     * @return a list of matching objects. If there are no matches, the empty list will be returned.
+     * @see #get(Object yPath)
+     * @see #getMultiple(String)
+     * @see #visit(String, YAML, YAMLVisitor)
      */
-    public List<Object> getMultiple(Object path0, YAML yaml) {
-        if (path0 == null) {
+    public List<Object> getMultiple(String yPath, YAML yaml) {
+        if (yPath == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
-        String path = path0.toString().trim();
+        String path = yPath.toString().trim();
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
@@ -695,18 +727,40 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     // The real implementation of get(path), made flexible so that the entry YAML can be specified
 
-    public void visit(Object pathO, YAML yaml, YAMLVisitor visitor) throws NotFoundException, InvalidTypeException, NullPointerException {
-        if (pathO == null) {
+    /**
+     * Follows the <a href="https://en.wikipedia.org/wiki/Visitor_pattern">Visitor Pattern</a>, performing a callback
+     * with the node value to {@code visitor} for all nodes matching {@code yPath} in {@code yaml}.
+     * Path elements are separated by {@code .} and can be
+     * <ul>
+     * <li>{@code key} for direct traversal, e.g. "foo" or "foo.bar"</li>
+     * <li>{@code key[index]} for a specific element in a list, e.g. "foo.[2]" or "foo.[2].bar"</li>
+     * <li>{@code key.[last]} for the last element in a list, e.g. "foo.[last]" or "foo.bar.[last]"</li>
+     * <li>{@code key.[subkey=value]} for the first map element in a list where its value for the subkey matches, e.g. "foo.[bar=baz]"</li>
+     * <li>{@code key.[subkey!=value]} for the map element in a list where its value for the subkey does not match, e.g. "foo.[bar!=baz]"</li>
+     * <li>{@code key.[*].zoo} for any value of zoo in a map</li>
+     * <li>{@code key.*.zoo} for any value of zoo, one level into the current YAML. Matches key.foo.zoo and key.bar.zoo.</li>
+     * <li>{@code key.**.zoo} for any value in the structure with the key zoo.</li>
+     *  </ul>
+     * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
+     * @param yPath path to the entries in the {@code yaml}.
+     * @param yaml which is traversed for {@code path0}.
+     * @param visitor {@link YAMLVisitor#visit(Object element)} will be called for all elements in {@code yaml}
+     *        matching {@code yPath}
+     * @see #getMultiple(String)
+     * @see #visit(String, YAML, YAMLVisitor)
+     */
+    public void visit(String yPath, YAML yaml, YAMLVisitor visitor) throws NotFoundException, InvalidTypeException, NullPointerException {
+        if (yPath == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
-        String path = pathO.toString().trim();
+        String path = yPath.toString().trim();
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
-        YPath yPath = new YPath(path);
+        YPath yPathParsed = new YPath(path);
 
-        if (!yPath.isEmpty()){
-            traverse(yPath, yaml, visitor);
+        if (!yPathParsed.isEmpty()){
+            traverse(yPathParsed, yaml, visitor);
         }
 
         // TODO: Investigate how JQ handles paths as: test.tuplesequence[*].*.name
@@ -739,7 +793,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
      * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
+     *              delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a List.
      * @param visitor used to visit values that match the given path.
      */
@@ -791,7 +845,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
      * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
+     *              delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a Map.
      * @param visitor used to visit matching paths.
      */
@@ -880,7 +934,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Convert a YAML list to a YAML map containing all elements, where the key is the index and continue the traversal
      * of the YAML structure through the {@link #traverse(YPath, Object, YAMLVisitor)}-method.
      * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(Object path, YAML yaml, YAMLVisitor visitor)}-method.
+     *              delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
      * @param visitor used to visit values that match the given path.
      * @param list the YAML list which is to be converted to a YAML map.
      */

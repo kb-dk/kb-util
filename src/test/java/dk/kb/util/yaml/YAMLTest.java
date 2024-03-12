@@ -557,7 +557,7 @@ class YAMLTest {
     @Test
     public void testReverseConditionalIndex() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
-        assertEquals("bar", yaml.get("conditionalpropermap.[default!=true].foo"));
+        assertEquals("[bar, zoo, baz]", yaml.getMultiple("conditionalpropermap.[default!=true].foo").toString());
     }
 
     @Test
@@ -746,7 +746,7 @@ class YAMLTest {
     @Test
     public void testDoubleWildcardLast() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        assertEquals(1, yaml.get("test.anotherlevel.name.**"),
+        assertEquals("[1, 2, 3, john]", yaml.getMultiple("test.anotherlevel.name.**").toString(),
                 "Double wildcard at the end of the path");
     }
 
@@ -823,7 +823,8 @@ class YAMLTest {
                 "Path substitution should work for visit using conditionals");
     }
 
-    @Test
+    // Disabled 20240312 due to change of the behaviour of getMultiple
+    @Disabled
     public void testGetMultipleOld() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
@@ -833,7 +834,8 @@ class YAMLTest {
         assertEquals(16, extractedNames.size());
     }
 
-    @Test
+    // Disabled 20240312 due to change of the behaviour of getMultiple
+    @Disabled
     public void testSubsetFromGetMultipleOld() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<YAML> subsetYaml = yaml.getYAMLList("test.tuplesequence");
