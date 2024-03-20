@@ -174,7 +174,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      * <p>
-     * This method is equal to {@link #getSubMap(String)}. {@code getYAML} is preferred dut to clearer semantics.
+     * This method is equal to {@link #getSubMap(String)}. {@code getYAML} is preferred due to clearer semantics.
      * @param path path for the sub map.
      * @return the map at the path
      * @throws NotFoundException    if the path could not be found
@@ -616,25 +616,6 @@ public class YAML extends LinkedHashMap<String, Object> {
             return defaultValue;
         }
     }
-
-    // TODO: Evaluate the redefinition of getMultiple
-    // The old getMultiple 
-
-//    /**
-//     * Resolves all values related to a given key, from a YAML structure. All values that have the specified key are
-//     * returned as part of a list.
-//     * @deprecated
-//     * This is no longer the best method to visit values. Use {@link #visit(Object, YAML, YAMLVisitor)} instead.
-//     * @param key the key to look for in the input YAML.
-//     * @return a list of all values that can be cast to strings.
-//     */
-//    @Deprecated
-//    public List<Object> getMultiple(String key){
-//        String correctedPath = "**." + key;
-//        MultipleValuesVisitor visitor = new MultipleValuesVisitor();
-//        visit(correctedPath, this, visitor);
-//        return visitor.extractedValues;
-//    }
 
     /**
      * Resolves all values related to a given key, from a part of a YAML structure. All values that are children of the
