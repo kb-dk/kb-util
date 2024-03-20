@@ -863,12 +863,18 @@ class YAMLTest {
         assertTrue(extractedNames.containsAll(testValues));
     }
 
-    // Switching to up front extrapolating in 20240311
     @Test
-    public void testExtrapolatingDefaultNotEnabled() throws IOException {
+    public void testExtrapolatingDefaultEnabled() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
+        assertEquals("foo", yaml.getString("test.somestring"),
+                "Default should be extrapolation for test.somestring");
+    }
+
+    @Test
+    public void testDisableInterpolation() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs(false, "yaml/extrapolation.yaml");
         assertEquals("${path:ypath.major}", yaml.getString("test.somestring"),
-                "Default should be no extrapolation for test.somestring");
+                "Disabling interpolation should work for test.somestring");
     }
 
     @Test
@@ -951,7 +957,7 @@ class YAMLTest {
 
     @Test
     public void testExtrapolatingFail() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation_fail.yaml");
+        YAML yaml = YAML.resolveLayeredConfigs(false, "yaml/extrapolation_fail.yaml");
         assertThrowsExactly(IllegalArgumentException.class, () -> yaml.setExtrapolate(true),
                 "Enabling extrapolation with a failing substitution should fail with an exception");
     }

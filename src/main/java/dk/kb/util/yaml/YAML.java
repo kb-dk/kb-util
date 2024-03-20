@@ -24,12 +24,7 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.validation.constraints.NotNull;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.net.MalformedURLException;
+import java.io.*;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -58,7 +53,7 @@ import java.util.stream.Collectors;
  * </ol>
  *
  * System properties can be used in the YAML values with the syntax {@code ${environment.variable}}
- * if it has been activated with {@link #setExtrapolate(boolean)}. The default is NOT to extrapolate.
+ * if it has been activated with {@link #setExtrapolate(boolean)}. The default is to extrapolate.
  * <p>
  * If extrapolation is enabled, system property values can be used as YAML values, such as
  * {@code greeting: "Running with {myapp.threads} threads"}
@@ -66,7 +61,8 @@ import java.util.stream.Collectors;
  * {@code java -Dmyapp.threads=4 -jar myapp.jar}, container configuration or similar.
  * <p>
  * A list of locally available system properties can be obtained with {@code System.getProperties().list(System.out)}
- * but only some of them are guaranteed to be set. See https://howtodoinjava.com/java/basics/java-system-properties/
+ * but only some of them are guaranteed to be set.
+ * See <a href="https://howtodoinjava.com/java/basics/java-system-properties/">java-system-properties</a>
  * Commonly used properties are {@code user.name} and {@code user.home}.
  * <p>
  * Due to limitations of the Generics implementation in Java, using system properties as list values
@@ -107,7 +103,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     private static final Pattern ARRAY_CONDITIONAL = Pattern.compile(" *([^!=]+) *(!=|=) *(.*)"); // foo=bar or foo!=bar
     private static final YAML EMPTY = new YAML();
 
-    boolean extrapolateSystemProperties = false;
+    boolean extrapolateSystemProperties = false; // All constructors set this explicitly
     private List<StringSubstitutor> substitutors = null;
 
     /**
@@ -123,31 +119,56 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
      * Use {@link #resolveLayeredConfigs} for treating YAML files as overlays when loading.
+     * <p>
+     * Extrapolation of values is enabled with this constructor. Use {@link YAML(Boolean, String...)} to control this.
      * @param resourceNames globs for YAML files.
      * @throws IOException if the files could not be loaded or parsed.
      * @see #resolveLayeredConfigs(String...)
      * @see #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, String...)
      */
     public YAML(String... resourceNames) throws IOException {
+        this(true, resourceNames);
+    }
+
+    /**
+     * Resolves one or more resources using globbing and returns YAML based on the concatenated resources.
+     * <p>
+     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
+     * Use {@link #resolveLayeredConfigs} for treating YAML files as overlays when loading.
+     * <p>
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
+     * @param resourceNames globs for YAML files.
+     * @throws IOException if the files could not be loaded or parsed.
+     * @see #resolveLayeredConfigs(String...)
+     * @see #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, String...)
+     */
+    public YAML(boolean extrapolateSystemProperties, String... resourceNames) throws IOException {
         putAll(YAML.resolveMultiConfig(resourceNames));
+        setExtrapolate(extrapolateSystemProperties);
     }
 
     /**
      * Creates a YAML wrapper around the given map.
-     * Changes to the map will be reflected in the YAML instance and vice versa.
-     *
+     * The content of {@code map} is shallow copied: Changes to values in the original {@code map} will be reflected
+     * in this YAML.
+     * <p>
+     * Extrapolation of values is enabled with this constructor. Use {@link YAML(Map, Boolean)} to control this.
      * @param map a map presumable delivered by SnakeYAML.
      */
     public YAML(Map<String, Object> map) {
-        putAll(map);
+        this(map, true);
     }
 
     /**
      * Creates a YAML wrapper around the given map.
-     * Changes to the map will be reflected in the YAML instance and vice versa.
+     * The content of {@code map} is shallow copied: Changes to values in the original {@code map} will be reflected
+     * in this YAML.
      *
      * @param map a map presumable delivered by SnakeYAML.
-     * @param extrapolateSystemProperties should system properties be extrapolated in values
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
      */
     public YAML(Map<String, Object> map, boolean extrapolateSystemProperties) {
         putAll(map);
@@ -156,16 +177,40 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Creates a YAML wrapper around the given map.
-     * Changes to the map will be reflected in the YAML instance and vice versa.
+     * The content of {@code map} is shallow copied: Changes to values in the original {@code map} will be reflected
+     * in this YAML.
      *
      * @param map a map presumable delivered by SnakeYAML.
      * @param extrapolateSystemProperties should system properties be extrapolated in values
+     *                                    Note that extrapolation cannot be turned off once enabled.
      * @param substitutors explicit specification of substitutors. Typically used for creating submaps.
      */
     YAML(Map<String, Object> map, boolean extrapolateSystemProperties, List<StringSubstitutor> substitutors) {
+        this(map, extrapolateSystemProperties, false, substitutors);
+    }
+
+    /**
+     * Internal optimized constructor. Creates a YAML wrapper around the given map.
+     * The content of {@code map} is shallow copied: Changes to values in the original {@code map} will be reflected
+     * in this YAML.
+     *
+     * @param map a map presumable delivered by SnakeYAML.
+     * @param extrapolateSystemProperties should system properties be extrapolated in values
+     *                                    Note that extrapolation cannot be turned off once enabled.
+     * @param alreadyExtrapolated         if true, extrapolation has already been performed on values,
+     *                                    so no extra traversal for extrapolation is needed.
+     * @param substitutors explicit specification of substitutors. Typically used for creating submaps.
+     */
+    YAML(Map<String, Object> map, boolean extrapolateSystemProperties, boolean alreadyExtrapolated,
+         List<StringSubstitutor> substitutors) {
         this.putAll(map);
         this.substitutors = substitutors;
-        setExtrapolate(extrapolateSystemProperties);
+        if (extrapolateSystemProperties && alreadyExtrapolated) {
+            // Skip the traversal as we know the map has already been extrapolated
+            this.extrapolateSystemProperties = true;
+        } else {
+            setExtrapolate(extrapolateSystemProperties);
+        }
     }
 
     /**
@@ -197,7 +242,6 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws InvalidTypeException if the value cannot be parsed as a List of YAMLs
      * @throws NullPointerException if the path is null
      */
-    @SuppressWarnings("unchecked")
     @NotNull
     public YAML getSubMap(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         return getSubMap(path, false);
@@ -245,7 +289,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
         //       This is needed for path substitution
-        return new YAML(result, extrapolateSystemProperties, getSubstitutors());
+        return new YAML(result, extrapolateSystemProperties, extrapolateSystemProperties, getSubstitutors());
     }
 
     /**
@@ -260,7 +304,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws InvalidTypeException if the value cannot be parsed as a List
      * @throws NullPointerException if the path is null
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "unused"})
     @NotNull
     public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         try {
@@ -299,7 +343,6 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param defaultList if the path cannot be resolved, return this value.
      * @return the list at the path or defaultList if it could not be located.
      */
-    @SuppressWarnings("unchecked")
     public <T> List<T> getList(String path, List<T> defaultList) {
         try {
             return getList(path);
@@ -343,7 +386,9 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
         //       This is needed for path substitution
-        return hmList.stream().map(map -> new YAML(map, extrapolateSystemProperties, getSubstitutors())).collect(Collectors.toList());
+        return hmList.stream()
+                .map(map -> new YAML(map, extrapolateSystemProperties, extrapolateSystemProperties, getSubstitutors()))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -668,7 +713,6 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @see #getMultiple(String)
      * @see #getMultiple(String, YAML)
      */
-    @SuppressWarnings("unchecked")
     @Override
     @NotNull
     public Object get(Object yPath) throws NotFoundException, InvalidTypeException, NullPointerException {
@@ -676,7 +720,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         visit(yPath.toString(), this, visitor);
 
         if (visitor.extractedValues.isEmpty()) {
-            throw new NotFoundException("Cannot find object at path '", yPath.toString() + "'");
+            throw new NotFoundException("Cannot find object at path '", yPath + "'");
         }
         if (visitor.extractedValues.size() > 1) {
             throw new IllegalStateException(String.format(Locale.ROOT,
@@ -712,7 +756,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         if (yPath == null) {
             throw new NullPointerException("Failed to query config for null path");
         }
-        String path = yPath.toString().trim();
+        String path = yPath.trim();
         if (path.startsWith(".")) {
             path = path.substring(1);
         }
@@ -782,6 +826,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param yaml the current place in the YAML file being traversed. This should be an instance of a List.
      * @param visitor used to visit values that match the given path.
      */
+    @SuppressWarnings("unchecked")
     private void traverseList(YPath yPath, Object yaml, YAMLVisitor visitor) {
         List<Object> list = (List<Object>) yaml;
 
@@ -951,7 +996,8 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
         //       This is needed for path substitution
-        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties, getSubstitutors());
+        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties, extrapolateSystemProperties,
+                getSubstitutors());
 
         // Check at the outer level for flat map style
         Object keyValue;
@@ -1040,8 +1086,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @NotNull
     @Deprecated
-    public static YAML resolveConfig(String configName) throws
-            IOException, FileNotFoundException, MalformedURLException, NullPointerException, InvalidPathException {
+    public static YAML resolveConfig(String configName) throws IOException, NullPointerException, InvalidPathException {
         return resolveConfig(configName, null);
     }
 
@@ -1086,11 +1131,28 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: This method merges the YAML config as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair. Sub-entries are not merged on key collisions, meaning that key-collisions at the root level
      * replaces the full tree under the key. References are supported with this method.
+     * <p>
+     * Extrapolation of values is enabled with this method. Use {@link #parse(InputStream, boolean)} to control this.
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
-    @SuppressWarnings("StatementWithEmptyBody")
     public static YAML parse(InputStream yamlStream) {
+        return parse(yamlStream, true);
+    }
+
+    /**
+     * Parse the given configStream as a single YAML.
+     * <p>
+     * Note: This method merges the YAML config as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair. Sub-entries are not merged on key collisions, meaning that key-collisions at the root level
+     * replaces the full tree under the key. References are supported with this method.
+     * @param yamlStream YAML.
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
+     * @return a YAML based on the given stream.
+     */
+    @SuppressWarnings({"StatementWithEmptyBody", "unused"})
+    public static YAML parse(InputStream yamlStream, boolean extrapolateSystemProperties) {
         Object raw = new Yaml().load(yamlStream);
         if (raw instanceof Map) {
             @SuppressWarnings("unchecked")
@@ -1100,7 +1162,8 @@ public class YAML extends LinkedHashMap<String, Object> {
             for (Object o : map.values());
 
             YAML rootMap = new YAML(map, false);
-            log.trace("Parsed YAML config stream");
+            log.trace("Parsed YAML config stream with extrapolateSystemProperties={}", extrapolateSystemProperties);
+            rootMap.setExtrapolate(extrapolateSystemProperties);
             return rootMap;
         } else {
             throw new IllegalArgumentException("The config resource does not evaluate to a valid YAML configuration.");
@@ -1113,6 +1176,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
      * <p>
      * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
+     * <p>
+     * Extrapolation of values is enabled with this method. Use {@link #parse(boolean, Path...)} to control this.
      *
      * @param yamlPaths paths to YAML Files.
      * @return a YAML based on the given paths.
@@ -1121,7 +1186,45 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws AccessDeniedException if a resource at a yamlPath could not be read.
      */
     public static YAML parse(Path... yamlPaths) throws IOException {
-        return parse(Arrays.stream(yamlPaths).map(Path::toFile).toArray(File[]::new));
+        return parse(true, yamlPaths);
+    }
+
+    /**
+     * Parse the given Paths as a single YAML, effectively concatenating all paths.
+     * It is possible to cross-reference between the individual paths.
+     * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
+     * <p>
+     * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
+     *
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
+     * @param yamlPaths paths to YAML Files.
+     * @return a YAML based on the given paths.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if a yamlFile could not be located.
+     * @throws AccessDeniedException if a resource at a yamlPath could not be read.
+     */
+    public static YAML parse(boolean extrapolateSystemProperties, Path... yamlPaths) throws IOException {
+        return parse(extrapolateSystemProperties, Arrays.stream(yamlPaths).map(Path::toFile).toArray(File[]::new));
+    }
+
+    /**
+     * Parse the given Files as a single YAML, effectively concatenating all files.
+     * It is possible to use cross references between the individual files.
+     * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
+     * <p>
+     * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
+     * <p>
+     * Extrapolation of values is enabled with this method. Use {@link #parse(boolean, File...)} to control this.
+     *
+     * @param yamlFiles path to YAML Files.
+     * @return a YAML based on the given stream.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if a yamlFile could not be located.
+     * @throws AccessDeniedException if a resource at a yamlFile could not be read.
+     */
+    public static YAML parse(File... yamlFiles) throws IOException {
+        return parse(true, yamlFiles);
     }
 
     /**
@@ -1131,13 +1234,15 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
      *
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
      * @param yamlFiles path to YAML Files.
      * @return a YAML based on the given stream.
      * @throws IOException if a configuration could not be fetched.
      * @throws FileNotFoundException if a yamlFile could not be located.
      * @throws AccessDeniedException if a resource at a yamlFile could not be read.
      */
-    public static YAML parse(File... yamlFiles) throws IOException {
+    public static YAML parse(boolean extrapolateSystemProperties, File... yamlFiles) throws IOException {
         // Check is files can be read
         for (File yamlFile: yamlFiles) {
             if (!yamlFile.exists()) {
@@ -1162,7 +1267,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
 
             // Perform a single parse of the content
-            return parse(yamlStream);
+            return parse(yamlStream, extrapolateSystemProperties);
         } finally {
             if (configs != null) {
                 for (InputStream config : configs) {
@@ -1184,7 +1289,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
      * <p>
-     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
+     * Extrapolation of values is enabled with this method.
+     * Use {@link #resolveMultiConfig(boolean, String...)} to control this.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
@@ -1194,13 +1300,66 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @see #resolveLayeredConfigs for alternative.
      */
     public static YAML resolveMultiConfig(String... configResources) throws IOException {
+        return resolveMultiConfig(true, configResources);
+    }
+
+    /**
+     * Resolve the given YAML configurations and present a merged YAML from that.
+     * <p>
+     * Note: This method merges the YAML configs as-is: Any key-collisions are handled implicitly by keeping the latest
+     * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
+     * This means that references across configResources is possible.
+     * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
+     * <p>
+     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
+     * order for that glob. The overall order is the given array of configResources
+     *
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
+     * @param configResources the names, paths or globs of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if none of the given configResources could be resolved.
+     * @throws AccessDeniedException if any of the resolved config files could not be read.
+     * @see #resolveLayeredConfigs for alternative.
+     */
+    public static YAML resolveMultiConfig(boolean extrapolateSystemProperties, String... configResources) throws IOException {
         Path[] configPaths = Arrays.stream(configResources)
                 .map(Resolver::resolveGlob).flatMap(Collection::stream)
                 .toArray(Path[]::new);
         if (configPaths.length == 0) {
             throw new FileNotFoundException("No paths resolved from " + Arrays.toString(configResources));
         }
-        return parse(configPaths);
+        return parse(extrapolateSystemProperties, configPaths);
+    }
+
+    /**
+     * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
+     * This is typically used to support easy overwriting of specific parts of a major configuration file.
+     * This is shorthand for {@code resolveLayeredConfig(MERGE_ACTION.union, MERGE_ACTION.kee_extra, configResources}:
+     * The values for duplicate keys in YAMLs are merged, lists and atomic values are overwritten with the values
+     * from extra.
+     * <p>
+     * Note: As opposed to {@link #resolveMultiConfig(String...)} this approach does not allow for references
+     * across configResources.
+     * <p>
+     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
+     * order for that glob. The overall order is the given array of configResources
+     * <p>
+     * Extrapolation of values is enabled with this method.
+     * Use {@link #resolveLayeredConfigs(boolean, String...)} to control this.
+     *
+     * @param configResources the names, paths or globs of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if none of the given configResources could be resolved.
+     * @throws AccessDeniedException if any of the resolved config files could not be read.
+     * @see #resolveMultiConfig for alternative.
+     */
+    public static YAML resolveLayeredConfigs(String... configResources) throws IOException {
+        return resolveLayeredConfigs(true, configResources);
     }
 
     /**
@@ -1219,6 +1378,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
      *
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException if a configuration could not be fetched.
@@ -1226,8 +1387,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveMultiConfig for alternative.
      */
-    public static YAML resolveLayeredConfigs(String... configResources) throws IOException {
-        return resolveLayeredConfigs(MERGE_ACTION.union, MERGE_ACTION.keep_extra, configResources);
+    public static YAML resolveLayeredConfigs(boolean extrapolateSystemProperties, String... configResources)
+            throws IOException {
+        return resolveLayeredConfigs(
+                MERGE_ACTION.union, MERGE_ACTION.keep_extra, extrapolateSystemProperties, configResources);
     }
 
     /**
@@ -1241,7 +1404,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
      * <p>
-     * Note 3: System property extrapolation is not enabled by default. Call {@link #extrapolate(boolean)} for that.
+     * Extrapolation of values is enabled with this method.
+     * Use {@link #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, boolean, String...)} to control this.
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
@@ -1256,6 +1420,36 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     public static YAML resolveLayeredConfigs(MERGE_ACTION defaultMA, MERGE_ACTION listMA, String... configResources)
             throws IOException {
+        return resolveLayeredConfigs(defaultMA, listMA, true, configResources);
+    }
+
+    /**
+     * Resolve the given YAML configurations, merging key-value pairs from subsequent configs into the first one.
+     * This is typically used to support easy overwriting of specific parts of a major configuration file.
+     * <p>
+     * Note: As opposed to {@link #resolveMultiConfig(String...)} this approach does not allow for references
+     * across configResources.
+     * <p>
+     * Note 2: The resolver supports globbing so {@code /home/someone/myapp-conf/*.yaml} expands to all YAML-files
+     * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
+     * order for that glob. The overall order is the given array of configResources
+     *
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs).
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @param listMA    the action to take when a key collision for a list is encountered.
+     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
+     *                                    Note that extrapolation cannot be turned off once enabled.
+     * @param configResources the names, paths or globs of the configuration files.
+     * @throws IOException if a configuration could not be fetched.
+     * @throws FileNotFoundException if none of the given configResources could be resolved.
+     * @throws AccessDeniedException if any of the resolved config files could not be read.
+     * @see #resolveMultiConfig for alternative.
+     */
+    public static YAML resolveLayeredConfigs(MERGE_ACTION defaultMA, MERGE_ACTION listMA,
+                                             boolean extrapolateSystemProperties, String... configResources)
+            throws IOException {
         List<Path> configPaths = Arrays.stream(configResources)
                 .map(Resolver::resolveGlob).flatMap(Collection::stream)
                 .collect(Collectors.toList());
@@ -1264,8 +1458,10 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         YAML compound = new YAML();
         for (Path configPath: configPaths) {
-            compound = compound.merge(YAML.parse(configPath), defaultMA, listMA);
+            // Important to wait with extrapolation af paths might cross files
+            compound = compound.merge(YAML.parse(false, configPath), defaultMA, listMA);
         }
+        compound.setExtrapolate(extrapolateSystemProperties);
         return compound;
     }
 

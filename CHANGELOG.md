@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Leaf-key based `getMultipleFromSubYaml` in `YAML` is now deprecated as the extended YAML syntax cover these scenarios
-- Breaking: Leaf-key based `getMultiple` has changed behaviour to generic yPath expansion  
+- Breaking: Leaf-key based `getMultiple` has changed behaviour to generic yPath expansion
+- Breaking: Default behaviour for YAML is now to extrapolate. Alternate constructors are provided to disable extrapolation
 
 ## [1.4.26](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.26)
 ### Added
