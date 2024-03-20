@@ -23,10 +23,10 @@ import java.util.function.Supplier;
 
 /**
  * Structure for timing-instrumentation of other code. Intended for always-enabled use as all methods are
- * sought to be light weight.
- *
+ * sought to be lightweight.
+ * <p>
  * Usage: Create a root instance and optionally add children with {@link #getChild}.
- *
+ * <p>
  * Mixed thread safety: Methods are thread safe, unless the JavaDoc says otherwise.
  */
 // TODO: Consider adding a toJSON
@@ -373,7 +373,7 @@ public class Timing {
 
     /**
      * Adds now-lastStart to spendNS, increments updateCount with 1 and sets lastStart to now.
-     *
+     * <p>
      * Note: The use of @{link #start()} and stop() is not thread-safe by nature.
      * @return now-lastStart.
      */
@@ -385,7 +385,7 @@ public class Timing {
      * Adds now-lastStart to spendNS, sets updateCount to the given updates and sets lastStart to now.
      * This is used when a process has handled an amount of entities and the average time spend on each
      * entity should be part of the report.
-     *
+     * <p>
      * Note: The use of @{link #start()} and stop() is not thread-safe by nature.
      * @param updates the number of updates that happened since start.
      * @return now-lastStart.
