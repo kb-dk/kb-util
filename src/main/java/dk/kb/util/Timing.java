@@ -226,11 +226,11 @@ public class Timing {
      * @return this Timing for further chaining.
      */
     public Timing measure(Runnable runnable) {
-        start();
+        long startNS = System.nanoTime();
         try {
             runnable.run();
         } finally {
-            stop();
+            addNS(System.nanoTime()-startNS);
         }
         return this;
     }
@@ -260,11 +260,11 @@ public class Timing {
      * @see #wrap(Supplier)
      */
     public <T> T measure(Supplier<T> supplier) {
-        start();
+        long startNS = System.nanoTime();
         try {
             return supplier.get();
         } finally {
-            stop();
+            addNS(System.nanoTime()-startNS);
         }
     }
 
@@ -345,7 +345,7 @@ public class Timing {
      * Note that children may have sub-children.
      * @return A list of all children. If there are no children, the empty list will be returned.
      */
-    public List<Timing> getAllChildren() {
+    public synchronized List<Timing> getAllChildren() {
         return children == null ?
                 Collections.emptyList() :
                 new ArrayList<>(children.values());
@@ -354,7 +354,7 @@ public class Timing {
     /**
      * @return the number of children.
      */
-    public int getChildCount() {
+    public synchronized int getChildCount() {
         return children == null ? 0 : children.size();
     }
 
@@ -589,13 +589,13 @@ public class Timing {
      * @param indent if true, the result is rendered multi-line and indented.
      * @return recursive timing information.
      */
-    public synchronized String toString(STATS[] showStats, boolean indent) {
+    public String toString(STATS[] showStats, boolean indent) {
         StringBuilder sb = new StringBuilder();
         toString(sb, showStats, indent, "");
         return sb.toString();
     }
 
-    private void toString(StringBuilder sb, STATS[] showStats, boolean indent, String spaces) {
+    private synchronized void toString(StringBuilder sb, STATS[] showStats, boolean indent, String spaces) {
         sb.append(spaces);
         for (STATS stat: showStats) {
             if (stat == STATS.name) {

@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Timing.measure and Timing.getAllChrildren are now thread safe
 
 ## [1.4.26](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.26)
 ### Added
