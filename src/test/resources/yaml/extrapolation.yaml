@@ -1,0 +1,52 @@
+# Test YAML
+test:
+  somestring: ${path:ypath.major}
+  someint: ${path:ypath.wholenumber}
+#  nothere: ${path:ypath.noexistingpath}
+  somedouble: ${path:ypath.doubleval}
+  somebool: ${path:ypath.boolval}
+#  somenull: ${path:ypath.nullval}
+
+  indirectstart: ${path:test.indirectmiddle}
+  indirectmiddle: ${path:test.indirectend}
+  indirectend: ${user.name}
+
+  indirectstringlist:
+    - ${path:ypath.major}
+    - ${path:ypath.minor}
+
+  indirectnumberlist:
+    - ${path:ypath.wholenumber}
+    - ${path:ypath.wholenumbertwo}
+
+  # Substitution currently only works for values that can be represented as simple strings
+  # TODO: Expand substitution to handle paths to structures
+  emptylist: ${path:ypath.emptylistval}
+
+  indirectnumbermap:
+    foo: ${path:ypath.wholenumber}
+    bar: ${path:ypath.wholenumbertwo}
+    sub:
+      subfoo: ${path:ypath.wholenumber}
+
+ypath:
+  major: foo
+  minor: oof
+  wholenumber: 123
+  wholenumbertwo: 234
+  doubleval: 12.34
+  boolval: true
+  nullval: null
+  emptylistval: []
+
+  sublist:
+    - ${path:ypath.major}
+  sublist2:
+    - submap:
+        ref: ${path:ypath.major}
+  direct: ${path:ypath.major}
+  maps:
+    - order: first
+      value: ${path:ypath.major}
+    - order: second
+      value: bar

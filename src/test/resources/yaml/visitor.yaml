@@ -62,3 +62,32 @@ subtrees:
       secondary:
         name: zab
         age: 121
+
+integerkeys:
+  1: foo
+  2: bar
+
+# lasting.*.one[last]
+# returner foo, boom
+lasting:
+  one:
+    sub:
+      - foo
+  two:
+    sub:
+      - bar
+      - boom
+
+ypath:
+  major: foo
+  sublist:
+    - ${path:ypath.major}
+  sublist2:
+    - submap:
+        ref: ${path:ypath.major}
+  direct: ${path:ypath.major}
+  maps:
+    - order: first
+      value: ${path:ypath.major}
+    - order: second
+      value: bar
