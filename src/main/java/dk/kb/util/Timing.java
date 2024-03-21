@@ -206,7 +206,7 @@ public class Timing {
     /**
      * Perform 1 call to {@link Runnable#run()}, measuring the time and adding that to the current Timing.
      * <p>
-     * This is equivalent to
+     * This is a thread-safe equivalent of
      * <pre>
      *     myTiming.start();
      *     runnable.run();
@@ -239,7 +239,7 @@ public class Timing {
      * Perform 1 call to {@link Supplier#get()}, measuring the time and adding that to the current Timing before
      * returning the result of the call. The supplier will be called exactly once.
      * <p>
-     * This is equivalent to
+     * This is a thread-safe equivalent of
      * <pre>
      *     myTiming.start();
      *     myResult = supplier.get();
