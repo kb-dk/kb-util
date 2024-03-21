@@ -89,7 +89,7 @@ public class TimingTest {
         {
             parent.setShowStats(Timing.MS_STATS);
             assertTrue(parent.toString().contains("util"),
-                    "Full stats should contain utilization after shange to showStats");
+                    "Full stats should contain utilization after change to showStats");
         }
         {
             assertFalse(child.toString().contains("util"),
@@ -99,6 +99,26 @@ public class TimingTest {
         Function<Integer, Integer> measuredF = num -> parent.measure(() -> myFunction.apply(num));
 
         Stream.of(1, 2, 3).map(measuredF).collect(Collectors.toList());
+    }
+
+    @Test
+    public void testTransitive() {
+        Timing parent = new Timing("parent").setShowStats(Timing.MS_STATS_SIMPLE);
+        parent.measure(() -> {
+            if (System.currentTimeMillis() == 0) {
+                throw new RuntimeException("Impossible time");
+            }
+        });
+        assertFalse(parent.toString().contains("util"), "parent should not contain utilization without child");
+        Timing child = parent.getChild("child").measure(() -> {
+            if (System.currentTimeMillis() == 0) {
+                throw new RuntimeException("Impossible time");
+            }
+        });
+        child.setShowStats(Timing.MS_STATS);
+
+        assertTrue(child.toString().contains("util"), "child should contain utilization");
+        assertTrue(parent.toString().contains("util"), "parent.toString should contain utilization due to child");
     }
 
     @Test

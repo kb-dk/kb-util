@@ -546,7 +546,7 @@ public class Timing {
      * @return recursive timing information using the existing {@link #showStats} setup.
      */
     public String toString() {
-        return toString(showStats, false);
+        return toString((STATS[])null, false);
     }
 
     /**
@@ -560,7 +560,9 @@ public class Timing {
     }
 
     /**
-     * @param ns if true, nano-seconds are returned, else milli-seconds.
+     * String serialization using fixed stat elements.
+     * @param ns if true, stats with nano-seconds are returned using {@link #NS_STATS},
+     *          else milli-seconds are returned using {@link #MS_STATS}.
      * @param indent if true, the result is rendered multi-line and indented.
      * @return recursive timing information in nano- or milli-seconds.
      */
@@ -568,15 +570,31 @@ public class Timing {
         return toString(ns ? NS_STATS : MS_STATS, indent);
     }
 
+    /**
+     * String serialization using fixed stat elements.
+     * @param sb will receive the serialized stats.
+     * @param ns if true, stats with nano-seconds are returned using {@link #NS_STATS},
+     *          else milli-seconds are returned using {@link #MS_STATS}.
+     */
     public void toString(StringBuilder sb, boolean ns) {
         toString(sb, ns, false);
     }
 
+    /**
+     * String serialization using fixed stat elements.
+     * @param sb will receive the serialized stats.
+     * @param ns if true, stats with nano-seconds are returned using {@link #NS_STATS},
+     *          else milli-seconds are returned using {@link #MS_STATS}.
+     * @param indent if true, the result is rendered multi-line and indented.
+     */
     synchronized void toString(StringBuilder sb, boolean ns, boolean indent) {
         toString(sb, ns ? NS_STATS : MS_STATS, indent, "");
     }
 
     /**
+     * String serialization using explictly stated {@link STATS}. Note that {@code showStats} will be used transitively
+     * for all {@code Timing} elements in the tree. State {@code null} to serialize using the {@link STATS} already
+     * defined for each element.
      * @param showStats the stats to output. Pre-defined collections are {@link #MS_STATS} and {@link #NS_STATS}.
      * @return recursive timing information.
      */
@@ -585,6 +603,9 @@ public class Timing {
     }
 
     /**
+     * String serialization using explictly stated {@link STATS}. Note that {@code showStats} will be used transitively
+     * for all {@code Timing} elements in the tree. State {@code null} to serialize using the {@link STATS} already
+     * defined for each element.
      * @param showStats the stats to output. Pre-defined collections are {@link #MS_STATS} and {@link #NS_STATS}.
      * @param indent if true, the result is rendered multi-line and indented.
      * @return recursive timing information.
@@ -597,7 +618,8 @@ public class Timing {
 
     private synchronized void toString(StringBuilder sb, STATS[] showStats, boolean indent, String spaces) {
         sb.append(spaces);
-        for (STATS stat: showStats) {
+        final STATS[] localStats = showStats == null ? this.showStats : showStats;
+        for (STATS stat: localStats) {
             if (stat == STATS.name) {
                 sb.append(name);
                 break;
@@ -605,7 +627,7 @@ public class Timing {
         }
         sb.append("(");
         boolean empty = true;
-        for (STATS stat: showStats) {
+        for (STATS stat: localStats) {
             if (stat == STATS.name || (stat == STATS.subject && subject == null)) {
                 continue;
             }
@@ -668,7 +690,6 @@ public class Timing {
                     first = false;
                 } else {
                     sb.append(indent ? ",\n" : ", ");
-                    first = false;
                 }
                 child.toString(sb, showStats, indent, indent ? spaces + "  " : "");
             }
