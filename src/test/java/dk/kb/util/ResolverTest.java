@@ -1,5 +1,6 @@
 package dk.kb.util;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -71,16 +72,20 @@ class ResolverTest {
                    is(Resolver.resolveGlob("yaml/subfolder/../subfolder/somefile.yaml").size()).matches(1));
 
         String glob = "../" + parent + "/yaml/subfolder/somefile.yaml";
+
+        // During mvn release:perform, a check git checkout is done under "target", resulting in 2 matches from
+        // the resolver instead of the usual 1. The asserts below accepts both 1+ matches
+
         assertThat("The file '" + known + "' should be resolved with ../ at the start of the path for glob '" +
                    glob + "' derived from absolute path '" + known + "' but returned matches " +
                    Resolver.resolveGlob(glob),
-                   is(Resolver.resolveGlob(glob).size()).matches(1));
+                is(Resolver.resolveGlob(glob).isEmpty()).matches(false));
 
         assertThat("The file '" + known + "' should be resolved with /../../ in the path",
-                   is(Resolver.resolveGlob("yaml/subfolder/../../yaml/subfolder/somefile.yaml").size()).matches(1));
+                   is(Resolver.resolveGlob("yaml/subfolder/../../yaml/subfolder/somefile.yaml").isEmpty()).matches(false));
 
         assertThat("The file '" + known + "' should be resolved with both /./ and /../ in the path",
-                   is(Resolver.resolveGlob("yaml/subfolder/./../subfolder/somefile.yaml").size()).matches(1));
+                   is(Resolver.resolveGlob("yaml/subfolder/./../subfolder/somefile.yaml").isEmpty()).matches(false));
     }
 
     @Test
