@@ -5,18 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.5.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.0)
 ### Added
-- Extended YAML-path syntax: `**` for matching any key at any depth 
-- YAML-path supporting [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) pattern for YAML
-- Fully generic `getMultiple` method, utilizing the Visitor implementation 
+- Extended YAML-path syntax: `**` for matching any key at any depth (DRA-99)
+- YAML-path supporting [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) pattern for YAML (DRA-99, DRA-134)
+- Fully generic `getMultiple` method, utilizing the Visitor implementation (DRA-99)
 
 ### Changed
-- Leaf-key based `getMultipleFromSubYaml` in `YAML` is now deprecated as the extended YAML syntax cover these scenarios
-- Breaking: Leaf-key based `getMultiple` has changed behaviour to generic yPath expansion
-- Breaking: Default behaviour for YAML is now to extrapolate. Alternate constructors are provided to disable extrapolation
+- Leaf-key based `getMultipleFromSubYaml` in `YAML` is now deprecated as the extended YAML syntax cover these scenarios (DRA-99)
+- Breaking: Leaf-key based `getMultiple` has changed behaviour to generic yPath expansion (DRA-99)
+- Breaking: Default behaviour for YAML is now to extrapolate. Alternate constructors are provided to disable extrapolation (DRA-145)
 
 ### Fixed
-- Timing.measure and Timing.getAllChrildren are now thread safe
+- Timing.measure and Timing.getAllChrildren are now thread safe (DRA-165)
 
 ## [1.4.26](https://github.com/kb-dk/kb-util/tree/kb-util-1.4.26)
 ### Added
