@@ -11,13 +11,13 @@
 
     <groupId>dk.kb.util</groupId>
     <artifactId>kb-util</artifactId>
-    <version>1.5.1</version>
+    <version>1.5.2-SNAPSHOT</version>
 
     <scm>
         <url>https://github.com/kb-dk/kb-util</url>
         <connection>scm:git:git@github.com:kb-dk/kb-util.git</connection>
         <developerConnection>scm:git:git@github.com:kb-dk/kb-util.git</developerConnection>
-        <tag>kb-util-1.5.1</tag>
+        <tag>kb-util-1.4.23</tag>
     </scm>
 
     <licenses>
