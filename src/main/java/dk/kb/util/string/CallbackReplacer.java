@@ -25,15 +25,31 @@ import java.util.regex.Pattern;
 /**
  * Sub-strings matching a given regular expression are delivered to a callback that returns the replacement string.
  */
-// TODO: Make this truly streaming using a buffered reader that maps to CharSequence
+// Implementation note: The replacer takes String as an input. It would be highly usable to switch to streaming
+// based replacement, taking a Reader og InputStream as input, but this does not work with Java's build in Pattern +
+// Matcher. Maybe because it is quite hard to make a streaming regexp engine?
+// It would be possible to take a CharSequence (e.g. StringBuffer is a CharSequence) as input, but that optimization
+// seems premature as there are no known calls for it.
 public class CallbackReplacer implements Function<String, String> {
     private final Pattern pattern;
     private final Function<String, String> callback;
+    /**
+     * If true and {@link #pattern} has 1 capturing group, the content of the capturing group will be used as input
+     * for the {@link #callback} but the full capture will be replaced with the result.
+     * <p>
+     * If false and {@link #pattern} has 1 capturing group, the content of the capturing group will be used as input
+     * for the {@link #callback} and only content of the capturing group will be replaced.
+     * <p>
+     * If {@link #pattern} has no capturing group, {@code replaceFull} is ignored.
+     * <p>
+     * Default is false.
+     */
+    private final boolean replaceFull;
 
     /**
      * @param pattern the pattern to look for.
      *                If the pattern contains no groups, the full match is passed to the callback.
-     *                f it contains a single capturing group, the content of that group is passed to the callback.
+     *                If it contains a single capturing group, the content of that group is passed to the callback.
      *                More than 1 group is not supported.
      * @param callback optionally adjusts the part matching the pattern. Returning null is the same as the empty String.
      */
@@ -44,13 +60,33 @@ public class CallbackReplacer implements Function<String, String> {
     /**
      * @param pattern the pattern to look for.
      *                If the pattern contains no groups, the full match is passed to the callback.
-     *                f it contains a single capturing group, the content of that group is passed to the callback.
+     *                If it contains a single capturing group, the content of that group is passed to the callback.
      *                More than 1 group is not supported.
      * @param callback optionally adjusts the part matching the pattern. Returning null is the same as the empty String.
      */
     public CallbackReplacer(Pattern pattern, Function<String, String> callback) {
+        this(pattern, callback, false);
+    }
+
+    /**
+     * @param pattern the pattern to look for.
+     *                If the pattern contains no groups, the full match is passed to the callback.
+     *                f it contains a single capturing group, the content of that group is passed to the callback.
+     *                More than 1 group is not supported.
+     * @param callback optionally adjusts the part matching the pattern. Returning null is the same as the empty String.
+     * @param replaceFull if true and {@code pattern} has 1 capturing group, the content of the capturing group will be
+     *                    used as input for the {@code callback} but the full capture will be replaced with the result.
+     *                    <p>
+     *                    If false and {@code #attern} has 1 capturing group, the content of the capturing group will
+     *                    be used as input for the {@code callback} and only content of the capturing group will be
+     *                    replaced.
+     *                    <p>
+     *                    If {@code pattern} has no capturing group, {@code replaceFull} is ignored.
+     */
+    public CallbackReplacer(Pattern pattern, Function<String, String> callback, boolean replaceFull) {
         this.pattern = pattern;
         this.callback = callback;
+        this.replaceFull = replaceFull;
         final int groups = pattern.matcher("").groupCount();
         if (groups > 1) {
             throw new UnsupportedOperationException(String.format(
@@ -71,7 +107,7 @@ public class CallbackReplacer implements Function<String, String> {
             apply(s, out);
         } catch (Exception e) {
             throw new RuntimeException("Exception during replacement", e);
-        }
+        }                       
         return out.toString();
     }
 
@@ -93,20 +129,24 @@ public class CallbackReplacer implements Function<String, String> {
                 out.write(replacement == null ? "" : replacement);
             } else if (matcher.groupCount() == 1) {
                 replacement = callback.apply(matcher.group(1));
-                out.write(in.substring(matcher.start(), matcher.start(1)));
-                out.write(replacement == null ? "" : replacement);
-                out.write(in.substring(matcher.end(1), matcher.end()));
+                if (replaceFull) { // Replace the full capture
+                    out.write(replacement == null ? "" : replacement);
+                } else { // Replace only the group capture
+                    out.write(in.substring(matcher.start(), matcher.start(1)));
+                    out.write(replacement == null ? "" : replacement);
+                    out.write(in.substring(matcher.end(1), matcher.end()));
+                }
             } else {
                 throw new IllegalStateException(
                         "More that 1 capturing group is not supported. Pattern: '" + pattern.pattern() + "'");
             }
             begin = matcher.end();
         }
-        out.write(in.substring(begin)); // Copy from eht end of last match to the end of the input
+        out.write(in.substring(begin)); // Copy from the end of last match to the end of the input
     }
 
     @Override
     public String toString() {
-        return "CallbackReplacer(pattern='" + pattern.pattern() + "')";
+        return "CallbackReplacer(pattern='" + pattern.pattern() + ", replaceFull=" + replaceFull + "')";
     }
 }

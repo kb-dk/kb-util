@@ -83,7 +83,27 @@ class CallbackReplacerTest {
              // Expected
          }
     }
-    
+
+    @Test
+    void testGroupMatchFullReplace() {
+        CallbackReplacer subMatcher = new CallbackReplacer(
+                Pattern.compile("\\$\\{config:([^}]+)}"),
+                s -> "foo",
+                true);
+        assertEquals("url: \"foo\"",
+                subMatcher.apply("url: \"${config:some.path}\""));
+    }
+
+    @Test
+    void testGroupMatchGroupReplace() {
+        CallbackReplacer subMatcher = new CallbackReplacer(
+                Pattern.compile("\\$\\{config:([^}]+)}"),
+                s -> "foo",
+                false);
+        assertEquals("url: \"${config:foo}\"",
+                subMatcher.apply("url: \"${config:some.path}\""));
+    }
+
     @Test
     void streamingOutput() throws IOException {
         StringWriter out = new StringWriter();
