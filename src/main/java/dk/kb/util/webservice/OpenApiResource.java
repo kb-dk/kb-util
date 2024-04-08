@@ -16,6 +16,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
@@ -52,6 +53,18 @@ public class OpenApiResource extends ImplBase {
             CONFIG_REPLACEMENT, OpenApiResource::getReplacementForMatch, true);
 
 
+    /**
+     * JAX-RS needs the empty constructor for serving the webapp. To configure the {@link OpenApiResource} create an
+     * instance of the class using the {@link OpenApiResource(YAML)} constructor inside the given implementation of
+     * {@link Application#getClasses()} before returning all classes that are part of the application.
+     */
+    public OpenApiResource(){}
+
+    /**
+     * To configure the {@link OpenApiResource} create an instance of the class using the {@link OpenApiResource(YAML)}
+     * constructor inside the given implementation of {@link Application#getClasses()} before returning all classes that
+     * are part of the application.
+     */
     public OpenApiResource(YAML configYAML) {
         config = configYAML;
     }
