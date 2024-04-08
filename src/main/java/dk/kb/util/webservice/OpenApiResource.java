@@ -23,9 +23,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+/**
+ * Handle serving of OpenAPI specification for a webapp. This class handles dynamic updates of the API specification.
+ * Through this class it gets possible to use syntax as the following {@code ${config:yaml.path}} to access values from
+ * config files in API specifications.
+ */
 public class OpenApiResource extends ImplBase {
     private static final Logger log = LoggerFactory.getLogger(OpenApiResource.class);
 
+    /**
+     * The config where values are substituted from.
+     */
     static private YAML config;
 
     public static final String APPLICATION_YAML = "application/yaml";
@@ -42,6 +50,7 @@ public class OpenApiResource extends ImplBase {
      */
     private static final CallbackReplacer CONFIG_PROCESSOR = new CallbackReplacer(
             CONFIG_REPLACEMENT, OpenApiResource::getReplacementForMatch, true);
+
 
     public OpenApiResource(YAML configYAML) {
         config = configYAML;

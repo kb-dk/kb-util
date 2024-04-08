@@ -19,7 +19,6 @@ public class OpenApiResourceTest {
         String yamlSpec = apiResource.getYamlSpec("util-openapi_v1")
                             .getEntity().toString();
         assertFalse(yamlSpec.contains("${config:"));
-
     }
 
 
