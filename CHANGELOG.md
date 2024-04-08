@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Added option to CallbackReplacer for replacing the full capture when using Pattern with 1 group 
+- Added the class OpenApiResource which handles dynamic updating of OpenAPI specifications in JAX-RS webapps.
 
 ## [1.5.1](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.1)
 ### Fixed
