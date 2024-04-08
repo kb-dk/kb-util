@@ -28,6 +28,24 @@ import java.util.regex.Pattern;
  * Handle serving of OpenAPI specification for a webapp. This class handles dynamic updates of the API specification.
  * Through this class it gets possible to use syntax as the following {@code ${config:yaml.path}} to access values from
  * config files in API specifications.
+ * <p>
+ * JAX-RS uses the empty constructor for serving the webapp. To configure the {@link OpenApiResource} call the
+ * {@link #setConfig(YAML)}-method inside the given implementation of {@link Application#getClasses()} before
+ * returning all classes that are part of the application. An example is provided here:
+ *
+ * <pre>
+ *     public Set<Class<?>> getClasses() {
+ *         OpenApiResource.setConfig(ServiceConfig.getConfig());
+ *
+ *         return new HashSet<>(Arrays.asList(
+ *                 JacksonJsonProvider.class,
+ *                 JacksonXMLProvider.class,
+ *                 DsDiscoverApiServiceImpl.class,
+ *                 ServiceApiServiceImpl.class,
+ *                 ServiceExceptionMapper.class,
+ *                 OpenApiResource.class
+ *         ));
+ * </pre>
  */
 public class OpenApiResource extends ImplBase {
     private static final Logger log = LoggerFactory.getLogger(OpenApiResource.class);
@@ -54,18 +72,27 @@ public class OpenApiResource extends ImplBase {
 
 
     /**
-     * JAX-RS needs the empty constructor for serving the webapp. To configure the {@link OpenApiResource} create an
-     * instance of the class using the {@link OpenApiResource(YAML)} constructor inside the given implementation of
-     * {@link Application#getClasses()} before returning all classes that are part of the application.
+     * JAX-RS uses the empty constructor for serving the webapp. To configure the {@link OpenApiResource} call the
+     * {@link #setConfig(YAML)}-method inside the given implementation of {@link Application#getClasses()} before
+     * returning all classes that are part of the application. An example is provided here:
+     *
+     * <pre>
+     *     public Set<Class<?>> getClasses() {
+     *         OpenApiResource.setConfig(ServiceConfig.getConfig());
+     *
+     *         return new HashSet<>(Arrays.asList(
+     *                 JacksonJsonProvider.class,
+     *                 JacksonXMLProvider.class,
+     *                 DsDiscoverApiServiceImpl.class,
+     *                 ServiceApiServiceImpl.class,
+     *                 ServiceExceptionMapper.class,
+     *                 OpenApiResource.class
+     *         ));
+     * </pre>
      */
     public OpenApiResource(){}
 
-    /**
-     * To configure the {@link OpenApiResource} create an instance of the class using the {@link OpenApiResource(YAML)}
-     * constructor inside the given implementation of {@link Application#getClasses()} before returning all classes that
-     * are part of the application.
-     */
-    public OpenApiResource(YAML configYAML) {
+    public static void setConfig(YAML configYAML){
         config = configYAML;
     }
 
