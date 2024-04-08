@@ -1,0 +1,16 @@
+# Test YAML
+test:
+  somestring: Hello World
+  someint: 87
+  somedouble: 87.13
+  somebool: true
+  nested:
+    sublevel2string: sub1
+  arrayofstrings:
+    - a
+    - b
+    - c
+  arrayofints:
+    - 1
+    - 2
+  emptyList: []
