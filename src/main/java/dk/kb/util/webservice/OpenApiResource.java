@@ -192,6 +192,9 @@ public class OpenApiResource extends ImplBase {
      * @return the value at the given path in the configuration files.
      */
     private static String getReplacementForMatch(String yPath) {
+        if (config == null){
+            throw new IllegalStateException("Config must be initialized before using the class. See JavaDoc for OpenApiResource for further details.");
+        }
         return config.get(yPath).toString();
     }
 
