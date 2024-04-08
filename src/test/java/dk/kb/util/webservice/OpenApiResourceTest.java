@@ -15,7 +15,8 @@ public class OpenApiResourceTest {
     @Test
     public void testGetYamlSpec() throws IOException {
         YAML config = YAML.resolveLayeredConfigs("conf/test.yaml");
-        OpenApiResource apiResource = new OpenApiResource(config);
+        OpenApiResource apiResource = new OpenApiResource();
+        OpenApiResource.setConfig(config);
         String yamlSpec = apiResource.getYamlSpec("util-openapi_v1")
                             .getEntity().toString();
         assertFalse(yamlSpec.contains("${config:"));
@@ -25,7 +26,9 @@ public class OpenApiResourceTest {
     @Test
     public void testPathHacking() throws IOException {
         YAML config = YAML.resolveLayeredConfigs("conf/test.yaml");
-        OpenApiResource apiResource = new OpenApiResource(config);
+        OpenApiResource apiResource = new OpenApiResource();
+        OpenApiResource.setConfig(config);
+
 
         assertThrows(NotFoundServiceException.class, () ->
                 apiResource.getYamlSpec("secret/very").getEntity().toString());
@@ -34,7 +37,8 @@ public class OpenApiResourceTest {
     @Test
     public void testGettingConfigPath() throws IOException {
         YAML config = YAML.resolveLayeredConfigs("conf/test.yaml");
-        OpenApiResource apiResource = new OpenApiResource(config);
+        OpenApiResource apiResource = new OpenApiResource();
+        OpenApiResource.setConfig(config);
 
         assertThrows(NotFoundServiceException.class, () ->
                 apiResource.getYamlSpec("test")
