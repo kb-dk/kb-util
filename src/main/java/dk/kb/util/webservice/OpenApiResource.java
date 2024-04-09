@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import dk.kb.util.Resolver;
 import dk.kb.util.string.CallbackReplacer;
+import dk.kb.util.string.Strings;
+import dk.kb.util.webservice.exception.InvalidArgumentServiceException;
 import dk.kb.util.webservice.exception.NotFoundServiceException;
 import dk.kb.util.yaml.YAML;
 import org.slf4j.Logger;
@@ -23,7 +25,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /**
@@ -201,23 +202,14 @@ public class OpenApiResource extends ImplBase {
         List<Object> result = config.getMultiple(yPath);
 
         if (result.isEmpty()){
-            // I am not quite sure what we should return here. Is it too harsh to throw an exception? If not, which would be correct? Illegal Argument?
             log.error("No entry has been found for yPath: '{}'.", yPath);
-            return yPath;
-        }
-        if (result.size() == 1){
-            return result.get(0).toString();
+            throw new InvalidArgumentServiceException("No entry has been found for yPath: '{}'.", yPath);
         }
 
         // If there are more than one entry, then the entries are combined to a specially formatted comma seperated string.
         // All entries are seperated by ", " to make the openAPI generator see the input ["${config:yaml.string}"] as an
         // actual array resolved as ["foo", "bar", "zoo"]
-        StringJoiner joiner = new StringJoiner("\", \"");
-        for (Object entry: result) {
-            joiner.add(entry.toString());
-        }
-
-        return joiner.toString();
+        return Strings.join(result, "\", \"");
     }
 
     /**
