@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OpenApiResourceTest {
 
@@ -20,6 +21,16 @@ public class OpenApiResourceTest {
         String yamlSpec = apiResource.getYamlSpec("util-openapi_v1")
                             .getEntity().toString();
         assertFalse(yamlSpec.contains("${config:"));
+    }
+
+    @Test
+    public void testEnumConstruction() throws IOException {
+        YAML config = YAML.resolveLayeredConfigs("conf/test.yaml");
+        OpenApiResource apiResource = new OpenApiResource();
+        OpenApiResource.setConfig(config);
+        String yamlSpec = apiResource.getYamlSpec("util-openapi_v1")
+                            .getEntity().toString();
+        assertTrue(yamlSpec.contains("enum: [\"a\", \"b\", \"c\"]"));
     }
 
 
