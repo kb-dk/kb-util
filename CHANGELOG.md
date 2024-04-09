@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Changed how OpenApiResource handles substitution of multiple values. Now substitutinos using placeholders in yaml paths can be used in OpenAPI enums.
+
 ## [1.5.3](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.3)
 ### Added
 - Added option to CallbackReplacer for replacing the full capture when using Pattern with 1 group 
