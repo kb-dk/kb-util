@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.5.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.5)
 ### Changed
 - Changed logging in YAML class as it extrapolates by default since kb-util 1.5.0
 
