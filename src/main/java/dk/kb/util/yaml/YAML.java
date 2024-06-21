@@ -1633,7 +1633,8 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "No extrapolation will be performed");
             return this;
         }
-        log.info("Extrapolating all values with paths and system properties");
+        // This logging has been disabled as the YAML class has been rewritten to a recursive structure, which enables this by default.
+        // log.info("Extrapolating all values with paths and system properties");
         extrapolateAll(this);
         return this;
     }
