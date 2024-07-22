@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * Map where entries are removed (lazily) when they have been kept for more than a given amount of milliseconds.
  */
-class TimeMap<K, V> extends AbstractMap<K, V> {
+public class TimeMap<K, V> extends AbstractMap<K, V> {
     private final long ttlMS;
     private final Map<K, TimeValue<V>> inner = new HashMap<>();
 

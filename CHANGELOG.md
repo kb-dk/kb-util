@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.5.7](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.7)
+## [1.5.9](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.9)
 
 ### Added
 - Added TimeMap class that are used when enabling OAuth2 on services.
