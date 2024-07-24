@@ -93,23 +93,6 @@ public abstract class ImplBase {
         return handleException(e, true, true);
     }
 
-
-    /**
-     * Exception wrapper that logs the given Exception together with information on the endpoint call.
-     * <p/>
-     * If the given exception is NOT inherited from {@link ServiceException}, it is wrapped in a {@link InternalServiceException}. If not, it will be delivered as is.
-     * In both cases the message will state the endpoint
-     * and the parameters from the client call.
-     * Also, a warning is logged, stating the endpoint and the parameters plus the given exception.
-     * <p/>
-     * This is a shortcut for {@code handleException(e, true, true)}.
-     * @param e: any kind of exception.
-     * @return a ServiceException stating endpoint and parameters.
-     */
-    protected ServiceException handleException(Exception e, boolean wrapServiceExceptions){
-        return handleException(e, true, wrapServiceExceptions);
-    }
-
     /**
      * Exception wrapper with flexible handling.
      *
