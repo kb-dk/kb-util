@@ -142,8 +142,28 @@ public abstract class ImplBase {
             }
             accepts.append(aHeaders.nextElement());
         }
+
+
+        boolean mappingEqualsEndpoint = compareMappingWithEndpoint(mapping, endpoint);
+
+        if (mappingEqualsEndpoint){
+            if (!endpoint.startsWith("/")){
+                endpoint = "/" + endpoint;
+            }
+
+            return method + " " + context +  endpoint + (params.isEmpty() ? "" : "?" + params) +
+                    " accepts: " + accepts;
+        }
+
         return method + " " + context + "/" + mapping + endpoint + (params.isEmpty() ? "" : "?" + params) +
-               " accepts: " + accepts;
+                    " accepts: " + accepts;
+    }
+
+    private boolean compareMappingWithEndpoint(String mapping, String endpoint) {
+        String cleanMapping = mapping.replaceAll("/", "");
+        String cleanEndpoint = endpoint.replaceAll("/", "");
+
+        return cleanMapping.equals(cleanEndpoint);
     }
 
     /**
