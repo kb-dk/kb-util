@@ -160,10 +160,15 @@ public abstract class ImplBase {
     }
 
     private boolean compareMappingWithEndpoint(String mapping, String endpoint) {
-        String cleanMapping = mapping.replaceAll("/", "");
-        String cleanEndpoint = endpoint.replaceAll("/", "");
 
-        return cleanMapping.equals(cleanEndpoint);
+        if (mapping != null && endpoint != null){
+            String cleanMapping = mapping.replaceAll("/", "");
+            String cleanEndpoint = endpoint.replaceAll("/", "");
+            return cleanMapping.equals(cleanEndpoint);
+        }
+
+        log.debug("Either mapping or endpoint was null, so they can't be compared. Mapping: '{}', Endpoint: '{}'", mapping, endpoint);
+        return false;
     }
 
     /**
