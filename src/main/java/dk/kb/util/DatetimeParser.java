@@ -52,9 +52,8 @@ public class DatetimeParser {
             datetime = datetime.replace(" ", "");
             // Remove any brackets
             datetime = datetime.replace("[", "").replace("]", "");
-
+            // Add seconds to timestamp if missing.
             String datetimeWithCorrectSeconds = getDateTimeWithCorrectSeconds(datetime);
-
             // Insert the missing "T" between date and time components
             String formattedDateTimeString = datetimeWithCorrectSeconds.replaceAll("(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2})", "$1T$2");
             // Remove extra zeros from the time zone offset
