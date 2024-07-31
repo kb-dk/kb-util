@@ -2,6 +2,9 @@ package dk.kb.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
@@ -49,6 +52,15 @@ public class DatetimeParserTest {
 
         String date10 = "åååå-mm-ddTtt:mm:ss+0200"; // Garbage data
         assertThrowsExactly(MalformedIOException.class, ()-> DatetimeParser.parseStringToZonedDateTime(date10,dateTimeFormat));
+    }
+
+    @Test
+    void zuluTimestampTest() throws MalformedIOException {
+        String dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss[XX][XXX]";
+
+        String date1 = "1967-12-19T16:40Z";
+        assertEquals("1967-12-19T16:40Z", DatetimeParser.parseStringToZonedDateTime(date1, dateTimeFormat).toString());
+        assertEquals("1967-12-19T16:40:00Z", DatetimeParser.parseStringToZonedDateTime(date1, dateTimeFormat).format(DateTimeFormatter.ISO_INSTANT));
     }
 }
 

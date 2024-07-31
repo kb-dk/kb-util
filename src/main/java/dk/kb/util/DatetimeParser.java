@@ -1,15 +1,22 @@
 package dk.kb.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Datetime Parser used to parse wrongly formatted data from observed formats from DOMS. Examples of formats, that are
  * fixed by this class can be seen in the test class {@code DatetimeParserTest}.
  */
 public class DatetimeParser {
+    private static final Logger log = LoggerFactory.getLogger(DatetimeParser.class);
+
 
 
     /**
@@ -45,15 +52,58 @@ public class DatetimeParser {
             datetime = datetime.replace(" ", "");
             // Remove any brackets
             datetime = datetime.replace("[", "").replace("]", "");
+            // Add seconds to timestamp if missing.
+            String datetimeWithCorrectSeconds = getDateTimeWithCorrectSeconds(datetime);
             // Insert the missing "T" between date and time components
-            String formattedDateTimeString = datetime.replaceAll("(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2})", "$1T$2");
+            String formattedDateTimeString = datetimeWithCorrectSeconds.replaceAll("(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2})", "$1T$2");
             // Remove extra zeros from the time zone offset
             String trimmedDateTimeString = formattedDateTimeString.replaceAll("(\\+|-)(\\d{2})(\\d{2})(\\d{0,2})$", "$1$2$3");
+
             // Parse it.
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern(format, Locale.ROOT);
             return ZonedDateTime.parse(trimmedDateTimeString, dtf);
         } catch (DateTimeParseException e) {
             return tryRepairStrangeTZ(datetime, format);
+        }
+    }
+
+    /**
+     * Validate that the timestamp in a datetime string has the correct size and format.
+     * The string should be 8 characters long and contain exactly two ':' chars.
+     * @param datetime to validate
+     * @return an updated datetime string. Where seconds have been added to the timestamp if they were missing.
+     * Otherwise, return the original datetime-string.
+     */
+    private static String getDateTimeWithCorrectSeconds(String datetime) {
+        String timestamp = getTimestamp(datetime);
+        if (timestamp.length() == 8) {
+            return datetime;
+        } else {
+            if (!containsColonTwice(timestamp)) {
+                String timestampWithSeconds = timestamp + ":00";
+                return datetime.replace(timestamp, timestampWithSeconds);
+            } else {
+                throw new RuntimeException("The timestamp contains two ':' but the length is: " + timestamp.length());
+            }
+        }
+    }
+
+    /**
+     * get the timestamp from a datetime by extracting everything between T and either Z or +.
+     * @param datetimeString to return timestamp from.
+     * @return the timestamp from the input datetime.
+     */
+    private static String getTimestamp(String datetimeString) {
+        // matches on everything after T and before either + or Z
+        String timestampPattern = "T(.*?)([Z|\\+])";
+        Pattern pattern = Pattern.compile(timestampPattern);
+
+        // Match against input datetime string
+        Matcher matcher1 = pattern.matcher(datetimeString);
+        if (matcher1.find()) {
+            return matcher1.group(1);
+        } else {
+            throw new RuntimeException("Could not extract timezone from datetime string: " + datetimeString);
         }
     }
 
@@ -67,8 +117,14 @@ public class DatetimeParser {
      */
     private static ZonedDateTime tryRepairStrangeTZ(String datetime, String format) throws MalformedIOException {
         try {
-            // Find index where the charater is
+            // Find index where the character is
             int index = datetime.indexOf('+');
+
+            if (index == -1 && datetime.endsWith("Z")){
+                log.debug("Datetime '{}' is in UTC time", datetime);
+                return ZonedDateTime.parse(datetime, DateTimeFormatter.ISO_INSTANT);
+            }
+
             // Extract the content after the '+' e.g. the timezone part
             String timeZoneOffset = datetime.substring(index + 1);
             // remove all zeros, so only the zimezone value remains
@@ -88,6 +144,25 @@ public class DatetimeParser {
         } catch (RuntimeException e) {
             throw new MalformedIOException("Could not parse/repair date: " + datetime);
         }
+    }
+
+
+    /**
+     * Validate that a string, often a timestamp, contains two colons.
+     * @param input to validate.
+     * @return true if the input string contains two colons. Otherwise, return false.
+     */
+    public static boolean containsColonTwice(String input) {
+        // Find the first occurrence of ':'
+        int firstColonIndex = input.indexOf(':');
+        // If no ':' is found, return false
+        if (firstColonIndex == -1) {
+            return false;
+        }
+        // Find the second occurrence of ':', starting after the first one
+        int secondColonIndex = input.indexOf(':', firstColonIndex + 1);
+        // If the second ':' is found, return true; otherwise, return false
+        return secondColonIndex != -1;
     }
 }
 
