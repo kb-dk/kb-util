@@ -2,18 +2,16 @@ package dk.kb.util;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 public class DatetimeParserTest {
+    private static final String dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss[XX][XXX]";
 
     @Test
     void testRepairZonedDateTimeOffset() throws MalformedIOException {
-        String dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss[XX][XXX]";
-
         String date1 = "2008-02-12T06:30:00+0100"; // no ":" test
         assertEquals(DatetimeParser.parseStringToZonedDateTime(date1,dateTimeFormat).toString(),
                 "2008-02-12T06:30+01:00");
@@ -56,11 +54,15 @@ public class DatetimeParserTest {
 
     @Test
     void zuluTimestampTest() throws MalformedIOException {
-        String dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss[XX][XXX]";
-
         String date1 = "1967-12-19T16:40Z";
         assertEquals("1967-12-19T16:40Z", DatetimeParser.parseStringToZonedDateTime(date1, dateTimeFormat).toString());
         assertEquals("1967-12-19T16:40:00Z", DatetimeParser.parseStringToZonedDateTime(date1, dateTimeFormat).format(DateTimeFormatter.ISO_INSTANT));
+    }
+
+    @Test
+    void noTInPlusTwoTimezone() throws MalformedIOException {
+        String date = "1987-05-0416:45:00+0200";
+        assertEquals("1987-05-04T14:45:00Z", DatetimeParser.parseStringToZonedDateTime(date, dateTimeFormat).format(DateTimeFormatter.ISO_INSTANT));
     }
 }
 

@@ -52,12 +52,12 @@ public class DatetimeParser {
             datetime = datetime.replace(" ", "");
             // Remove any brackets
             datetime = datetime.replace("[", "").replace("]", "");
-            // Add seconds to timestamp if missing.
-            String datetimeWithCorrectSeconds = getDateTimeWithCorrectSeconds(datetime);
             // Insert the missing "T" between date and time components
-            String formattedDateTimeString = datetimeWithCorrectSeconds.replaceAll("(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2})", "$1T$2");
+            String formattedDateTimeString = datetime.replaceAll("(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2})", "$1T$2");
+            // Add seconds to timestamp if missing.
+            String datetimeWithCorrectSeconds = getDateTimeWithCorrectSeconds(formattedDateTimeString);
             // Remove extra zeros from the time zone offset
-            String trimmedDateTimeString = formattedDateTimeString.replaceAll("(\\+|-)(\\d{2})(\\d{2})(\\d{0,2})$", "$1$2$3");
+            String trimmedDateTimeString = datetimeWithCorrectSeconds.replaceAll("(\\+|-)(\\d{2})(\\d{2})(\\d{0,2})$", "$1$2$3");
 
             // Parse it.
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern(format, Locale.ROOT);
