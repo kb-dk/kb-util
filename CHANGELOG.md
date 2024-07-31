@@ -5,9 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed order of datetime repairing.
+
 
 ## [1.5.12](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.12)
-###
+### Changed
 - Changed DatetimeParser to also fix UTC datetimes, where seconds are missing from timestamp.
 
 ## [1.5.11](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.11)
