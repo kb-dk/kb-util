@@ -5,9 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.5.13](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.13)
 ### Fixed
 - Fixed order of datetime repairing.
-
 
 ## [1.5.12](https://github.com/kb-dk/kb-util/tree/kb-util-1.5.12)
 ### Changed
