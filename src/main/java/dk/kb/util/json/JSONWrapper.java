@@ -16,33 +16,26 @@ package dk.kb.util.json;
 
 import org.json.JSONObject;
 
-import java.util.Locale;
-
 /**
- * Wrapper for JSoup for easier access to the JSON elements.
+ * Not implemented.
+ * Had been thought to be a wrapper for JSoup for easier access to the JSON elements.
  */
 public class JSONWrapper {
 
     /**
-     * Resolves the Object at the given JSON path
-     * @param path the path
-     * @param json  the json
-     * @return the object
+     * Not implemented.
+     * @throws UnsupportedOperationException always
      */
     public static Object getObject(JSONObject json, String path) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
-    
+
     /**
-     *  something
-      * @param path the path
-     * @return the object
+     * Not implemented.
+     * @throws UnsupportedOperationException always
      */
     public Object getObjects(String path) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
-    public static void main(String[] args) {
-        JSONObject jo = new JSONObject("sss", Locale.ENGLISH);
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+
 }
