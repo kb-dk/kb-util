@@ -20,6 +20,7 @@ import org.json.JSONObject;
  * Not implemented.
  * Had been thought to be a wrapper for JSoup for easier access to the JSON elements.
  */
+@Deprecated(forRemoval = true)
 public class JSONWrapper {
 
     /**
