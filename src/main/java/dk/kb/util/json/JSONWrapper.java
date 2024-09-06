@@ -39,4 +39,7 @@ public class JSONWrapper {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
+    public static void main(String[] args) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }
