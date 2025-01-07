@@ -8,3 +8,10 @@ nulllist:
   - ~
   -
   - bar
+
+multipleNull:
+  valueOne: null
+  valueTwo:
+  valueThree: ~
+
+

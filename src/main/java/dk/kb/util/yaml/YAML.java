@@ -25,6 +25,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -264,8 +265,10 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML getSubMap(String path, boolean maintainKeys)
             throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
+
         if (found == null) {
-            throw new NotFoundException("Path gives a null value", path);
+            log.debug("Value for subMap is null, therefore an empty YAML structure is returned.");
+            return EMPTY;
         }
 
         if (!(found instanceof Map)) {
@@ -1077,8 +1080,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param configName the name, path or glob for the configuration file.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException                    if the configuration could not be fetched.
-     * @throws java.io.FileNotFoundException  if the config name does not refer to a file
-     * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
+     * @throws FileNotFoundException  if the config name does not refer to a file
+     * @throws MalformedURLException if the resource location could not be converted to an URL.
      * @throws InvalidPathException           if the configName is not valid as a path
      * @throws NullPointerException           if the configName is null
      * @throws IllegalArgumentException       if the config cannot be parsed as YAML
@@ -1101,8 +1104,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param confRoot   the root element in the configuration or null if the full configuration is to be returned.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException                    if the configuration could not be fetched.
-     * @throws java.io.FileNotFoundException  if the config name does not refer to a file
-     * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
+     * @throws FileNotFoundException  if the config name does not refer to a file
+     * @throws MalformedURLException if the resource location could not be converted to an URL.
      * @throws InvalidPathException           if the configName is not valid as a path
      * @throws NullPointerException           if the configName is null
      * @throws IllegalArgumentException       if the config cannot be parsed as YAML

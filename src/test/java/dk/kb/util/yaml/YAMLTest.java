@@ -975,10 +975,6 @@ class YAMLTest {
                 "Explicit and implicit List<YAML> retrieval should be the same");
     }
 
-    // TODO: all these methods: YAML.get, YAML.getMultiple, YAML.getSubMap, YAML.getList, YAML.getYAMLList should be able to return an empty structure, if the value for the key
-    //  is null
-    // TODO: YAML.containsKey should return true, when key contains null explicitly.
-
     @Test
     public void testContainsKeyNullValues() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
@@ -992,5 +988,47 @@ class YAMLTest {
         containsKey = yaml.containsKey("tildevalue");
         assertTrue(containsKey);
     }
+
+    @Test
+    public void testGetNullValues() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+
+        Object nullValue = yaml.get("nullvalue");
+        assertNull(nullValue);
+
+        Object emptyValue = yaml.get("emptyvalue");
+        assertNull(emptyValue);
+
+        Object tildeValue = yaml.get("tildevalue");
+        assertNull(tildeValue);
+    }
+
+    @Test
+    public void testGetMultipleNullValues() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+
+        List<Object> nullValues = yaml.getMultiple("multipleNull.**");
+
+        assertEquals(3, nullValues.size());
+        nullValues.forEach(Assertions::assertNull);
+    }
+
+    @Test
+    public void testGetSubMapNull() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML emptyYaml = new YAML();
+
+        YAML nullYaml = yaml.getSubMap("emptyvalue");
+        assertEquals(emptyYaml, nullYaml);
+
+        nullYaml = yaml.getSubMap("nullvalue");
+        assertEquals(emptyYaml, nullYaml);
+
+        nullYaml = yaml.getSubMap("tildevalue");
+        assertEquals(emptyYaml, nullYaml);
+    }
+
+    // TODO: all these methods: YAML.getList, YAML.getYAMLList should be able to return an empty structure, if the value for the key
+    //  is null
 
 }
