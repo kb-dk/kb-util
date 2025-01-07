@@ -309,7 +309,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @SuppressWarnings({"unchecked", "unused"})
     @NotNull
-    public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException {
         try {
             // The cast to test checks if T is YAML, in which case the designated getYAMLList is called
             // It is ugly, but no better test for T == YAML is known. See e.g.
@@ -317,12 +317,13 @@ public class YAML extends LinkedHashMap<String, Object> {
             // https://stackoverflow.com/questions/73982858/java-generics-reflection-get-classt-from-generic-returns-typevariableimpl-ins
             T test = (T)EMPTY;
             return (List<T>)getYAMLList(path);
-        } catch (ClassCastException e) {
-            // Do nothing as this just mean that T is not YAML
+        } catch (ClassCastException | NullPointerException e) {
+            // Do nothing as this just mean that T is not YAML or contains elements that are not directly YAML, such as null.
         }
 
         Object found = get(path);
         if (found == null) {
+            // This message should probably be: "Requested key does not exist in YAML."
             throw new NotFoundException("Path gives a null value", path);
         }
 
@@ -331,7 +332,13 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
         }
         try {
-            return (List<T>) found;
+            log.info("We get here and found is: '{}'", found);
+            List<T> foundList = (List<T>) found;
+
+            return foundList.stream()
+                    .map(value -> (T) Objects.requireNonNullElseGet(value, YAML::new))
+                    .collect(Collectors.toList());
+
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + found + "' to List<T>", path, e);
         }
@@ -373,13 +380,15 @@ public class YAML extends LinkedHashMap<String, Object> {
     public List<YAML> getYAMLList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
         if (found == null) {
-            throw new NotFoundException("Path gives a null value", path);
+            return List.of(new YAML());
+            //throw new NotFoundException("Path gives a null value", path);
         }
 
         if (!(found instanceof List)) {
             throw new InvalidTypeException(
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
         }
+
         List<Map<String, Object>> hmList;
         try {
             hmList = (List<Map<String, Object>>) found;
@@ -926,7 +935,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
                 if (cleanedYPath.size() == 1){
                     if (key.equals(cleanedYPath.getFirst())){
-                        visitor.visit(value);
+                        visitor.visit(Objects.requireNonNullElseGet(value, YAML::new));
                     }
                 } else {
                     if (key.equals(cleanedYPath.getFirst())){

@@ -992,15 +992,16 @@ class YAMLTest {
     @Test
     public void testGetNullValues() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML empty = new YAML();
 
         Object nullValue = yaml.get("nullvalue");
-        assertNull(nullValue);
+        assertEquals(empty, nullValue);
 
         Object emptyValue = yaml.get("emptyvalue");
-        assertNull(emptyValue);
+        assertEquals(empty, emptyValue);
 
         Object tildeValue = yaml.get("tildevalue");
-        assertNull(tildeValue);
+        assertEquals(empty, tildeValue);
     }
 
     @Test
@@ -1030,5 +1031,36 @@ class YAMLTest {
 
     // TODO: all these methods: YAML.getList, YAML.getYAMLList should be able to return an empty structure, if the value for the key
     //  is null
+
+    @Test
+    public void testGetYAMLListNull() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML empty = new YAML();
+
+        List<YAML> nullYaml = yaml.getYAMLList("listWithSomeYamlValuesAndNull");
+
+        assertEquals("bar", nullYaml.get(0).getString("foo"));
+        assertEquals(empty, nullYaml.get(2).get("moo"));
+    }
+
+    @Test
+    public void testGetListNull() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML empty = new YAML();
+
+        List<Object> yamlList = yaml.getList("listWithMixedValuesAndNull");
+        List<Object> emptyList = yaml.getList("listWithEmptyValues");
+
+        // empty structures
+        assertEquals(empty, yamlList.get(0));
+        assertEquals(empty, yamlList.get(4));
+        // YAML Structures
+        YAML entry = new YAML((Map<String, Object>) yamlList.get(1));
+        assertEquals("bar", entry.getString("foo"));
+        // Object
+        assertEquals("stringValue", yamlList.get(5));
+        // All empty values
+        emptyList.forEach(value -> assertEquals(empty, value));
+    }
 
 }

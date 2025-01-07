@@ -14,4 +14,20 @@ multipleNull:
   valueTwo:
   valueThree: ~
 
+listWithEmptyValues:
+  -
+  -
+  -
 
+listWithSomeYamlValuesAndNull:
+  - foo: bar
+  - bar: zoo
+  - moo: null
+
+listWithMixedValuesAndNull:
+  - null
+  - foo: bar
+  - bar: zoo
+  - moo: null
+  - ~
+  - stringValue
