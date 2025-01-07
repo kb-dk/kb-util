@@ -974,4 +974,23 @@ class YAMLTest {
         assertEquals(explicit.toString(), implicit.toString(),
                 "Explicit and implicit List<YAML> retrieval should be the same");
     }
+
+    // TODO: all these methods: YAML.get, YAML.getMultiple, YAML.getSubMap, YAML.getList, YAML.getYAMLList should be able to return an empty structure, if the value for the key
+    //  is null
+    // TODO: YAML.containsKey should return true, when key contains null explicitly.
+
+    @Test
+    public void testContainsKeyNullValues() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+
+        boolean containsKey = yaml.containsKey("emptyvalue");
+        assertTrue(containsKey);
+
+        containsKey = yaml.containsKey("nullvalue");
+        assertTrue(containsKey);
+
+        containsKey = yaml.containsKey("tildevalue");
+        assertTrue(containsKey);
+    }
+
 }

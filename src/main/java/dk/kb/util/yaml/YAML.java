@@ -683,8 +683,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     /* **************************** Path-supporting overrides ************************************ */
 
     /**
-     * Checks if a value is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
-     * Sample path: foo.bar
+     * Checks if a key is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
+     * Sample path: foo.bar.
      *
      * @param path path for the Object.
      * @return true is an Object exists for the given path.
@@ -693,8 +693,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Override
     public boolean containsKey(Object path) throws NullPointerException {
         try {
-            Object value = get(path);
-            return value != null;
+            get(path);
+            return true;
         } catch (NotFoundException | InvalidTypeException e) {
             return false;
         }

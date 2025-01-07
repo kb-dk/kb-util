@@ -2,7 +2,6 @@
 nullvalue: null
 tildevalue: ~
 emptyvalue:
-defaultnull: ${nonexisting.property:null}
 nulllist:
   - foo
   - null
