@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Updated
 - Updated YAML implementation to allow keys with null values. These gets interpreted as empty YAML structures.
 
+## Fixed
+- Fixed HeaderInputStream unit test which expected wrongly defined headers at kb.dk.
+
 ## [1.6.0](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.0)
 ### Changed
 - Marked `JSONWrapper` deprecated for removal;
