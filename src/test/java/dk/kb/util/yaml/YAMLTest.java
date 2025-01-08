@@ -974,4 +974,93 @@ class YAMLTest {
         assertEquals(explicit.toString(), implicit.toString(),
                 "Explicit and implicit List<YAML> retrieval should be the same");
     }
+
+    @Test
+    public void testContainsKeyNullValues() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+
+        boolean containsKey = yaml.containsKey("emptyvalue");
+        assertTrue(containsKey);
+
+        containsKey = yaml.containsKey("nullvalue");
+        assertTrue(containsKey);
+
+        containsKey = yaml.containsKey("tildevalue");
+        assertTrue(containsKey);
+    }
+
+    @Test
+    public void testGetNullValues() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML empty = new YAML();
+
+        Object nullValue = yaml.get("nullvalue");
+        assertEquals(empty, nullValue);
+
+        Object emptyValue = yaml.get("emptyvalue");
+        assertEquals(empty, emptyValue);
+
+        Object tildeValue = yaml.get("tildevalue");
+        assertEquals(empty, tildeValue);
+    }
+
+    @Test
+    public void testGetMultipleNullValues() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+
+        List<Object> nullValues = yaml.getMultiple("multipleNull.**");
+
+        assertEquals(3, nullValues.size());
+        nullValues.forEach(Assertions::assertNull);
+    }
+
+    @Test
+    public void testGetSubMapNull() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML emptyYaml = new YAML();
+
+        YAML nullYaml = yaml.getSubMap("emptyvalue");
+        assertEquals(emptyYaml, nullYaml);
+
+        nullYaml = yaml.getSubMap("nullvalue");
+        assertEquals(emptyYaml, nullYaml);
+
+        nullYaml = yaml.getSubMap("tildevalue");
+        assertEquals(emptyYaml, nullYaml);
+    }
+
+    // TODO: all these methods: YAML.getList, YAML.getYAMLList should be able to return an empty structure, if the value for the key
+    //  is null
+
+    @Test
+    public void testGetYAMLListNull() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML empty = new YAML();
+
+        List<YAML> nullYaml = yaml.getYAMLList("listWithSomeYamlValuesAndNull");
+
+        assertEquals("bar", nullYaml.get(0).getString("foo"));
+        assertEquals(empty, nullYaml.get(2).get("moo"));
+    }
+
+    @Test
+    public void testGetListNull() throws IOException {
+        YAML yaml = YAML.resolveLayeredConfigs("yaml/null.yaml");
+        YAML empty = new YAML();
+
+        List<Object> yamlList = yaml.getList("listWithMixedValuesAndNull");
+        List<Object> emptyList = yaml.getList("listWithEmptyValues");
+
+        // empty structures
+        assertEquals(empty, yamlList.get(0));
+        assertEquals(empty, yamlList.get(4));
+        // YAML Structures
+        YAML entry = new YAML((Map<String, Object>) yamlList.get(1));
+        assertEquals("bar", entry.getString("foo"));
+        // Object
+        assertEquals("stringValue", yamlList.get(5));
+        // All empty values
+        emptyList.forEach(value -> assertEquals(empty, value));
+    }
+
 }

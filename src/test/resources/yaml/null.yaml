@@ -2,10 +2,32 @@
 nullvalue: null
 tildevalue: ~
 emptyvalue:
-defaultnull: ${nonexisting.property:null}
 nulllist:
   - foo
   - null
   - ~
   -
   - bar
+
+multipleNull:
+  valueOne: null
+  valueTwo:
+  valueThree: ~
+
+listWithEmptyValues:
+  -
+  -
+  -
+
+listWithSomeYamlValuesAndNull:
+  - foo: bar
+  - bar: zoo
+  - moo: null
+
+listWithMixedValuesAndNull:
+  - null
+  - foo: bar
+  - bar: zoo
+  - moo: null
+  - ~
+  - stringValue

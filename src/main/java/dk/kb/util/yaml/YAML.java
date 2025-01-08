@@ -25,6 +25,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -264,8 +265,10 @@ public class YAML extends LinkedHashMap<String, Object> {
     public YAML getSubMap(String path, boolean maintainKeys)
             throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
+
         if (found == null) {
-            throw new NotFoundException("Path gives a null value", path);
+            log.debug("Value for subMap is null, therefore an empty YAML structure is returned.");
+            return EMPTY;
         }
 
         if (!(found instanceof Map)) {
@@ -306,7 +309,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     @SuppressWarnings({"unchecked", "unused"})
     @NotNull
-    public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
+    public <T> List<T> getList(String path) throws NotFoundException, InvalidTypeException {
         try {
             // The cast to test checks if T is YAML, in which case the designated getYAMLList is called
             // It is ugly, but no better test for T == YAML is known. See e.g.
@@ -314,12 +317,13 @@ public class YAML extends LinkedHashMap<String, Object> {
             // https://stackoverflow.com/questions/73982858/java-generics-reflection-get-classt-from-generic-returns-typevariableimpl-ins
             T test = (T)EMPTY;
             return (List<T>)getYAMLList(path);
-        } catch (ClassCastException e) {
-            // Do nothing as this just mean that T is not YAML
+        } catch (ClassCastException | NullPointerException e) {
+            // Do nothing as this just mean that T is not YAML or contains elements that are not directly YAML, such as null.
         }
 
         Object found = get(path);
         if (found == null) {
+            // This message should probably be: "Requested key does not exist in YAML."
             throw new NotFoundException("Path gives a null value", path);
         }
 
@@ -328,7 +332,12 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
         }
         try {
-            return (List<T>) found;
+            List<T> foundList = (List<T>) found;
+
+            return foundList.stream()
+                    .map(value -> (T) Objects.requireNonNullElseGet(value, YAML::new))
+                    .collect(Collectors.toList());
+
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + found + "' to List<T>", path, e);
         }
@@ -370,13 +379,15 @@ public class YAML extends LinkedHashMap<String, Object> {
     public List<YAML> getYAMLList(String path) throws NotFoundException, InvalidTypeException, NullPointerException {
         Object found = get(path);
         if (found == null) {
-            throw new NotFoundException("Path gives a null value", path);
+            return List.of(new YAML());
+            //throw new NotFoundException("Path gives a null value", path);
         }
 
         if (!(found instanceof List)) {
             throw new InvalidTypeException(
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
         }
+
         List<Map<String, Object>> hmList;
         try {
             hmList = (List<Map<String, Object>>) found;
@@ -683,8 +694,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     /* **************************** Path-supporting overrides ************************************ */
 
     /**
-     * Checks if a value is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
-     * Sample path: foo.bar
+     * Checks if a key is present at the given path in the YAML. See {@link #get(Object)} for path syntax.
+     * Sample path: foo.bar.
      *
      * @param path path for the Object.
      * @return true is an Object exists for the given path.
@@ -693,8 +704,8 @@ public class YAML extends LinkedHashMap<String, Object> {
     @Override
     public boolean containsKey(Object path) throws NullPointerException {
         try {
-            Object value = get(path);
-            return value != null;
+            get(path);
+            return true;
         } catch (NotFoundException | InvalidTypeException e) {
             return false;
         }
@@ -923,7 +934,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
                 if (cleanedYPath.size() == 1){
                     if (key.equals(cleanedYPath.getFirst())){
-                        visitor.visit(value);
+                        visitor.visit(Objects.requireNonNullElseGet(value, YAML::new));
                     }
                 } else {
                     if (key.equals(cleanedYPath.getFirst())){
@@ -1077,8 +1088,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param configName the name, path or glob for the configuration file.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException                    if the configuration could not be fetched.
-     * @throws java.io.FileNotFoundException  if the config name does not refer to a file
-     * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
+     * @throws FileNotFoundException  if the config name does not refer to a file
+     * @throws MalformedURLException if the resource location could not be converted to an URL.
      * @throws InvalidPathException           if the configName is not valid as a path
      * @throws NullPointerException           if the configName is null
      * @throws IllegalArgumentException       if the config cannot be parsed as YAML
@@ -1101,8 +1112,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param confRoot   the root element in the configuration or null if the full configuration is to be returned.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
      * @throws IOException                    if the configuration could not be fetched.
-     * @throws java.io.FileNotFoundException  if the config name does not refer to a file
-     * @throws java.net.MalformedURLException if the resource location could not be converted to an URL.
+     * @throws FileNotFoundException  if the config name does not refer to a file
+     * @throws MalformedURLException if the resource location could not be converted to an URL.
      * @throws InvalidPathException           if the configName is not valid as a path
      * @throws NullPointerException           if the configName is null
      * @throws IllegalArgumentException       if the config cannot be parsed as YAML
