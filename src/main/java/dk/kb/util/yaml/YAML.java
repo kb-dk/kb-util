@@ -332,7 +332,6 @@ public class YAML extends LinkedHashMap<String, Object> {
                     "Expected a List for path but got '" + found.getClass().getName() + "'", path);
         }
         try {
-            log.info("We get here and found is: '{}'", found);
             List<T> foundList = (List<T>) found;
 
             return foundList.stream()
