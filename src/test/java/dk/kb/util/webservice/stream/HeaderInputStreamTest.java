@@ -35,7 +35,7 @@ class HeaderInputStreamTest {
         String headerString;
         try (HeaderInputStream headerStream = HeaderInputStream.from(uri)) {
             headerString = IOUtils.toString(headerStream, StandardCharsets.UTF_8);
-            // For some reason headers are now lower cased.
+            // For some reason headers are now lower cased. This is the case for all headers from kb.dk
             assertEquals("bytes", headerStream.getResponseHeaders().get("accept-ranges").get(0),
                     "The header 'Accept-Ranges: bytes' should be present");
         }
