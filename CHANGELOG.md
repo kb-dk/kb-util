@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.6.2](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.1) - 2025-01-10
+## [1.6.2](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.2) - 2025-01-10
 ### Changed
 - Excluded dependency `jakarta.activation` from `jaxb-runtime` as it is imported directly into kb-util.
 
