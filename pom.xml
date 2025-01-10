@@ -311,6 +311,13 @@
             <!-- Latest version is 4.0.4. Has not been investigated -->
             <version>2.3.9</version>
             <scope>runtime</scope>
+            <exclusions>
+                <!-- This is imported directly above.-->
+                <exclusion>
+                    <groupId>com.sun.activation</groupId>
+                    <artifactId>jakarta.activation</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!--XML end-->
 
