@@ -40,20 +40,18 @@ public class ErrorList {
      * This returns a JSONNode on the format:
      * <pre>
      * {
-     *   "recordsWithErrors":{
-     *     "amount": 0,
-     *     "records": [
-     *       {
-     *         "id": "record1",
-     *         "error": "description of error"
-     *       },
-     *       {
-     *         "id": "record...N",
-     *         "error": "description of error"
-     *       },
-     *       ...
-     *     ]
-     *   }
+     *  "amount": 0,
+     *  "records": [
+     *    {
+     *      "id": "record1",
+     *      "error": "description of error"
+     *    },
+     *    {
+     *      "id": "record...N",
+     *      "error": "description of error"
+     *    },
+     *    ...
+     *  ]
      * }
      * </pre>
      * @return a JSON formatted overview of the {@link #errors} in the list.
