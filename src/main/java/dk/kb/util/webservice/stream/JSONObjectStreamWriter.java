@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 /**
  * Wrapper that handles streamed output of entries, either as a single valid JSON or
  * JSON Lines (1 independent JSON/line). This wrapper can include a metaobject containing information on records with errors.
+ * <br/>
+ * This StreamWriter is almost identical with {@link JSONStreamWriter} which returns a JSON array of data. This writer returns an object containing a data array and an errors
+ * object.
  */
 public class JSONObjectStreamWriter extends ExportWriter {
     private static final Logger log = LoggerFactory.getLogger(JSONObjectStreamWriter.class);
@@ -34,10 +37,10 @@ public class JSONObjectStreamWriter extends ExportWriter {
     private final ErrorList errorList;
 
     /**
-     * Wrap the given inner Writer in the JSONStreamWriter. Calls to {@link #write(Object)} writes directly to inner,
-     * so the JSONStreamWriter holds no cached data. The inner {@link Writer#flush()} is not called during write.
+     * Wrap the given inner Writer in the JSONObjectStreamWriter. Calls to {@link #write(Object)} writes directly to inner,
+     * so the JSONObjectStreamWriter holds no cached data. The inner {@link Writer#flush()} is not called during write.
      * null-values in objects given to {@link #write(Object)} will not be written. To control this, use
-     * the {@link JSONStreamWriter(Writer, FORMAT, boolean)} constructor.
+     * the {@link JSONObjectStreamWriter(Writer, FORMAT, boolean, ErrorList)} constructor.
      * @param inner  the Writer to send te result to.
      * @param format Valid JSON or JSON Lines.
      */
@@ -149,9 +152,14 @@ public class JSONObjectStreamWriter extends ExportWriter {
             super.write("{\n");
             super.write(preOutput);
         }
-        super.write(postOutput + ",");
-        super.write("\"errors\":" + errorList.getOverview().toString());
-        super.write("}");
+        if (errorList != null){
+            super.write(postOutput + ",");
+            super.write("\"errors\":" + errorList.getOverview().toString());
+            super.write("}");
+        } else {
+            super.write(postOutput);
+            super.write("}");
+        }
 
         super.close();
     }

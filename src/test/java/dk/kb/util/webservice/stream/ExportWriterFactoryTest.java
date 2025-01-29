@@ -156,6 +156,36 @@ class ExportWriterFactoryTest {
         }
     }
 
+    @Test
+    void testWrapWithNoErrorsList() throws IOException {
+
+        // The servlet response is used for setting the correct MIME type
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        // The HTTP headers specifies allowed MIME types
+        HttpHeaders headers = mock(HttpHeaders.class);
+        List<MediaType> mimes = Arrays.asList(
+                new MediaType("foo", "bar"),
+                new MediaType("application", "x-ndjson"));
+        when(headers.getAcceptableMediaTypes()).thenReturn(mimes);
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ExportWriter writer = ExportWriterFactory.wrapWithErrors(
+                    out, response, ExportWriterFactory.FORMAT.json, true, null);
+            getBooks(3).forEach(writer::write);
+            writer.close();
+
+            assertEquals("{\n" +
+                            "\"data\":[\n" +
+                            "{\"id\":\"0\",\"title\":\"book #0\",\"pages\":null},\n" +
+                            "{\"id\":\"1\",\"title\":\"book #1\",\"pages\":null},\n" +
+                            "{\"id\":\"2\",\"title\":\"book #2\",\"pages\":null}\n" +
+                            "]\n" +
+                            "}",
+                    out.toString(StandardCharsets.UTF_8));
+        }
+    }
+
     @Tag("fast")
     @Test
     void testWrapCSV() throws IOException {
