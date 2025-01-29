@@ -89,6 +89,73 @@ class ExportWriterFactoryTest {
         }
     }
 
+
+    @Test
+    void testWrapWithErrors() throws IOException {
+        // Using mockito setup from testWrapJSONLines test.
+        ErrorRecord error = new ErrorRecord("testID", "This specific test error occured");
+        ErrorList errorList = new ErrorList();
+        errorList.addErrorToList(error);
+
+        // The servlet response is used for setting the correct MIME type
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        // The HTTP headers specifies allowed MIME types
+        HttpHeaders headers = mock(HttpHeaders.class);
+        List<MediaType> mimes = Arrays.asList(
+                new MediaType("foo", "bar"),
+                new MediaType("application", "x-ndjson"));
+        when(headers.getAcceptableMediaTypes()).thenReturn(mimes);
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ExportWriter writer = ExportWriterFactory.wrapWithErrors(
+                    out, response, ExportWriterFactory.FORMAT.json, true, errorList);
+            getBooks(3).forEach(writer::write);
+            writer.close();
+
+            assertEquals("{\n" +
+                            "\"data\":[\n" +
+                            "{\"id\":\"0\",\"title\":\"book #0\",\"pages\":null},\n" +
+                            "{\"id\":\"1\",\"title\":\"book #1\",\"pages\":null},\n" +
+                            "{\"id\":\"2\",\"title\":\"book #2\",\"pages\":null}\n" +
+                            "]\n" +
+                            ",\"errors\":{\"amount\":1,\"records\":[{\"id\":\"testID\",\"errorMessage\":\"This specific test error occured\"}]}}",
+                    out.toString(StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    void testWrapWithNoErrors() throws IOException {
+        // Using mockito setup from testWrapJSONLines test.
+        ErrorList errorList = new ErrorList();
+
+        // The servlet response is used for setting the correct MIME type
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        // The HTTP headers specifies allowed MIME types
+        HttpHeaders headers = mock(HttpHeaders.class);
+        List<MediaType> mimes = Arrays.asList(
+                new MediaType("foo", "bar"),
+                new MediaType("application", "x-ndjson"));
+        when(headers.getAcceptableMediaTypes()).thenReturn(mimes);
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ExportWriter writer = ExportWriterFactory.wrapWithErrors(
+                    out, response, ExportWriterFactory.FORMAT.json, true, errorList);
+            getBooks(3).forEach(writer::write);
+            writer.close();
+
+            assertEquals("{\n" +
+                            "\"data\":[\n" +
+                            "{\"id\":\"0\",\"title\":\"book #0\",\"pages\":null},\n" +
+                            "{\"id\":\"1\",\"title\":\"book #1\",\"pages\":null},\n" +
+                            "{\"id\":\"2\",\"title\":\"book #2\",\"pages\":null}\n" +
+                            "]\n" +
+                            ",\"errors\":{\"amount\":0,\"records\":[]}}",
+                    out.toString(StandardCharsets.UTF_8));
+        }
+    }
+
     @Tag("fast")
     @Test
     void testWrapCSV() throws IOException {
