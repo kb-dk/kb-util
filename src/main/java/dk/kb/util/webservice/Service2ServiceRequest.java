@@ -21,8 +21,19 @@ import dk.kb.util.webservice.exception.ServiceException;
 import dk.kb.util.webservice.stream.ContinuationInputStream;
 import dk.kb.util.webservice.stream.ContinuationUtil;
 
-public class HttpRequestService2Service {
-    private static final Logger log = LoggerFactory.getLogger(HttpRequestService2Service .class);
+/**
+ * Service2Service call wrapper will inject an existing OAuth token into the next call.<
+ * <p>
+ * Current supported:
+ * <ul>
+ *   <li>Standard Http Request call </li>
+ *   <li>Custom ContinuationInputStream</li>
+ * </ul>
+ * 
+ *  Http-requests and continuationStreams requests and inject existing OAuth tokens.   
+ */
+public class Service2ServiceRequest {
+    private static final Logger log = LoggerFactory.getLogger(Service2ServiceRequest.class);
         
     /**
     * <p>
@@ -91,19 +102,23 @@ public class HttpRequestService2Service {
     public static <C2> ContinuationInputStream<C2> continuationInputStreamFromWithOAUthToken(
             URI uri, Function<String, C2> tokenMapper, Map<String, String> requestHeaders) throws IOException {
   
+        if (requestHeaders== null) { //in case this is called with null map.
+            requestHeaders= new HashMap<String, String>(); 
+        }
+        
         String token= (String) JAXRSUtils.getCurrentMessage().get(OAuthConstants.ACCESS_TOKEN_STRING);   
         if (token != null) {                                          
             requestHeaders.put("Authorization","Bearer "+token);
         }
                         
         HttpURLConnection con = getHttpURLConnection(uri, "GET",requestHeaders);
-        Map<String, List<String>> headers = con.getHeaderFields();
-        C2 continuationToken = ContinuationUtil.getContinuationToken(headers, tokenMapper).orElse(null);
-        Boolean hasMore = ContinuationUtil.getHasMore(headers).orElse(null);
-        Long recordCount = ContinuationUtil.getRecordCount(headers).orElse(null);
+        Map<String, List<String>> responseHeaders = con.getHeaderFields();
+        C2 continuationToken = ContinuationUtil.getContinuationToken(responseHeaders, tokenMapper).orElse(null);
+        Boolean hasMore = ContinuationUtil.getHasMore(responseHeaders).orElse(null);
+        Long recordCount = ContinuationUtil.getRecordCount(responseHeaders).orElse(null);
         log.debug("Established connection with continuation token '{}', hasMore {} and recordCount {} to '{}'",
                 continuationToken, hasMore, recordCount, uri);
-        return new ContinuationInputStream<>(con.getInputStream(), continuationToken, hasMore, recordCount, headers);
+        return new ContinuationInputStream<>(con.getInputStream(), continuationToken, hasMore, recordCount, responseHeaders);
     }
     
     
