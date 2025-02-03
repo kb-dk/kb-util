@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.4](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.4) - 2025-02-03
+### Added
+- Added JsonObjectStreamWriter and ExportWriterFactory methods using it.
+
+
 ## [1.6.3](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.3) - 2025-01-30
 ### Added
 - Added Servlet for redirecting request to /api-docs endpoints to /api
