@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+New Service2Service class that can be used both for HTTP calls and ContinutationStreams and will inject any existing OAuth to the call.
+The new methods should be used in all client implementations in modules that uses web-template project wit OAuth.  
+Old methods not using OAuth has been kept so the transition can be implemented step-by-step and in each module.
 
 ## [1.6.3](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.3) - 2025-01-30
 ### Added
