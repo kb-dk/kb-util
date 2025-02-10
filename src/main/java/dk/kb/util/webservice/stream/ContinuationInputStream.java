@@ -15,6 +15,8 @@
 package dk.kb.util.webservice.stream;
 
 import dk.kb.util.json.JSONStreamUtil;
+import dk.kb.util.webservice.Service2ServiceRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -67,6 +70,22 @@ public class ContinuationInputStream<C> extends HeaderInputStream implements Aut
      */
     public static <C2> ContinuationInputStream<C2> from(
             URI uri, Function<String, C2> tokenMapper, Map<String, String> requestHeaders) throws IOException {
+      
+        if (requestHeaders== null) { //in case this is called with null map.
+            requestHeaders= new HashMap<String, String>(); 
+        }
+        
+        String token= Service2ServiceRequest.getOAuth2Token();   
+        if (token != null) {           
+            log.debug("OAuth2 Bearer token added to service2service call");
+            requestHeaders.put("Authorization","Bearer "+token);
+        }
+        else {
+            log.debug("No OAuth token was found for service2service request");
+        }
+        
+        
+        
         HttpURLConnection con = getHttpURLConnection(uri, requestHeaders);
         Map<String, List<String>> headers = con.getHeaderFields();
         C2 continuationToken = ContinuationUtil.getContinuationToken(headers, tokenMapper).orElse(null);

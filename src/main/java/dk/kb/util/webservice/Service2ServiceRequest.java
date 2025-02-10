@@ -1,6 +1,8 @@
 package dk.kb.util.webservice;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +13,7 @@ import java.util.function.Function;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.utils.JAXRSUtils;
+import org.apache.cxf.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,24 +47,30 @@ public class Service2ServiceRequest {
     * @param uri the full URI with path and parameters set.
     * @param httpMethod The http-method to use for the service call. GET, POST, DELETE etc.
     * @param objectClass The DTO type that the response should be parsed to.
-    * @return DtoObject (objectClass) of the same type at given as input. 
+    * @param postJsonDto If not the DTO will be send as POST. Set to null if API method does not require a DTO. 
+    * @return DtoObject (objectClass) of the same type at given as input. Use null as input for void API methods that has no return dto.
     * @throws ServiceException If anything unexpected happens.   
     **/    
-    public static <T> T httpCallWithOAuthToken (URI uri , String httpMethod, T objectClass) throws ServiceException {                 
+    public static <T> T httpCallWithOAuthToken (URI uri , String httpMethod, T objectClass, Object postJsonDto) throws ServiceException {                 
         //The token (message) will be set if the service method that initiated this call required OAuth token. 
-        String token= (String) JAXRSUtils.getCurrentMessage().get(OAuthConstants.ACCESS_TOKEN_STRING); 
+        String token= getOAuth2Token();
         Map<String, String> requestHeaders= new HashMap<String, String>();
+            if (postJsonDto != null) { 
+                requestHeaders.put("Content-Type", "application/json");
+                                
+            }   
+            //requestHeaders.put("Accept", "application/json"); Do we need to set this if objectClass is not null?            
         if (token != null) {                                          
             requestHeaders.put("Authorization","Bearer "+token);
             log.debug("OAuth2 Bearer token added to service2service call");
         }
         else {
-             log.debug("Making service2service call without OAuth token");  
+             log.debug("No OAuth token was found for service2service request");  
         }
              
         try {
-            HttpURLConnection con = getHttpURLConnection(uri, httpMethod, requestHeaders);
-
+            HttpURLConnection con = getHttpURLConnection(uri, httpMethod, requestHeaders,postJsonDto);
+            log.debug("Establishing connection to:"+uri);
             int status = con.getResponseCode();
             if (status < 200 || status > 299) { // Could be mapped to a more precise exception type, but an exception here is most likely a coding error. 
                 String msg="Got HTTP " + status + " establishing connection to '" + uri + "'"+ con.getResponseCode();
@@ -72,10 +81,13 @@ public class Service2ServiceRequest {
             
             String json = IOUtils.toString(con.getInputStream(), StandardCharsets.UTF_8);          
 
-            ObjectMapper mapper = new ObjectMapper();
-            @SuppressWarnings("unchecked")
-            T dto = (T) mapper.readValue(json, objectClass.getClass());           
-            return dto;
+            if (objectClass != null) { //Convert to DTO
+               ObjectMapper mapper = new ObjectMapper();
+               @SuppressWarnings("unchecked")
+               T dto = (T) mapper.readValue(json, objectClass.getClass());           
+               return dto;
+            }
+            return null; //Void API methods will return null
         }
         catch(Exception e) { 
             log.error(e.getMessage(),e);
@@ -84,42 +96,7 @@ public class Service2ServiceRequest {
 
     }
 
-    /** 
-     * <p>
-     * Make service call to another web service and set the same OAuth token on the call that was used for the initiating service call. 
-     * <p>
-     * 
-     * Establish a connection to the given {@code uri}, extract all headers and construct a
-     * {@link ContinuationInputStream} with the headers and response stream from the {@code uri}.
-     * 
-     * @param uri full URI for a call to a webservice.
-     * @param tokenMapper maps the String header {@link ContinuationUtil#HEADER_PAGING_CONTINUATION_TOKEN}
-     *                    to the concrete token type.
-     * @param requestHeaders optional headers for the connection. Can be null.
-     * @return an {@code InputStream} with the response.
-     * @throws IOException if the connection failed.
-     */
-    public static <C2> ContinuationInputStream<C2> continuationInputStreamFromWithOAUthToken(
-            URI uri, Function<String, C2> tokenMapper, Map<String, String> requestHeaders) throws IOException {
-  
-        if (requestHeaders== null) { //in case this is called with null map.
-            requestHeaders= new HashMap<String, String>(); 
-        }
-        
-        String token= (String) JAXRSUtils.getCurrentMessage().get(OAuthConstants.ACCESS_TOKEN_STRING);   
-        if (token != null) {                                          
-            requestHeaders.put("Authorization","Bearer "+token);
-        }
-                        
-        HttpURLConnection con = getHttpURLConnection(uri, "GET",requestHeaders);
-        Map<String, List<String>> responseHeaders = con.getHeaderFields();
-        C2 continuationToken = ContinuationUtil.getContinuationToken(responseHeaders, tokenMapper).orElse(null);
-        Boolean hasMore = ContinuationUtil.getHasMore(responseHeaders).orElse(null);
-        Long recordCount = ContinuationUtil.getRecordCount(responseHeaders).orElse(null);
-        log.debug("Established connection with continuation token '{}', hasMore {} and recordCount {} to '{}'",
-                continuationToken, hasMore, recordCount, uri);
-        return new ContinuationInputStream<>(con.getInputStream(), continuationToken, hasMore, recordCount, responseHeaders);
-    }
+   
     
     
     /**
@@ -129,16 +106,47 @@ public class Service2ServiceRequest {
      * @param httpMethod The http-method to use for the service call. GET, POST, DELETE etc. 
      * @return HttpUrlConnection that will have the status code and response can be read with an InputStream. 
      */
-     private static HttpURLConnection getHttpURLConnection(URI uri, String httpMethod, Map<String, String> requestHeaders) throws IOException {
+     private static HttpURLConnection getHttpURLConnection(URI uri, String httpMethod, Map<String, String> requestHeaders, Object postJsonDto) throws IOException {
          //Do not log requestHeader since this would expose a valid OAuth token in the log file.
-         log.debug("Opening streaming connection to '{}' with, method={}", uri, httpMethod);
+         log.debug("Opening streaming connection to '{}' with, method={}, headers={}", uri, httpMethod,requestHeaders);
          HttpURLConnection con = (HttpURLConnection) uri.toURL().openConnection();
-         con.setRequestProperty("Content-Type","application/json");
-         con.setRequestMethod(httpMethod);
+     
+      
+         
          con.setInstanceFollowRedirects(true);
          if (requestHeaders != null) {
              requestHeaders.forEach(con::setRequestProperty);
-         }      
+         }
+         
+         //Make a new ObjectMapper each time.  Reports that it can deadlock if static.
+         //Performance hardly an issue since it is only used for service2service calls
+         ObjectMapper memberVarObjectMapper = new ObjectMapper();
+         String localVarPostBody = memberVarObjectMapper.writeValueAsString( postJsonDto);
+         if (postJsonDto !=  null) {
+             con.setDoOutput(true); //Required if we post data
+             OutputStream os = con.getOutputStream();
+             OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");    
+             osw.write(localVarPostBody);
+             osw.flush();
+             osw.close();
+             os.close();  //don't forget to close the OutputStream
+          }
          return con;
      }
+     /**
+      * Will return  the oauth token that has been set by the OAuth Interceptor in webservice call. 
+      * Return null if no message what set. This will happen in unittests etc. that has not set it implicit
+      * 
+      * @return token if any was set  by intercepter. Else return null.
+      */
+     public static String getOAuth2Token() {
+         Message m = JAXRSUtils.getCurrentMessage();
+         if (m==null) { //Happens in unittest etc, since no interceptor was activated on webservice call.
+             return null;             
+         }
+         
+         return (String) m.get(OAuthConstants.ACCESS_TOKEN_STRING); 
+                  
+     }
+     
 }
