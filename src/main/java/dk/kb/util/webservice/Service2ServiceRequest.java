@@ -44,15 +44,15 @@ public class Service2ServiceRequest {
     * @param uri the full URI with path and parameters set.
     * @param httpMethod The http-method to use for the service call. GET, POST, DELETE etc.
     * @param objectClass The DTO type that the response should be parsed to.
-    * @param postJsonDto If not the DTO will be send as POST. Set to null if API method does not require a DTO. 
-    * @return DtoObject (objectClass) of the same type at given as input. Use null as input for void API methods that has no return dto.
+    * @param postJsonDto If present must be a JSON serialize objectDTO. Set to null if method call does not require a DTO to be POST'ed.  
+    * @return DtoObject (objectClass) of the same type as given as input. Use null as input for void API methods that has no return dto.
     * @throws ServiceException If anything unexpected happens.   
     **/    
     public static <T> T httpCallWithOAuthToken (URI uri , String httpMethod, T objectClass, Object postJsonDto) throws ServiceException {                 
         //The token (message) will be set if the service method that initiated this call required OAuth token. 
         String token= getOAuth2Token();
         Map<String, String> requestHeaders= new HashMap<String, String>();
-            if (postJsonDto != null) { 
+            if (postJsonDto != null) { // only set application/json if and DTO is posted as JSON.
                 requestHeaders.put("Content-Type", "application/json");
                                 
             }   
@@ -81,7 +81,7 @@ public class Service2ServiceRequest {
             if (objectClass != null) { //Convert to DTO
                ObjectMapper mapper = new ObjectMapper();
                @SuppressWarnings("unchecked")
-               T dto = (T) mapper.readValue(json, objectClass.getClass());           
+               T dto = (T) mapper.readValue(json, objectClass.getClass()); //Need to return an object of type <T>.            
                return dto;
             }
             return null; //Void API methods will return null

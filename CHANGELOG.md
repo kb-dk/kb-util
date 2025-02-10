@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
-- InputContinutationStream injecting oauth-token. 
+- InputContinutationInputStream injecting oauth-token. 
 
 
 ## [1.6.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.5) - 2025-02-04
