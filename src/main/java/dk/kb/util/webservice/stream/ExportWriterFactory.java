@@ -116,7 +116,7 @@ public class ExportWriterFactory {
     public static ExportWriter wrap(OutputStream output, HttpServletResponse response,
                                     FORMAT format, boolean writeNulls, String rootElement) {
         if (response == null) {
-            log.warn("warp: No HttpServletResponse given so the content MIME type could not be set");
+            log.warn("wrap: No HttpServletResponse given so the content MIME type could not be set");
         } else {
             format.setContentType(response);
         }
@@ -128,6 +128,33 @@ public class ExportWriterFactory {
             case csv: return new CSVStreamWriter(writer);
             default: throw new InternalServiceException("The export format '" + format + "' is unsupported");
         }
+    }
+
+    /**
+     *
+     * @param output      the destination stream.
+     * @param response    used for setting the proper contentType. Can be null.
+     * @param format      the format to export to.
+     * @param writeNulls  if true, null-values are exported as {@code "key":null} for JSON and JSONL.
+     *                    If false, null-values are not stated.
+     * @param errorList   An ErrorList which contains information on records that have failed processing.
+     * @return a writer that takes Jackson annotated objects and streams a serialization to output.
+     */
+    public static ExportWriter wrapWithErrors(OutputStream output, HttpServletResponse response,
+                                    FORMAT format, boolean writeNulls, ErrorList errorList){
+        if (response == null) {
+            log.warn("wrap: No HttpServletResponse given so the content MIME type could not be set");
+        } else {
+            format.setContentType(response);
+        }
+
+        Writer writer = new OutputStreamWriter(output, StandardCharsets.UTF_8);
+        switch (format) {
+            case jsonl: return new JSONObjectStreamWriter(writer, JSONObjectStreamWriter.FORMAT.jsonl, writeNulls, errorList);
+            case json: return new JSONObjectStreamWriter(writer, JSONObjectStreamWriter.FORMAT.json, writeNulls, errorList);
+            default: throw new InternalServiceException("This method only handles JSON formats JSON and JSONL. The export format '" + format + "' is unsupported");
+        }
+
     }
 
     /**

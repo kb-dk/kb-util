@@ -7,9 +7,8 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
+
 import java.util.Map;
-import java.util.function.Function;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.utils.JAXRSUtils;
@@ -21,8 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dk.kb.util.webservice.exception.InternalServiceException;
 import dk.kb.util.webservice.exception.ServiceException;
-import dk.kb.util.webservice.stream.ContinuationInputStream;
-import dk.kb.util.webservice.stream.ContinuationUtil;
 
 /**
  * Service2Service call wrapper will inject an existing OAuth token into the next call.<
@@ -96,8 +93,6 @@ public class Service2ServiceRequest {
 
     }
 
-   
-    
     
     /**
      * Invoke a HTTP of a given HttpMethod and requestHeaders.
