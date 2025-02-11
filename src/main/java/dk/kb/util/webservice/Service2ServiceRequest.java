@@ -105,9 +105,7 @@ public class Service2ServiceRequest {
          //Do not log requestHeader since this would expose a valid OAuth token in the log file.
          log.debug("Opening streaming connection to '{}' with, method={}, headers={}", uri, httpMethod,requestHeaders);
          HttpURLConnection con = (HttpURLConnection) uri.toURL().openConnection();
-     
-      
-         
+         con.setRequestMethod(httpMethod);               
          con.setInstanceFollowRedirects(true);
          if (requestHeaders != null) {
              requestHeaders.forEach(con::setRequestProperty);
