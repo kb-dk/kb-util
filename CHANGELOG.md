@@ -5,9 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Added
 
-- ContinuationInputStream injecting oauth-token. 
+
+
+
+## [1.6.6](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.6) - 2025-02-18
+
+### Fixed
+- ContinuationInputStream injecting oauth-token. Support for void methods and bug fix.
 
 
 ## [1.6.5](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.5) - 2025-02-04
