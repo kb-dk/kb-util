@@ -43,7 +43,7 @@ public class Service2ServiceRequest {
     *
     * @param uri the full URI with path and parameters set.
     * @param httpMethod The http-method to use for the service call. GET, POST, DELETE etc.
-    * @param objectClass The DTO type that the response should be parsed to.
+    * @param objectClass The DTO type or String that the response should be parsed to. Only those two return types supported.
     * @param postJsonDto If present must be a JSON serialize objectDTO. Set to null if method call does not require a DTO to be POST'ed.  
     * @return DtoObject (objectClass) of the same type as given as input. Use null as input for void API methods that has no return dto.
     * @throws ServiceException If anything unexpected happens.   
@@ -77,7 +77,13 @@ public class Service2ServiceRequest {
             }
             
             String json = IOUtils.toString(con.getInputStream(), StandardCharsets.UTF_8);          
-
+            
+            if (objectClass != null && objectClass instanceof String) {
+                @SuppressWarnings("unchecked")
+                T jsonString = (T) json;
+                return jsonString;
+            }
+            
             if (objectClass != null) { //Convert to DTO
                ObjectMapper mapper = new ObjectMapper();
                @SuppressWarnings("unchecked")
