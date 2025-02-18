@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [1.6.7](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.7) - 2025-02-18
+### Added
+- Also allow String type as valid return type besides a DTO. Strings are used too many places in the API, so too much working defining DTO for it.
 
 ## [1.6.6](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.6) - 2025-02-18
 
