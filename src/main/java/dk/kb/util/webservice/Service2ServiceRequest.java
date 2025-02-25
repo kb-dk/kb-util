@@ -6,8 +6,9 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -16,7 +17,9 @@ import org.apache.cxf.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 
 import dk.kb.util.webservice.exception.InternalServiceException;
 import dk.kb.util.webservice.exception.ServiceException;
@@ -76,7 +79,7 @@ public class Service2ServiceRequest {
                 // TODO: Consider if the error stream should be logged. It can be arbitrarily large (TOES)
             }
             
-            String json = IOUtils.toString(con.getInputStream(), StandardCharsets.UTF_8);          
+            String json = IOUtils.toString(con.getInputStream(), StandardCharsets.UTF_8);                               
             
             if (objectClass != null && objectClass instanceof String) {
                 @SuppressWarnings("unchecked")
@@ -99,6 +102,61 @@ public class Service2ServiceRequest {
 
     }
 
+    
+    /**
+     * <p>
+     * Make service call to another web service and set the same OAuth token on the call that was used for the initiating service call. 
+     * <p>
+     * Maybe this method should be extended to also take additional RequestHeaders, but implement this if situation occurs. 
+     *
+     * @param uri the full URI with path and parameters set.
+     * @param httpMethod The http-method to use for the service call. GET, POST, DELETE etc.
+     * @param objectClass The DTO type or String that the response should be parsed to. Only those two return types supported.
+     * @param postJsonDto If present must be a JSON serialize objectDTO. Set to null if method call does not require a DTO to be POST'ed.  
+     * @return List<DtoObject> (objectClass) of the same type as given as input. Use null as input for void API methods that has no return dto.
+     * @throws ServiceException If anything unexpected happens.   
+     **/    
+     public static <T> List<T> httpCallWithOAuthTokenAsDtoList(URI uri , String httpMethod, T objectClass, Object postJsonDto) throws ServiceException {                 
+         //The token (message) will be set if the service method that initiated this call required OAuth token. 
+         String token= getOAuth2Token();
+         Map<String, String> requestHeaders= new HashMap<String, String>();
+             if (postJsonDto != null) { // only set application/json if and DTO is posted as JSON.
+                 requestHeaders.put("Content-Type", "application/json");
+                                 
+             }   
+             //requestHeaders.put("Accept", "application/json"); Do we need to set this if objectClass is not null?            
+         if (token != null) {                                          
+             requestHeaders.put("Authorization","Bearer "+token);
+             log.debug("OAuth2 Bearer token added to service2service call");
+         }
+         else {
+              log.debug("No OAuth token was found for service2service request");  
+         }
+              
+         try {
+             HttpURLConnection con = getHttpURLConnection(uri, httpMethod, requestHeaders,postJsonDto);
+             log.debug("Establishing connection to:"+uri);
+             int status = con.getResponseCode();
+             if (status < 200 || status > 299) { // Could be mapped to a more precise exception type, but an exception here is most likely a coding error. 
+                 String msg="Got HTTP " + status + " establishing connection to '" + uri + "'"+ con.getResponseCode();
+                 log.error(msg);
+                 throw new InternalServiceException(msg);
+                 // TODO: Consider if the error stream should be logged. It can be arbitrarily large (TOES)
+             }             
+             String json = IOUtils.toString(con.getInputStream(), StandardCharsets.UTF_8);                       
+             ObjectMapper mapper = new ObjectMapper();
+             CollectionType listType = mapper.getTypeFactory().constructCollectionType(ArrayList.class,  objectClass.getClass());
+             List<T> dtoList = mapper.readValue(json, listType);                                                              
+             return dtoList;                                                           
+         }
+         catch(Exception e) { 
+             log.error(e.getMessage(),e);
+             throw new InternalServiceException(e.getMessage()); 
+         }
+
+     }
+
+    
     
     /**
      * Invoke a HTTP of a given HttpMethod and requestHeaders.
@@ -132,6 +190,7 @@ public class Service2ServiceRequest {
           }
          return con;
      }
+          
      /**
       * Will return  the oauth token that has been set by the OAuth Interceptor in webservice call. 
       * Return null if no message what set. This will happen in unittests etc. that has not set it implicit

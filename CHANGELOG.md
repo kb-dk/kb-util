@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.6.8](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.8) - 2025-02-25
+### Added
+- New OAuth HTTP method that returns List<DTO>. This required special handling in code.
 
 ## [1.6.7](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.7) - 2025-02-18
 ### Added
