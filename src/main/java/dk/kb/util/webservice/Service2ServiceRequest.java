@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 
 import dk.kb.util.webservice.exception.InternalServiceException;
+import dk.kb.util.webservice.exception.InvalidArgumentServiceException;
+import dk.kb.util.webservice.exception.NotFoundServiceException;
 import dk.kb.util.webservice.exception.ServiceException;
 
 /**
@@ -75,8 +77,7 @@ public class Service2ServiceRequest {
             if (status < 200 || status > 299) { // Could be mapped to a more precise exception type, but an exception here is most likely a coding error. 
                 String msg="Got HTTP " + status + " establishing connection to '" + uri + "'"+ con.getResponseCode();
                 log.error(msg);
-                throw new InternalServiceException(msg);
-                // TODO: Consider if the error stream should be logged. It can be arbitrarily large (TOES)
+                throw mapServiceException(status);
             }
             
             String json = IOUtils.toString(con.getInputStream(), StandardCharsets.UTF_8);                               
@@ -140,8 +141,7 @@ public class Service2ServiceRequest {
              if (status < 200 || status > 299) { // Could be mapped to a more precise exception type, but an exception here is most likely a coding error. 
                  String msg="Got HTTP " + status + " establishing connection to '" + uri + "'"+ con.getResponseCode();
                  log.error(msg);
-                 throw new InternalServiceException(msg);
-                 // TODO: Consider if the error stream should be logged. It can be arbitrarily large (TOES)
+                 throw mapServiceException(status);
              }             
              String json = IOUtils.toString(con.getInputStream(), StandardCharsets.UTF_8);                       
              ObjectMapper mapper = new ObjectMapper();
@@ -153,10 +153,7 @@ public class Service2ServiceRequest {
              log.error(e.getMessage(),e);
              throw new InternalServiceException(e.getMessage()); 
          }
-
      }
-
-    
     
     /**
      * Invoke a HTTP of a given HttpMethod and requestHeaders.
@@ -205,6 +202,21 @@ public class Service2ServiceRequest {
          
          return (String) m.get(OAuthConstants.ACCESS_TOKEN_STRING); 
                   
+     }
+     /**
+      * Map status codes to known exceptions. 
+      * Http 2xx codes should not be mapped here.
+      * 
+      */
+     private static ServiceException mapServiceException(int statusCode) {         
+         switch (statusCode) {                      
+         case 400:            
+            return new InvalidArgumentServiceException();            
+         case 404:
+             return new NotFoundServiceException();            
+        default:
+            return new InternalServiceException();
+        }         
      }
      
 }
