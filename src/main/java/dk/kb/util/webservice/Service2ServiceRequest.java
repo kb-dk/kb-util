@@ -96,6 +96,9 @@ public class Service2ServiceRequest {
             }
             return null; //Void API methods will return null
         }
+        catch(ServiceException e) {
+            throw e; //Already correct
+        }        
         catch(Exception e) { 
             log.error(e.getMessage(),e);
             throw new InternalServiceException(e.getMessage()); 
@@ -149,6 +152,9 @@ public class Service2ServiceRequest {
              List<T> dtoList = mapper.readValue(json, listType);                                                              
              return dtoList;                                                           
          }
+         catch(ServiceException e) {
+             throw e; //Already correct
+         }        
          catch(Exception e) { 
              log.error(e.getMessage(),e);
              throw new InternalServiceException(e.getMessage()); 
