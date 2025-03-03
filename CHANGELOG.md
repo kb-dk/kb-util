@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+
+## [1.6.9](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.9) - 2025-03-03
+### Fixed
 - Mapped HTTP status codes to correct ServiceException when using Service2ServiceRequest for OAuth injection.
 
 ## [1.6.8](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.8) - 2025-02-25
