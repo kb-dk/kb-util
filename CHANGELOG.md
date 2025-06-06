@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - KeyCloak method to retrieve an access_token to be used as Bearer authentication. KeycloakUtil.getKeycloakAccessToken()
 - Moved ForbiddenServiceException from project DS-Present to the `webservice.exception`-package.
+- Updated cxf-rt-frontend-jaxrs and logback-classic to address CVEs
 
 ## [1.6.9](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.9) - 2025-03-03
 ### Fixed
