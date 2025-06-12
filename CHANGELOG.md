@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+### Fixed
+
+### Changed
+
 ## [1.6.10](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.10) - 2025-06-12
 ### Added
 - KeyCloak method to retrieve an access_token to be used as Bearer authentication. KeycloakUtil.getKeycloakAccessToken()
