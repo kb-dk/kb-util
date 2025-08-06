@@ -72,6 +72,7 @@ public class HeaderInputStream extends FilterInputStream implements AutoCloseabl
      * @return the HTTP headers from the response that this stream was constructed from. Can be null.
      * @deprecated use {@link #getResponseHeaders()} instead.
      */
+    @Deprecated
     public Map<String, List<String>> getHeaders() {
         return headers;
     }

@@ -70,14 +70,14 @@ public class CSVStreamWriter extends ExportWriter {
 
         ObjectNode nodeBook = mapper.valueToTree(annotatedObject);
         if (first) {
-            CSVFormat csvFormat = CSVFormat.DEFAULT
-                    .withQuoteMode(QuoteMode.NON_NUMERIC)
-                    .withRecordSeparator("\n");
+            CSVFormat.Builder csvFormatBuilder = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+                    .setQuoteMode(QuoteMode.NON_NUMERIC)
+                    .setRecordSeparator("\n");
             List<String> headers = new ArrayList<>();
             nodeBook.fieldNames().forEachRemaining(headers::add);
-            csvFormat = csvFormat.withHeader(headers.toArray(new String[0]));
+            csvFormatBuilder = csvFormatBuilder.setHeader(headers.toArray(new String[0]));
             try {
-                csvPrinter = new CSVPrinter(this, csvFormat);
+                csvPrinter = new CSVPrinter(this, csvFormatBuilder.get());
             } catch (IOException e) {
                 throw new InternalServiceException("Unable to create a CSVPrinter");
             }
