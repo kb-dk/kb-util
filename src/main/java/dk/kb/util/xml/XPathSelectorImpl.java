@@ -111,8 +111,8 @@ public class XPathSelectorImpl implements XPathSelector {
     }
 
     @Override
-    public NodeList selectNodeList(Node dom, String xpath) {
-        return (NodeList) selectObject(dom, xpath, XPathConstants.NODESET);
+    public List<Node> selectNodeList(Node dom, String xpath) {
+        return XpathUtils.nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET));
     }
 
     @Override
