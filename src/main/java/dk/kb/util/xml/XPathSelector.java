@@ -117,9 +117,9 @@ public interface XPathSelector {
      *
      * @param node  the root document.
      * @param xpath the xpath for the Node list.
-     * @return the NodeList requested or an empty NodeList if unattainable
+     * @return the List of Node requested or an empty List if unattainable
      */
-    NodeList selectNodeList(Node node, String xpath);
+    List<Node> selectNodeList(Node node, String xpath);
     
     List<String> selectStringList(Node dom, String xpath);
 

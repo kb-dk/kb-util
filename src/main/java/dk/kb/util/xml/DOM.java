@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.List;
 
 /**
  * Helpers for doing DOM parsing and manipulations. The methods are thread-safe
@@ -338,16 +339,16 @@ public class DOM {
     }
 
     /**
-     * Select the {@link NodeList} with the given XPath.
+     * Select the List of Nodes, not NodeList with the given XPath.
      *
      * Note: This is a convenience method that logs exceptions instead of
      * throwing them.
      *
      * @param node  the root document.
      * @param xpath the xpath for the Node list.
-     * @return the NodeList requested or an empty NodeList if unattainable
+     * @return the List of Nodes requested or an empty List if unattainable
      */
-    public static NodeList selectNodeList(Node node, String xpath) {
+    public static List<Node> selectNodeList(Node node, String xpath) {
         return selector.selectNodeList(node, xpath);
     }
 

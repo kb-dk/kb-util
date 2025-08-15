@@ -6,6 +6,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.util.List;
+
 import static dk.kb.util.xml.DOM.stringToDOM;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -121,14 +123,14 @@ public class XPathSelectorImplTest {
 
     @Test
     public void testSelectNodeList() {
-        NodeList l = selector.selectNodeList(dom, "asdfg");
-        assertEquals(0, l.getLength());
+        List<Node> l = selector.selectNodeList(dom, "asdfg");
+        assertEquals(0, l.size());
 
         // We use /body/node() because /body/* doesn't select the text nodes
         l = selector.selectNodeList(dom, "/foo:body/node()");
         NodeList expected = dom.getFirstChild().getChildNodes();
-        assertSame(expected.getLength(), l.getLength());
-        assertEquals(8, l.getLength());
+        assertSame(expected.getLength(), l.size());
+        assertEquals(8, l.size());
     }
 
     @Test

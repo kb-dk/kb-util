@@ -115,14 +115,14 @@ public class DOMSelectTest {
 
     @Test
     public void testSelectNodeList() {
-        NodeList l = selectNodeList(dom, "asdfg");
-        assertEquals(0, l.getLength());
+        List<Node> l = selectNodeList(dom, "asdfg");
+        assertEquals(0, l.size());
 
         // We use /body/node() because /body/* doesn't select the text nodes
         l = selectNodeList(dom, "/body/node()");
         NodeList expected = dom.getFirstChild().getChildNodes();
-        assertSame(expected.getLength(), l.getLength());
-        assertEquals(10, l.getLength());
+        assertSame(expected.getLength(), l.size());
+        assertEquals(10, l.size());
         boolean subExist = false;
         for (int i = 0; i < expected.getLength(); i++) {
             if (expected.item(i).getNodeName().equals("sub")) {
