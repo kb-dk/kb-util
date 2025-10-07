@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 
 public class XML {
@@ -35,10 +36,10 @@ public class XML {
      * Serialises the given Document as a (human-readable) String with indents and linebreaks
      * @param dom the dom
      * @return the doc in string form
-     * @throws TransformerException if the transformation failed
      * @see #domToString(Node, boolean) for a more compact machine-readable version
+     * @see DOM#domToString(Node)
      */
-    public static String domToString(Node dom) throws TransformerException {
+    public static String domToString(Node dom) {
         return domToString(dom, true);
     }
 
@@ -47,10 +48,11 @@ public class XML {
      * @param dom the dom
      * @param indent if true, the output will be indented. If false, output will be a single line.
      * @return the doc in string form
-     * @throws TransformerException if the transformation failed
+     * @throws XMLException if the transformation failed
      * @see #domToString(Node) for an indented version of the same string
+     * @see DOM#domToString(Node, boolean, boolean)
      */
-    public static String domToString(Node dom, boolean indent) throws TransformerException {
+    public static String domToString(Node dom, boolean indent)  {
         Transformer transformer;
         if (indent) {
             transformer = getTransformer(null);
@@ -66,22 +68,28 @@ public class XML {
             // After transformation, the only newlines are in text elements where they can be replaced
             // with the newline entity
             return indent ? sw.toString() : sw.toString().replace("\n", "&#10;");
+        } catch (TransformerException e) {
+            throw new XMLException(e);
         } catch (IOException e) {
-            throw new TransformerException(e);
+            throw new UncheckedIOException(e);
         }
     }
     
-    private static Transformer getTransformer(String xsltResource) throws TransformerConfigurationException {
+    private static Transformer getTransformer(String xsltResource)  {
         Transformer transformer;
-        if (xsltResource == null) {
-            transformer = TransformerFactory.newInstance().newTransformer();
-        } else {
-            try (InputStream xsltStream = Resolver.resolveStream(xsltResource)) {
-                transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xsltStream));
-            } catch (IOException e) {
-                throw new TransformerConfigurationException(
-                        "Unable to retrieve and compile XSLT resource '" + xsltResource + "'", e);
+        try {
+            if (xsltResource == null) {
+                transformer = TransformerFactory.newInstance().newTransformer();
+            } else {
+                try (InputStream xsltStream = Resolver.resolveStream(xsltResource)) {
+                    transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xsltStream));
+                } catch (IOException e) {
+                    throw new TransformerConfigurationException(
+                            "Unable to retrieve and compile XSLT resource '" + xsltResource + "'", e);
+                }
             }
+        } catch (TransformerException e) {
+            throw new XMLException(e);
         }
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
@@ -95,23 +103,24 @@ public class XML {
      * @param object the object to convert to xml
      * @param <T> the type of object
      * @return the object serialised as xml (UTF-8)
-     * @throws JAXBException if something failed
+     * @throws XMLException if something failed
      */
-    public static <T> String marshall(T object) throws JAXBException {
+    public static <T> String marshall(T object) {
         //TODO does this work?
-        JAXBContext jc = JAXBContext.newInstance(object.getClass());
-        
-        
-        Marshaller marshaller = jc.createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            marshaller.marshal(object, out);
-            out.flush();
-            return out.toString(StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        try {
+            JAXBContext jc = JAXBContext.newInstance(object.getClass());
+            Marshaller marshaller = jc.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                marshaller.marshal(object, out);
+                out.flush();
+                return out.toString(StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        } catch (JAXBException e) {
+            throw new XMLException(e);
         }
-        
     }
     
     /**
@@ -120,7 +129,8 @@ public class XML {
      * @param type the class of object to create
      * @param <T> the type of object
      * @return an instance of Type
-     * @throws RuntimeException if anything failed
+     * @throws XMLException  if the xml parsing failed
+     * @throws UncheckedIOException If reading the xml string failed (should not happen)
      */
     @SuppressWarnings("unchecked")
     public static <T> T unmarshall(String xml, Class<T> type) {
@@ -134,12 +144,13 @@ public class XML {
                     return unmarshaller.unmarshal(new StreamSource(in), type).getValue();
                 }
             }
-        } catch (JAXBException | IOException e) {
-            throw new RuntimeException(e);
+        } catch (JAXBException e) {
+            throw new XMLException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
-    
-    
+
     
     /**
      * Parses an XML document from a String to a DOM.
@@ -148,13 +159,11 @@ public class XML {
      * @param namespaceAware if {@code true} the parsed DOM will reflect any
      *                       XML namespaces declared in the document
      * @return The document in a DOM
-     * @throws ParserConfigurationException if creating an Xml parser failed (should not happen)
-     * @throws IOException If reading the xml string failed (should not happen)
-     * @throws SAXException if the xml parsing failed
+     * @throws XMLException  if the xml parsing failed
+     * @throws UncheckedIOException If reading the xml string failed (should not happen)
      */
     public static Document fromXML(String xmlString,
-                                   boolean namespaceAware)
-            throws ParserConfigurationException, IOException, SAXException {
+                                   boolean namespaceAware) throws UncheckedIOException, XMLException {
 
         DocumentBuilderFactory dbFact = DocumentBuilderFactory.newInstance();
         dbFact.setNamespaceAware(namespaceAware);
@@ -163,6 +172,10 @@ public class XML {
         try (StringReader characterStream = new StringReader(xmlString);) {
             in.setCharacterStream(characterStream);
             return dbFact.newDocumentBuilder().parse(in);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (SAXException | ParserConfigurationException e) {
+            throw new XMLException(e);
         }
     }
     
@@ -173,19 +186,21 @@ public class XML {
      * @param namespaceAware if {@code true} the constructed DOM will reflect
      *                       the namespaces declared in the XML document
      * @return The document in a DOM
-     * @throws ParserConfigurationException if creating an Xml parser failed (should not happen)
-     * @throws IOException If reading the xml string failed (should not happen)
-     * @throws SAXException if the xml parsing failed
+     * @throws XMLException  if the xml parsing failed
+     * @throws UncheckedIOException If reading the xml string failed (should not happen)
      */
     public static Document fromXML(InputStream xmlStream,
-                                   boolean namespaceAware)
-            throws ParserConfigurationException, IOException, SAXException {
+                                   boolean namespaceAware) throws UncheckedIOException, XMLException {
         
         DocumentBuilderFactory dbFact = DocumentBuilderFactory.newInstance();
         dbFact.setNamespaceAware(namespaceAware);
-        
-        return dbFact.newDocumentBuilder().parse(xmlStream);
-        
-    }
 
+        try {
+            return dbFact.newDocumentBuilder().parse(xmlStream);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (SAXException | ParserConfigurationException e) {
+            throw new XMLException(e);
+        }
+    }
 }

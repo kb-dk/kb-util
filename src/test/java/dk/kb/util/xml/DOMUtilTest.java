@@ -2,18 +2,13 @@ package dk.kb.util.xml;
 
 
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.builder.Input;
-import org.xmlunit.diff.Diff;
+import org.xmlunit.matchers.CompareMatcher;
 
-import javax.xml.transform.TransformerException;
 import java.util.Map;
 
-import static dk.kb.util.xml.DOMUtil.logger;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -21,16 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class DOMUtilTest {
 
-    private static final Logger log = LoggerFactory.getLogger(DOMUtilTest.class);
-
     @Test
-    void parsesGeneratedStringBack() throws TransformerException {
+    void parsesGeneratedStringBack() {
         Document originalDocument = DOMUtil.createDocument();
 
         Element rootElement = DOMUtil.addRootElementToDocument(
                 originalDocument, "myRootTag", "xmlnsTest", Map.of("schemaUri", "schemaUriTest"));
 
-        DOMUtil.addElementWithTextContent(rootElement, "myChildTag", "Some text");
+        DOMUtil.addElement(rootElement, "myChildTag").setTextContent("Some text");
 
         String xml = DOM.domToString(originalDocument);
 
@@ -44,87 +37,88 @@ public class DOMUtilTest {
     @Test
     void testRemoveElement() {
         String oldStatusMetadata =
-                "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                        "<transcodingStatus>pending</transcodingStatus>" +
-                        "<transcodingReady>true</transcodingReady>" +
-                        "</radiotvTranscodingStatus>";
+                "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<transcodingStatus>pending</transcodingStatus>"
+                + "<transcodingReady>true</transcodingReady>"
+                + "</radiotvTranscodingStatus>";
         String updatedStatus = DOMUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus");
-        assertTrue(areXmlEquivalent(
-                "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                        "<transcodingReady>true</transcodingReady>" +
-                        "</radiotvTranscodingStatus>",
-                updatedStatus));
+        assertThat(updatedStatus,
+                   CompareMatcher.isIdenticalTo(
+                           "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                           + "<transcodingReady>true</transcodingReady>"
+                           + "</radiotvTranscodingStatus>"));
+    }
+
+    @Test
+    void testRemoveElementNS() {
+        String oldStatusMetadata =
+                "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<transcodingStatus>pending</transcodingStatus>"
+                + "<transcodingReady>true</transcodingReady>"
+                + "</radiotvTranscodingStatus>";
+        String updatedStatus = DOMUtil.removeElementFromXml(oldStatusMetadata,
+                                                            "transcodingStatus",
+                                                            "http://id.kb.dk/schemas/radiotv_access/transcoding_status");
+
+        assertThat(updatedStatus,
+                   CompareMatcher.isIdenticalTo(
+                           "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                           + "<transcodingReady>true</transcodingReady>"
+                           + "</radiotvTranscodingStatus>"));
+    }
+
+    @Test
+    void testRemoveElementDocument() {
+        Element oldStatusMetadata = DOM.stringToDOM(
+                "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<transcodingStatus>pending</transcodingStatus>"
+                + "<transcodingReady>true</transcodingReady>"
+                + "</radiotvTranscodingStatus>").getDocumentElement();
+        String updatedStatus = DOM.domToString(DOMUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus"));
+        assertThat(updatedStatus,
+                   CompareMatcher.isIdenticalTo(
+                           "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                           + "<transcodingReady>true</transcodingReady>"
+                           + "</radiotvTranscodingStatus>"));
     }
 
     @Test
     void testRemoveNonExistingElement() {
         String oldStatusMetadata =
-                "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                        "<transcodingReady>true</transcodingReady>" +
-                        "</radiotvTranscodingStatus>";
+                "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<transcodingReady>true</transcodingReady>"
+                + "</radiotvTranscodingStatus>";
         String updatedStatus = DOMUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus");
-        assertTrue(areXmlEquivalent(oldStatusMetadata, updatedStatus));
+        assertThat(updatedStatus,
+                   CompareMatcher.isIdenticalTo(oldStatusMetadata));
     }
 
     @Test
-    void testCreateDocumentWithRootElementNoExtraAttributes() throws TransformerException {
+    void testCreateDocumentWithRootElementNoExtraAttributes() {
         Document document = DOMUtil.createDocument();
         DOMUtil.addRootElementToDocument(document, "testRootElement", "testxmlns");
-        assertTrue(areXmlEquivalent(
-                "<testRootElement xmlns=\"testxmlns\"/>", DOM.domToString(document, false)));
+        assertThat(DOM.domToString(document),
+                   CompareMatcher.isIdenticalTo("<testRootElement xmlns=\"testxmlns\"/>"));
     }
 
     @Test
-    void testCreateDocumentWithRootElementWith1ExtraAttribute() throws TransformerException {
+    void testCreateDocumentWithRootElementWith1ExtraAttribute() {
         Document document = DOMUtil.createDocument();
         Map<String, String> attributeMap = Map.of("schemaUri", "testSchemaUri", "xmlns:xs", "extraNamespace");
         DOMUtil.addRootElementToDocument(
                 document, "testRootElement", "testxmlns", attributeMap);
-        assertTrue(areXmlEquivalent(
-                "<testRootElement xmlns=\"testxmlns\" xmlns:xs=\"extraNamespace\" schemaUri=\"testSchemaUri\"/>",
-                DOM.domToString(document, false)));
+        assertThat(DOM.domToString(document),
+                   CompareMatcher.isIdenticalTo(
+                           "<testRootElement xmlns=\"testxmlns\" xmlns:xs=\"extraNamespace\" schemaUri=\"testSchemaUri\"/>"));
     }
 
     @Test
-    void testAddElement() throws TransformerException {
+    void testAddElement() {
         Document originalDocument = DOMUtil.createDocument();
         Element rootElement = DOMUtil.addRootElementToDocument(
                 originalDocument, "myRootTag", "xmlnsTest");
         DOMUtil.addElement(rootElement, "myElementTag");
-        String xml = DOM.domToString(originalDocument, false);
-        assertTrue(areXmlEquivalent(
-                "<myRootTag xmlns=\"xmlnsTest\"><myElementTag/></myRootTag>", xml));
+        String xml = DOM.domToString(originalDocument);
+        assertThat(xml, CompareMatcher.isIdenticalTo("<myRootTag xmlns=\"xmlnsTest\"><myElementTag/></myRootTag>"));
     }
-
-    @Test
-    void testAddElementWithTextContent() throws TransformerException {
-        Document originalDocument = DOMUtil.createDocument();
-        Element rootElement = DOMUtil.addRootElementToDocument(
-                originalDocument, "myRootTag", "xmlnsTest");
-        DOMUtil.addElementWithTextContent(rootElement, "myElementTag", "Some text");
-        String xml = DOM.domToString(originalDocument, false);
-        assertTrue(areXmlEquivalent(
-                "<myRootTag xmlns=\"xmlnsTest\"><myElementTag>Some text</myElementTag></myRootTag>", xml));
-    }
-    /**
-     * Checks for XML equivalence between two XML objects, ignoring whitespace and element order.
-     *
-     * @return true if the two documents are semantically equivalent.
-     */
-    public static boolean areXmlEquivalent(String xml1, String xml2) {
-        Diff diffs = DiffBuilder.compare(Input.fromString(xml1))
-                .withTest(Input.fromString(xml2))
-                .ignoreComments()
-                .ignoreElementContentWhitespace()
-                .build();
-        if (!diffs.hasDifferences()) {
-            return true;
-        } else {
-            for (Object diff : diffs.getDifferences()) {
-                logger.debug("Found metadata diff: {}", diff);
-            }
-            return false;
-        }
-    }
-
 }

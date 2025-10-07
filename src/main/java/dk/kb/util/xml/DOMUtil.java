@@ -10,7 +10,6 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -103,17 +102,17 @@ public class DOMUtil {
     }
 
     /**
-     * This is a method to add a child element with som text content to an existing element.
-     * Similar to method {@link #addElement(Element, String)} except it does not give the new element
-     * any text content.
+     * This is a method to add a child element with no content to an existing element.
+     * Similar to method {@link #addElementWithTextContent(Element, String, String)} which additionally also
+     * gives the new element some text content.
      * @param parentElement The parent element of the newly created element.
-     * @param elementTagName The name of the newly created element: <elementTagName>...</elementTagName>.
-     * @param textContent The content of the newly created element: <elementTagName>textContent</elementTagName>
+     * @param xmlns the namespace of the element
+     * @param elementTagName The name of the newly created element: <elementTagName/>.
      * @return The element object of the newly created element which has been added (appended) to the given parentElement.
      */
-    public static Element addElementWithTextContent(Element parentElement, String elementTagName, String textContent) {
-        Element newElement = addElement(parentElement, elementTagName);
-        newElement.setTextContent(textContent);
+    public static Element addElement(Element parentElement, String elementTagName, String xmlns) {
+        Element newElement = parentElement.getOwnerDocument().createElementNS(xmlns, elementTagName);
+        parentElement.appendChild(newElement);
         return newElement;
     }
 
@@ -127,18 +126,57 @@ public class DOMUtil {
     public static String removeElementFromXml(String xmlString, String elementTag) {
         Document document = DOM.stringToDOM(xmlString);
         Element rootElement = document.getDocumentElement();
-        NodeList childElementNodeList = rootElement.getElementsByTagName(elementTag);
-        if (childElementNodeList.getLength() > 0) {
-            Node childElementNode = childElementNodeList.item(0);
-            rootElement.removeChild(childElementNode);
-            try {
-                return DOM.domToString(document, false);
-            } catch (TransformerException e) {
-                throw new XMLException(e);
-            }
-        } else {
-            logger.warn("No child element was found for tag {}. Returning original xml string.", elementTag);
+        removeElementFromXml(rootElement, elementTag);
+        return DOM.domToString(document);
+    }
+
+    /**
+     * Removes the element specified by 'elementTag' from the root element of the given XML.
+     * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
+     * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
+     * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
+     * Otherwise, the initial xmlString given as argument is returned.
+     */
+    public static String removeElementFromXml(String xmlString, String elementTag, String xmlns) {
+        Document document = DOM.stringToDOM(xmlString, true);
+        if (document == null) {
             return xmlString;
         }
+        Element rootElement = document.getDocumentElement();
+        removeElementFromXml(rootElement, elementTag, xmlns);
+        return DOM.domToString(document);
+    }
+
+
+    /**
+     * Removes the element specified by 'elementTag' from the root element of the given XML.
+     * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
+     * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
+     * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
+     * Otherwise, the initial xmlString given as argument is returned.
+     */
+    public static Element removeElementFromXml(Element node, String elementTag) {
+        NodeList childElementNodeList = node.getElementsByTagName(elementTag);
+        if (childElementNodeList.getLength() > 0) {
+            Node childElementNode = childElementNodeList.item(0);
+            node.removeChild(childElementNode);
+        }
+        return node;
+    }
+
+    /**
+     * Removes the element specified by 'elementTag' from the root element of the given XML.
+     * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
+     * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
+     * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
+     * Otherwise, the initial xmlString given as argument is returned.
+     */
+    public static Element removeElementFromXml(Element node, String elementTag, String xmlns) {
+        NodeList childElementNodeList = node.getElementsByTagNameNS(xmlns, elementTag);
+        if (childElementNodeList.getLength() > 0) {
+            Node childElementNode = childElementNodeList.item(0);
+            node.removeChild(childElementNode);
+        }
+        return node;
     }
 }
