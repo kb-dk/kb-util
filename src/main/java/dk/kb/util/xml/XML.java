@@ -1,9 +1,6 @@
 package dk.kb.util.xml;
 
 import dk.kb.util.Resolver;
-import org.custommonkey.xmlunit.DetailedDiff;
-import org.custommonkey.xmlunit.Diff;
-import org.custommonkey.xmlunit.XMLUnit;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -31,8 +28,6 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-
-import static dk.kb.util.xml.XMLUtil.logger;
 
 public class XML {
     
@@ -191,30 +186,6 @@ public class XML {
         
         return dbFact.newDocumentBuilder().parse(xmlStream);
         
-    }
-
-    /**
-     * Checks for XML equivalence between two XML objects, ignoring whitespace and element order.
-     * @return true if the two documents are semantically equivalent.
-     */
-    public static boolean areXmlEquivalent(String xml1, String xml2) {
-        XMLUnit.setIgnoreWhitespace(true);
-        XMLUnit.setIgnoreAttributeOrder(true);
-        try {
-            Diff diffs = XMLUnit.compareXML(xml1, xml2);
-            if (diffs.similar()) {
-                return true;
-            } else {
-                for (Object diff : new DetailedDiff(diffs).getAllDifferences()) {
-                    logger.debug("Found metadata diff: {}", diff);
-                }
-                return false;
-            }
-        } catch (SAXException | IOException e) {
-            logger.warn("areXmlEquivalent(): ", e);
-            return false;
-        }
-
     }
 
 }

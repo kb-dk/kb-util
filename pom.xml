@@ -168,11 +168,6 @@
             <artifactId>annotations</artifactId>
             <version>2.0.2</version>
         </dependency>
-        <dependency>
-            <groupId>xmlunit</groupId>
-            <artifactId>xmlunit</artifactId>
-            <version>1.6</version>
-        </dependency>
 
         <!-- Only used for Iterators in ExtractionUtils. Could we do without? -->
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
@@ -358,8 +353,13 @@
         </dependency>
         <!--JSON end-->
 
-
         <!--Testing-->
+        <dependency>
+            <groupId>org.xmlunit</groupId>
+            <artifactId>xmlunit-core</artifactId>
+            <version>2.10.4</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>

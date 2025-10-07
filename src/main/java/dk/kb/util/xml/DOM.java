@@ -177,8 +177,21 @@ public class DOM {
      * @return the dom as an XML String.
      * @throws TransformerException if the dom could not be converted.
      */
+    public static String domToString(Node dom, boolean withXmlDeclaration) throws TransformerException {
+        return domToString(dom, withXmlDeclaration, false);
+    }
+
+    /**
+     * Convert the given DOM to an UTF-8 XML String.
+     *
+     * @param dom                the Document to convert.
+     * @param withXmlDeclaration if trye, an XML-declaration is prepended.
+     * @param standAlone         if true make standAlone XML
+     * @return the dom as an XML String.
+     * @throws TransformerException if the dom could not be converted.
+     */
     // TODO: Consider optimizing this with ThreadLocal Transformers
-    public static String domToString(Node dom, boolean withXmlDeclaration)
+    public static String domToString(Node dom, boolean withXmlDeclaration, boolean standAlone)
             throws TransformerException {
         Transformer t = TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
@@ -188,6 +201,11 @@ public class DOM {
             t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         }
         t.setOutputProperty(OutputKeys.METHOD, "xml");
+        if (standAlone) {
+            t.setOutputProperty(OutputKeys.STANDALONE, "no");
+        } else {
+            t.setOutputProperty(OutputKeys.STANDALONE, "yes");
+        }
 
         /* Transformer */
         StringWriter sw = new StringWriter();

@@ -55,10 +55,17 @@ public class XMLUtil {
 
     static final Logger logger = LoggerFactory.getLogger(XMLUtil.class);
 
-    private static final ThreadLocal<ReplaceReader> localEncoder = ThreadLocal.withInitial(() ->
-            ReplaceFactory.getReplacer("&", "&amp;", "\"", "&quot;", "<", "&lt;", ">", "&gt;", "'", "&apos;")
-    );
-
+    private static final ThreadLocal<ReplaceReader> localEncoder =
+            new ThreadLocal<ReplaceReader>() {
+                @Override
+                protected ReplaceReader initialValue() {
+                    return ReplaceFactory.getReplacer("&", "&amp;",
+                            "\"", "&quot;",
+                            "<", "&lt;",
+                            ">", "&gt;",
+                            "'", "&apos;");
+                }
+            };
     /**
      * Performs a simple entity-encoding of input, making it safe to include in XML.
      *
@@ -126,8 +133,7 @@ public class XMLUtil {
             newDocument.setXmlStandalone(standalone);
             return newDocument;
         } catch (ParserConfigurationException e) {
-            logger.error("An error occurred while creating a DocumentBuilder for a new Document.", e);
-            throw new RuntimeException("An error occurred while creating a DocumentBuilder.", e);
+            throw new XMLException("An error occurred while creating a DocumentBuilder for a new Document.", e);
         }
     }
 
@@ -151,8 +157,7 @@ public class XMLUtil {
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
             return documentBuilder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            logger.error("An error occurred while parsing XML from string: {} to a Document.", xml, e);
-            throw new RuntimeException("An error occurred while parsing XML from string to a Document.", e);
+            throw new XMLException("An error occurred while parsing XML from string to a Document." + xml, e);
         }
     }
 
@@ -165,19 +170,10 @@ public class XMLUtil {
      * @return A string representation of the given Document.
      */
     public static String getStringFromDocument(Document document, boolean omitXmlDeclaration) {
-        DOMSource domSource = new DOMSource(document);
-        StringWriter stringWriter = new StringWriter();
-        StreamResult streamResult = new StreamResult(stringWriter);
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
         try {
-            Transformer transformer = transformerFactory.newTransformer();
-            String omitXmlDeclarationKey = booleanToYesNo(omitXmlDeclaration);
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXmlDeclarationKey);
-            transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
-            transformer.transform(domSource, streamResult);
-            return stringWriter.toString();
+            return DOM.domToString(document, !omitXmlDeclaration, true);
         } catch (TransformerException e) {
-            throw new RuntimeException("An error occurred while trying to transform a document to a string.", e);
+            throw new XMLException("An error occurred while trying to transform a document to a string.", e);
         }
 
     }
@@ -244,14 +240,6 @@ public class XMLUtil {
         return newElement;
     }
 
-    @Deprecated(since = "5.2.0", forRemoval = true)
-    public static Element addElement(Document document, Element parentElement, String elementTagName) {
-        if (parentElement.getOwnerDocument() != document) {
-            throw new IllegalArgumentException("When document is supplied, it must be the parentElement’s owner document");
-        }
-        return addElement(parentElement, elementTagName);
-    }
-
     /**
      * This is a method to add a child element with som text content to an existing element.
      * Similar to method {@link #addElement(Element, String)} except it does not give the new element
@@ -265,14 +253,6 @@ public class XMLUtil {
         Element newElement = addElement(parentElement, elementTagName);
         newElement.setTextContent(textContent);
         return newElement;
-    }
-
-    @Deprecated(since = "5.2.0", forRemoval = true)
-    public static Element addElementWithTextContent(Document document, Element parentElement, String elementTagName, String textContent) {
-        if (parentElement.getOwnerDocument() != document) {
-            throw new IllegalArgumentException("When document is supplied, it must be the parentElement’s owner document");
-        }
-        return addElementWithTextContent(parentElement, elementTagName, textContent);
     }
 
     /**

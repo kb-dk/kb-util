@@ -6,10 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.Diff;
 
 import java.util.Map;
 
 import static dk.kb.util.xml.XMLUtil.encode;
+import static dk.kb.util.xml.XMLUtil.logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -41,7 +45,7 @@ public class XMLUtilTest {
                         "<transcodingReady>true</transcodingReady>" +
                         "</radiotvTranscodingStatus>";
         String updatedStatus = XMLUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus");
-        assertTrue(XML.areXmlEquivalent(
+        assertTrue(areXmlEquivalent(
                 "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
                         "<transcodingReady>true</transcodingReady>" +
                         "</radiotvTranscodingStatus>",
@@ -55,14 +59,14 @@ public class XMLUtilTest {
                         "<transcodingReady>true</transcodingReady>" +
                         "</radiotvTranscodingStatus>";
         String updatedStatus = XMLUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus");
-        assertTrue(XML.areXmlEquivalent(oldStatusMetadata, updatedStatus));
+        assertTrue(areXmlEquivalent(oldStatusMetadata, updatedStatus));
     }
 
     @Test
     void testCreateDocumentWithRootElementNoExtraAttributes() {
         Document document = XMLUtil.createDocument();
         XMLUtil.addRootElementToDocument(document, "testRootElement", "testxmlns");
-        assertTrue(XML.areXmlEquivalent(
+        assertTrue(areXmlEquivalent(
                 "<testRootElement xmlns=\"testxmlns\"/>", XMLUtil.getStringFromDocument(document)));
     }
 
@@ -72,7 +76,7 @@ public class XMLUtilTest {
         Map<String, String> attributeMap = Map.of("schemaUri", "testSchemaUri", "xmlns:xs", "extraNamespace");
         XMLUtil.addRootElementToDocument(
                 document, "testRootElement", "testxmlns", attributeMap);
-        assertTrue(XML.areXmlEquivalent(
+        assertTrue(areXmlEquivalent(
                 "<testRootElement xmlns=\"testxmlns\" xmlns:xs=\"extraNamespace\" schemaUri=\"testSchemaUri\"/>",
                 XMLUtil.getStringFromDocument(document)));
     }
@@ -84,7 +88,7 @@ public class XMLUtilTest {
                 originalDocument, "myRootTag", "xmlnsTest");
         XMLUtil.addElement(rootElement, "myElementTag");
         String xml = XMLUtil.getStringFromDocument(originalDocument);
-        assertTrue(XML.areXmlEquivalent(
+        assertTrue(areXmlEquivalent(
                 "<myRootTag xmlns=\"xmlnsTest\"><myElementTag/></myRootTag>", xml));
     }
 
@@ -95,7 +99,7 @@ public class XMLUtilTest {
                 originalDocument, "myRootTag", "xmlnsTest");
         XMLUtil.addElementWithTextContent(rootElement, "myElementTag", "Some text");
         String xml = XMLUtil.getStringFromDocument(originalDocument);
-        assertTrue(XML.areXmlEquivalent(
+        assertTrue(areXmlEquivalent(
                 "<myRootTag xmlns=\"xmlnsTest\"><myElementTag>Some text</myElementTag></myRootTag>", xml));
     }
 
@@ -109,6 +113,27 @@ public class XMLUtilTest {
         assertEquals("&amp;amp;", encode("&amp;"));
         assertEquals("&amp;&amp;", encode("&&"));
         assertEquals("&quot;+", encode("\"+"));
+    }
+
+    /**
+     * Checks for XML equivalence between two XML objects, ignoring whitespace and element order.
+     *
+     * @return true if the two documents are semantically equivalent.
+     */
+    public static boolean areXmlEquivalent(String xml1, String xml2) {
+        Diff diffs = DiffBuilder.compare(Input.fromString(xml1))
+                .withTest(Input.fromString(xml2))
+                .ignoreComments()
+                .ignoreElementContentWhitespace()
+                .build();
+        if (!diffs.hasDifferences()) {
+            return true;
+        } else {
+            for (Object diff : diffs.getDifferences()) {
+                logger.debug("Found metadata diff: {}", diff);
+            }
+            return false;
+        }
     }
 
 }
