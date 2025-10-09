@@ -186,7 +186,7 @@ public class DOM {
      *
      * @param dom                the Document to convert.
      * @param withXmlDeclaration if trye, an XML-declaration is prepended.
-     * @param standalone         Whether it is standalone in the XML sense of the word
+     * @param standAlone         Whether it is standalone in the XML sense of the word
      *          (see for example <a href="https://stackoverflow.com/questions/5578645/what-does-the-standalone-directive-mean-in-xml">"https://stackoverflow.com/questions/5578645/what-does-the-standalone-directive-mean-in-xml"</a>)
      * @return the dom as an XML String.
      * @throws XMLException if the dom could not be converted.

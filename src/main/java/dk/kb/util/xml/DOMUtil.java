@@ -6,10 +6,15 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 
@@ -131,6 +136,22 @@ public class DOMUtil {
     }
 
     /**
+     * Takes an XML fragment represented as a String object and parses it to a Document object.
+     * @param xml The XML fragment represented as a string.
+     * @return A document object, parsed from the given XML string.
+     */
+    public static Document parseDocument(String xml) {
+        try {
+            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+            documentBuilderFactory.setNamespaceAware(true); // Ensure namespace awareness
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            return documentBuilder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new XMLException("An error occurred while parsing XML from string to a Document." + xml, e);
+        }
+    }
+
+    /**
      * Removes the element specified by 'elementTag' from the root element of the given XML.
      * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
      * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
@@ -150,7 +171,7 @@ public class DOMUtil {
 
     /**
      * Removes the element specified by 'elementTag' from the root element of the given XML.
-     * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
+     * @param node the XML, represented as a string, for which the specified element is to be removed from.
      * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
      * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
      * Otherwise, the initial xmlString given as argument is returned.
@@ -166,7 +187,7 @@ public class DOMUtil {
 
     /**
      * Removes the element specified by 'elementTag' from the root element of the given XML.
-     * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
+     * @param node the XML, represented as a string, for which the specified element is to be removed from.
      * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
      * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
      * Otherwise, the initial xmlString given as argument is returned.

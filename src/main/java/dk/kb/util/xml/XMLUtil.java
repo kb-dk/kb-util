@@ -19,34 +19,19 @@
  */
 package dk.kb.util.xml;
 
+import org.custommonkey.xmlunit.DetailedDiff;
+import org.custommonkey.xmlunit.Diff;
+import org.custommonkey.xmlunit.XMLUnit;
 import dk.kb.util.reader.ReplaceFactory;
 import dk.kb.util.reader.ReplaceReader;
 import dk.kb.util.string.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.events.XMLEvent;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Objects;
+
+import static dk.kb.util.xml.DOMUtil.logger;
 
 /**
  * Misc. helpers for XML handling.
@@ -112,6 +97,29 @@ public class XMLUtil {
                 return "SPACE";
             default:
                 return "UNKNOWN_EVENT_TYPE " + "," + eventType;
+        }
+    }
+
+    /**
+     * Checks for XML equivalence between two XML objects, ignoring whitespace and element order.
+     * @return true if the two documents are semantically equivalent.
+     */
+    public static boolean areXmlEquivalent(String xml1, String xml2) {
+        XMLUnit.setIgnoreWhitespace(true);
+        XMLUnit.setIgnoreAttributeOrder(true);
+        try {
+            Diff diffs = XMLUnit.compareXML(xml1, xml2);
+            if (diffs.similar()) {
+                return true;
+            } else {
+                for (Object diff : new DetailedDiff(diffs).getAllDifferences()) {
+                    logger.debug("Found metadata diff: {}", diff);
+                }
+                return false;
+            }
+        } catch (SAXException | IOException e) {
+            logger.warn("areXmlEquivalent(): ", e);
+            return false;
         }
     }
 
