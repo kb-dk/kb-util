@@ -49,12 +49,36 @@ public class XMLUtilTest {
                 "<myMetadata xmlns=\"http://foobar.com/othernamespace\">" +
                         "<afield>123456</afield>" +
                         "</myMetadata>";
-        String metadataXml3 =
-                "<ns:myMetadata xmlns:ns=\"http://foobar.com/othernamespace\">" +
-                        "<ns:afield>123456</ns:afield>\n" +
-                        "</ns:myMetadata>";
         assertFalse(XMLUtil.areXmlEquivalent(metadataXml1, metadataXml2));
+    }
+
+    @Test
+    void compareXmlNamespacePrefix() {
+
+        String metadataXml2 =
+            "<myMetadata xmlns=\"http://foobar.com/othernamespace\">" +
+            "<afield>123456</afield>" +
+            "</myMetadata>";
+        String metadataXml3 =
+            "<ns:myMetadata xmlns:ns=\"http://foobar.com/othernamespace\">" +
+            "<ns:afield>123456</ns:afield>\n" +
+            "</ns:myMetadata>";
         assertTrue(XMLUtil.areXmlEquivalent(metadataXml2, metadataXml3));
     }
 
+    @Test
+    void compareXmlElementOrder() {
+        String metadataXml1 =
+            "<myMetadata xmlns=\"http://foobar.com/othernamespace\">" +
+            "<bfield>123456</bfield>" +
+            "<afield>123456</afield>" +
+            "</myMetadata>";
+        String metadataXml2 =
+            "<myMetadata xmlns=\"http://foobar.com/othernamespace\">" +
+            "<afield>123456</afield>" +
+            "<bfield>123456</bfield>" +
+            "</myMetadata>";
+
+        assertTrue(XMLUtil.areXmlEquivalent(metadataXml1, metadataXml2));
+    }
 }
