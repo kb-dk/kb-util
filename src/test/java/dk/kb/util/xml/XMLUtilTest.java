@@ -38,4 +38,23 @@ public class XMLUtilTest {
         assertFalse(XMLUtil.areXmlEquivalent("<root><child attr='1'/></root>", "<root><child attr='2'/></root>"));
         assertFalse(XMLUtil.areXmlEquivalent("<root></root>", "<differentRoot></differentRoot>"));
     }
+
+    @Test
+    void compareXml() {
+        String metadataXml1 =
+                "<myMetadata xmlns=\"http://foobar.com/othernamespace\">" +
+                        "<afield>[[FIELD]]</afield>" +
+                        "</myMetadata>";
+        String metadataXml2 =
+                "<myMetadata xmlns=\"http://foobar.com/othernamespace\">" +
+                        "<afield>123456</afield>" +
+                        "</myMetadata>";
+        String metadataXml3 =
+                "<ns:myMetadata xmlns:ns=\"http://foobar.com/othernamespace\">" +
+                        "<ns:afield>123456</ns:afield>\n" +
+                        "</ns:myMetadata>";
+        assertFalse(XMLUtil.areXmlEquivalent(metadataXml1, metadataXml2));
+        assertTrue(XMLUtil.areXmlEquivalent(metadataXml2, metadataXml3));
+    }
+
 }
