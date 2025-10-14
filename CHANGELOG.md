@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [1.6.13](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.13) - 2025-10-03
+### Added
+- Methods in XMLUtil and XMLUtilTest to solve a circular dependency
+
 ## [1.6.10](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.10) - 2025-06-12
 ### Added
 - KeyCloak method to retrieve an access_token to be used as Bearer authentication. KeycloakUtil.getKeycloakAccessToken()

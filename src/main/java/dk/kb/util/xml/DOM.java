@@ -31,6 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -163,9 +164,8 @@ public class DOM {
      *
      * @param dom the Document to convert.
      * @return the dom as an XML String.
-     * @throws TransformerException if the dom could not be converted.
      */
-    public static String domToString(Node dom) throws TransformerException {
+    public static String domToString(Node dom) {
         return domToString(dom, false);
     }
 
@@ -177,10 +177,28 @@ public class DOM {
      * @return the dom as an XML String.
      * @throws TransformerException if the dom could not be converted.
      */
+    public static String domToString(Node dom, boolean withXmlDeclaration) {
+        return domToString(dom, withXmlDeclaration, false);
+    }
+
+    /**
+     * Convert the given DOM to an UTF-8 XML String.
+     *
+     * @param dom                the Document to convert.
+     * @param withXmlDeclaration if trye, an XML-declaration is prepended.
+     * @param standAlone         Whether it is standalone in the XML sense of the word
+     *          (see for example <a href="https://stackoverflow.com/questions/5578645/what-does-the-standalone-directive-mean-in-xml">"https://stackoverflow.com/questions/5578645/what-does-the-standalone-directive-mean-in-xml"</a>)
+     * @return the dom as an XML String.
+     * @throws XMLException if the dom could not be converted.
+     */
     // TODO: Consider optimizing this with ThreadLocal Transformers
-    public static String domToString(Node dom, boolean withXmlDeclaration)
-            throws TransformerException {
-        Transformer t = TransformerFactory.newInstance().newTransformer();
+    public static String domToString(Node dom, boolean withXmlDeclaration, boolean standAlone) throws XMLException {
+        Transformer t = null;
+        try {
+            t = TransformerFactory.newInstance().newTransformer();
+        } catch (TransformerConfigurationException e) {
+            throw new XMLException(e);
+        }
         t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         if (withXmlDeclaration) {
             t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
@@ -188,10 +206,19 @@ public class DOM {
             t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         }
         t.setOutputProperty(OutputKeys.METHOD, "xml");
+        if (standAlone) {
+            t.setOutputProperty(OutputKeys.STANDALONE, "no");
+        } else {
+            t.setOutputProperty(OutputKeys.STANDALONE, "yes");
+        }
 
         /* Transformer */
         StringWriter sw = new StringWriter();
-        t.transform(new DOMSource(dom), new StreamResult(sw));
+        try {
+            t.transform(new DOMSource(dom), new StreamResult(sw));
+        } catch (TransformerException e) {
+            throw new XMLException(e);
+        }
 
         return sw.toString();
     }

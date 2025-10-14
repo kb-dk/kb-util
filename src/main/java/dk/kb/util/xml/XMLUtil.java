@@ -1,7 +1,7 @@
 /* $Id$
  *
  * The Summa project.
- * Copyright (C) 2005-2008  The State and University Library
+ * Copyright (C) 2005-2008  The Royal Danish Library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,9 +22,20 @@ package dk.kb.util.xml;
 import dk.kb.util.reader.ReplaceFactory;
 import dk.kb.util.reader.ReplaceReader;
 import dk.kb.util.string.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.ComparisonResult;
+import org.xmlunit.diff.DefaultNodeMatcher;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.DifferenceEvaluator;
+import org.xmlunit.diff.DifferenceEvaluators;
+import org.xmlunit.diff.ElementSelectors;
 
 import javax.xml.stream.events.XMLEvent;
 import java.io.StringReader;
+import java.util.Objects;
 
 /**
  * Misc. helpers for XML handling.
@@ -42,6 +53,8 @@ public class XMLUtil {
                                                       "'", "&apos;");
                 }
             };
+
+    private static final Logger logger = LoggerFactory.getLogger(XMLUtil.class);
 
     /**
      * Performs a simple entity-encoding of input, making it safe to include in XML.
@@ -92,4 +105,56 @@ public class XMLUtil {
                 return "UNKNOWN_EVENT_TYPE " + "," + eventType;
         }
     }
+
+
+    /**
+     * Checks for XML equivalence between two XML objects, ignoring whitespace and element order.
+     *
+     * @return true if the two documents are semantically equivalent.
+     */
+    public static boolean areXmlEquivalent(String xml1, String xml2) {
+        Diff diffs = DiffBuilder.compare(Input.fromString(xml1))
+                                .withTest(Input.fromString(xml2))
+                                .ignoreComments()
+                                .ignoreElementContentWhitespace()
+                                .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText, ElementSelectors.byName))
+                                .withDifferenceEvaluator(DifferenceEvaluators.chain(
+                                    ignoreNamespacePrefixDifferences(),
+                                    ignoreElementOrderDifferences()))
+                                .build();
+
+        if (!diffs.hasDifferences()) {
+            return true;
+        } else {
+            for (Object diff : diffs.getDifferences()) {
+                logger.debug("Found metadata diff: {}", diff);
+            }
+            return false;
+        }
+    }
+
+    private static DifferenceEvaluator ignoreNamespacePrefixDifferences() {
+        return (comparison, outcome) -> {
+            if (outcome != ComparisonResult.EQUAL) {
+                switch (Objects.requireNonNull(comparison.getType())) {
+                    case NAMESPACE_PREFIX:
+                        return ComparisonResult.EQUAL;
+                }
+            }
+            return outcome;
+        };
+    }
+
+    private static DifferenceEvaluator ignoreElementOrderDifferences() {
+        return (comparison, outcome) -> {
+            if (outcome != ComparisonResult.EQUAL) {
+                switch (Objects.requireNonNull(comparison.getType())) {
+                    case CHILD_NODELIST_SEQUENCE:
+                        return ComparisonResult.EQUAL;
+                }
+            }
+            return outcome;
+        };
+    }
+
 }

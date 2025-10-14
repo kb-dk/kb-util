@@ -3,12 +3,9 @@ package dk.kb.util.xml;
 import dk.kb.util.Resolver;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -19,7 +16,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 class XMLTest {
     
     @Test
-    void domToString() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    void domToString() throws IOException {
         String xmlFileContents = Resolver.readFileFromClasspath("xml/test.xml");
         Document document = XML.fromXML(xmlFileContents, true);
         String xmloutput = XML.domToString(document);
@@ -62,8 +59,7 @@ class XMLTest {
     }
     
     @Test
-    void unmarshallNonRootElement()
-            throws JAXBException, IOException, SAXException, ParserConfigurationException, TransformerException {
+    void unmarshallNonRootElement() {
         MarshallTestObject marshallTestObject = new MarshallTestObject("foo", new Weird("bar"));
         Weird object = marshallTestObject.value;
         
@@ -166,7 +162,7 @@ class XMLTest {
     
     
     @Test
-    void testFromXMLStream() throws IOException, ParserConfigurationException, SAXException, TransformerException {
+    void testFromXMLStream() throws IOException {
         try (InputStream inputStream = Resolver.openFileFromClasspath("xml/test.xml")) {
             Document doc = XML.fromXML(inputStream, true);
             String xmloutput = XML.domToString(doc);
