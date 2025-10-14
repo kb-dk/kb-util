@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [2.0.0](https://github.com/kb-dk/kb-util/tree/kb-util-2.0.0) - 2025-10-14
+### Changed
+- Switched from `javax` to `jakarta` and changed to java version to `17`
+
 ## [1.6.13](https://github.com/kb-dk/kb-util/tree/kb-util-1.6.13) - 2025-10-03
 ### Added
 - Methods in XMLUtil and XMLUtilTest to solve a circular dependency
