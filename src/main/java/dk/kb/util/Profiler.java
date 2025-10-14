@@ -23,11 +23,11 @@
 package dk.kb.util;
 
 
-import de.thetaphi.forbiddenapis.SuppressForbidden;
 
 import java.io.StringWriter;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.TimeZone;
 
 
 /**
@@ -374,10 +374,9 @@ public class Profiler {
      * @param useCurrentSpeed use the bpsSpan for the estimate, thus basing it on current speed
      * @return the extimated time of arrival, null if it is incalculable
      */
-    @SuppressForbidden
     public Calendar getETA(boolean useCurrentSpeed) {
         long timeLeft = getTimeLeft(useCurrentSpeed);
-        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault());
         if (timeLeft == -1) {
             return null;
         }

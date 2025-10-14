@@ -3,6 +3,7 @@ package dk.kb.util.oauth2;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
@@ -37,8 +38,9 @@ public class KeycloakUtil {
      * 
      */
     public static String getKeycloakAccessToken(String keyCloakRealmUrl,String clientId, String clientSecret) throws ServiceException {
-    try {     
-        HttpsURLConnection con = (HttpsURLConnection) new URL(keyCloakRealmUrl).openConnection();
+    try {
+        URL url = new URI(keyCloakRealmUrl).toURL();
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.addRequestProperty("Content-Type", "application/x-www-form-urlencoded");  //header attribute
 

@@ -23,13 +23,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+
 import java.util.Objects;
 
 /**
@@ -42,7 +44,7 @@ import java.util.Objects;
   BookDto.JSON_PROPERTY_TITLE,
   BookDto.JSON_PROPERTY_PAGES
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaCXFExtServerCodegen", date = "2022-06-24T12:52:17.834352580+02:00[Europe/Copenhagen]")
+@Generated(value = "org.openapitools.codegen.languages.JavaCXFExtServerCodegen", date = "2022-06-24T12:52:17.834352580+02:00[Europe/Copenhagen]")
 @XmlRootElement(name = "book")
 @XmlAccessorType(XmlAccessType.FIELD)
 @JacksonXmlRootElement(localName = "book")

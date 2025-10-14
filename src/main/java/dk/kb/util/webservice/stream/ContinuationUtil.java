@@ -15,8 +15,8 @@
 package dk.kb.util.webservice.stream;
 
 import dk.kb.util.Pair;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

@@ -23,8 +23,8 @@ import io.swagger.v3.core.util.DeserializationModule;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.PathsDeserializer;
 import io.swagger.v3.oas.models.Paths;
+import jakarta.ws.rs.core.StreamingOutput;
 
-import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
