@@ -1,11 +1,10 @@
 package dk.kb.util.xml;
 
 import dk.kb.util.Resolver;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -43,7 +42,7 @@ class XMLTest {
     }
     
     @Test
-    void marshall() throws JAXBException {
+    void marshall() {
         MarshallTestObject object = new MarshallTestObject("foo", new Weird("bar"));
         String result = XML.marshall(object);
         assertThat(result,
@@ -51,7 +50,7 @@ class XMLTest {
     }
     
     @Test
-    void unmarshall() throws JAXBException {
+    void unmarshall() {
         MarshallTestObject object = new MarshallTestObject("foo", new Weird("bar"));
         String intermediate = XML.marshall(object);
         MarshallTestObject result = XML.unmarshall(intermediate, MarshallTestObject.class);
@@ -159,8 +158,7 @@ class XMLTest {
             return Objects.hash(string);
         }
     }
-    
-    
+
     @Test
     void testFromXMLStream() throws IOException {
         try (InputStream inputStream = Resolver.openFileFromClasspath("xml/test.xml")) {

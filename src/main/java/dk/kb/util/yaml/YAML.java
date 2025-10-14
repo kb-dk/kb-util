@@ -15,6 +15,7 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
+import jakarta.validation.constraints.NotNull;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.commons.text.lookup.StringLookup;
 import org.apache.commons.text.lookup.StringLookupFactory;
@@ -23,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.AccessDeniedException;

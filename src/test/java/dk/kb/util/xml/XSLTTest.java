@@ -30,6 +30,8 @@ import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -211,8 +213,8 @@ public class XSLTTest {
             return null;
         }
         try {
-            return new URL(resource);
-        } catch (MalformedURLException e) {
+            return new URI(resource).toURL();
+        } catch (MalformedURLException | URISyntaxException | IllegalArgumentException e) {
             // Nada error, just try the next
         }
         File file = new File(resource);

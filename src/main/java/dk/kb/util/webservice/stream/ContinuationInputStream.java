@@ -17,10 +17,10 @@ package dk.kb.util.webservice.stream;
 import dk.kb.util.json.JSONStreamUtil;
 import dk.kb.util.webservice.Service2ServiceRequest;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;

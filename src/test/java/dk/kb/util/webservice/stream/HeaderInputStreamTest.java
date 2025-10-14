@@ -14,10 +14,10 @@
  */
 package dk.kb.util.webservice.stream;
 
+import jakarta.ws.rs.core.UriBuilder;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;

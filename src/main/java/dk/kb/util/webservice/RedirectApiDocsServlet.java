@@ -1,11 +1,13 @@
 package dk.kb.util.webservice;
 
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
 
 /**
  * Servlet used to redirect requests for /api-docs endpoints to the respective /api endpoints as this is where the swagger UI gets the correct specification in applications
