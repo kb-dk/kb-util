@@ -35,18 +35,28 @@ public class JSONStreamUtilTest {
 
     @Test
     public void testRecords0() throws IOException {
-        try (Stream<DsRecordDto> deserialized = JSONStreamUtil.jsonToObjectsStream(
-                new CharSequenceInputStream(RECORDS0, StandardCharsets.UTF_8, 1024), DsRecordDto.class)) {
-            List<DsRecordDto> records = deserialized.collect(Collectors.toList());
+        try (Stream<DsRecordDto> deserialized =
+                 JSONStreamUtil.jsonToObjectsStream(CharSequenceInputStream.builder()
+                                                                           .setCharSequence(RECORDS0)
+                                                                           .setCharset(StandardCharsets.UTF_8)
+                                                                           .setBufferSize(1024)
+                                                                           .get(),
+                                                    DsRecordDto.class)) {
+            List<DsRecordDto> records = deserialized.toList();
             assertTrue(records.isEmpty(), "There should be no records, but there were " + records.size());
         }
     }
 
     @Test
     public void testRecords1() throws IOException {
-        try (Stream<DsRecordDto> deserialized = JSONStreamUtil.jsonToObjectsStream(
-                new CharSequenceInputStream(RECORDS1, StandardCharsets.UTF_8, 1024), DsRecordDto.class)) {
-            List<DsRecordDto> records = deserialized.collect(Collectors.toList());
+        try (Stream<DsRecordDto> deserialized =
+                 JSONStreamUtil.jsonToObjectsStream(CharSequenceInputStream.builder()
+                                                                           .setCharSequence(RECORDS1)
+                                                                           .setCharset(StandardCharsets.UTF_8)
+                                                                           .setBufferSize(1024)
+                                                                           .get(),
+                                                    DsRecordDto.class)) {
+            List<DsRecordDto> records = deserialized.toList();
             assertEquals(1, records.size(), "There should be the right number of records");
             assertEquals("id1", records.get(0).getId(), "The first record should have the expected ID");
         }
@@ -54,9 +64,14 @@ public class JSONStreamUtilTest {
 
     @Test
     public void testRecords2() throws IOException {
-        try (Stream<DsRecordDto> deserialized = JSONStreamUtil.jsonToObjectsStream(
-                new CharSequenceInputStream(RECORDS2, StandardCharsets.UTF_8, 1024), DsRecordDto.class)) {
-            List<DsRecordDto> records = deserialized.collect(Collectors.toList());
+        try (Stream<DsRecordDto> deserialized =
+                 JSONStreamUtil.jsonToObjectsStream(CharSequenceInputStream.builder()
+                                                                           .setCharSequence(RECORDS2)
+                                                                           .setCharset(StandardCharsets.UTF_8)
+                                                                           .setBufferSize(1024)
+                                                                           .get(),
+                                                    DsRecordDto.class)) {
+            List<DsRecordDto> records = deserialized.toList();
             assertEquals(2, records.size(), "There should be the right number of records");
             assertEquals("id1", records.get(0).getId(), "The first record should have the expected ID");
             assertEquals(123L, records.get(0).getmTime(), "The first record should have the expected mTime");

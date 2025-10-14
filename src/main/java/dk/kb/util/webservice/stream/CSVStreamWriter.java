@@ -40,7 +40,7 @@ public class CSVStreamWriter extends ExportWriter {
     private static final Logger log = LoggerFactory.getLogger(CSVStreamWriter.class);
     ObjectMapper mapper = createMapper();
     {
-        mapper.setSerializationInclusion(JsonInclude.Include.ALWAYS); // We want nulls
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS); // We want nulls
     }
 
     CSVPrinter csvPrinter = null; // Initialized at first write in order to get headers

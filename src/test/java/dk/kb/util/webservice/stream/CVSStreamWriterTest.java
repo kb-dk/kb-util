@@ -28,17 +28,21 @@ class CVSStreamWriterTest {
     @Tag("fast")
     @Test
     void testBasicWriterSingleCSV() {
-        assertEquals("\"id\",\"title\",\"pages\"\n" +
-                     "\"0\",\"book #0\",100\n",
+        assertEquals("""
+                     "id","title","pages"
+                     "0","book #0",100
+                     """,
                      getBookCSV(1));
     }
 
     @Tag("fast")
     @Test
     void testBasicWriterMultiCSV() {
-        assertEquals("\"id\",\"title\",\"pages\"\n" +
-                     "\"0\",\"book #0\",100\n" +
-                     "\"1\",\"book #1\",101\n",
+        assertEquals("""
+                     "id","title","pages"
+                     "0","book #0",100
+                     "1","book #1",101
+                     """,
                      getBookCSV(2));
     }
 

@@ -64,7 +64,7 @@ public class ExportXMLStreamWriter extends ExportWriter {
         this.writeNulls = writeNulls;
         this.wrapperElement = rootElement;
 
-        xmlMapper.setSerializationInclusion(writeNulls ? JsonInclude.Include.ALWAYS : JsonInclude.Include.NON_NULL);
+        xmlMapper.setDefaultPropertyInclusion(writeNulls ? JsonInclude.Include.ALWAYS : JsonInclude.Include.NON_NULL);
         xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
 //        xmlWriter = mapper.writer(new MinimalPrettyPrinter()).withoutRootName();
         

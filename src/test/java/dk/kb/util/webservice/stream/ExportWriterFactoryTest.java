@@ -84,8 +84,10 @@ class ExportWriterFactoryTest {
                      out, response, headers, null, ExportWriterFactory.FORMAT.jsonl, false, null);
             getBooks(2).forEach(writer::write);
             writer.close();
-            assertEquals("{\"id\":\"0\",\"title\":\"book #0\"}\n" +
-                         "{\"id\":\"1\",\"title\":\"book #1\"}\n",
+            assertEquals("""
+                         {"id":"0","title":"book #0"}
+                         {"id":"1","title":"book #1"}
+                         """,
                          out.toString(StandardCharsets.UTF_8));
         }
     }
@@ -114,14 +116,15 @@ class ExportWriterFactoryTest {
             getBooks(3).forEach(writer::write);
             writer.close();
 
-            assertEquals("{\n" +
-                            "\"data\":[\n" +
-                            "{\"id\":\"0\",\"title\":\"book #0\",\"pages\":null},\n" +
-                            "{\"id\":\"1\",\"title\":\"book #1\",\"pages\":null},\n" +
-                            "{\"id\":\"2\",\"title\":\"book #2\",\"pages\":null}\n" +
-                            "]\n" +
-                            ",\"errors\":{\"amount\":1,\"records\":[{\"id\":\"testID\",\"errorMessage\":\"This specific test error occured\"}]}}",
-                    out.toString(StandardCharsets.UTF_8));
+            assertEquals("""
+                         {
+                         "data":[
+                         {"id":"0","title":"book #0","pages":null},
+                         {"id":"1","title":"book #1","pages":null},
+                         {"id":"2","title":"book #2","pages":null}
+                         ]
+                         ,"errors":{"amount":1,"records":[{"id":"testID","errorMessage":"This specific test error occured"}]}}""",
+                         out.toString(StandardCharsets.UTF_8));
         }
     }
 
@@ -146,14 +149,15 @@ class ExportWriterFactoryTest {
             getBooks(3).forEach(writer::write);
             writer.close();
 
-            assertEquals("{\n" +
-                            "\"data\":[\n" +
-                            "{\"id\":\"0\",\"title\":\"book #0\",\"pages\":null},\n" +
-                            "{\"id\":\"1\",\"title\":\"book #1\",\"pages\":null},\n" +
-                            "{\"id\":\"2\",\"title\":\"book #2\",\"pages\":null}\n" +
-                            "]\n" +
-                            ",\"errors\":{\"amount\":0,\"records\":[]}}",
-                    out.toString(StandardCharsets.UTF_8));
+            assertEquals("""
+                         {
+                         "data":[
+                         {"id":"0","title":"book #0","pages":null},
+                         {"id":"1","title":"book #1","pages":null},
+                         {"id":"2","title":"book #2","pages":null}
+                         ]
+                         ,"errors":{"amount":0,"records":[]}}""",
+                         out.toString(StandardCharsets.UTF_8));
         }
     }
 
@@ -219,57 +223,69 @@ class ExportWriterFactoryTest {
     @Tag("fast")
     @Test
     void testXML1Format() {
-        assertResponse("<books><book id=\"0\">\n" +
-                       "  <title>book #0</title>\n" +
-                       "</book>\n" +
-                       "\n" +
-                       "</books>\n",
+        assertResponse("""
+                       <books><book id="0">
+                         <title>book #0</title>
+                       </book>
+                       
+                       </books>
+                       """,
                        "xml", null, 1);
     }
 
     @Tag("fast")
     @Test
     void testXML2Format() {
-        assertResponse("<books><book id=\"0\">\n" +
-                       "  <title>book #0</title>\n" +
-                       "</book>\n" +
-                       "\n" +
-                       "</books>\n",
+        assertResponse("""
+                       <books><book id="0">
+                         <title>book #0</title>
+                       </book>
+                       
+                       </books>
+                       """,
                        "xml", null, 1);
     }
 
     @Tag("fast")
     @Test
     void testXML1MIME() {
-        assertResponse("<books><book id=\"0\">\n" +
-                       "  <title>book #0</title>\n" +
-                       "</book>\n" +
-                       "\n" +
-                       "</books>\n",
+        assertResponse("""
+                       <books><book id="0">
+                         <title>book #0</title>
+                       </book>
+                       
+                       </books>
+                       """,
                        null, "application/xml", 1);
     }
 
     @Tag("fast")
     @Test
     void testJSON1MIME() {
-        assertResponse("[\n" +
-                       "{\"id\":\"0\",\"title\":\"book #0\"}\n" +
-                       "]\n",
+        assertResponse("""
+                       [
+                       {"id":"0","title":"book #0"}
+                       ]
+                       """,
                        null, "application/json", 1);
     }
 
     @Tag("fast")
     @Test
     void testJSONL1MIME() {
-        assertResponse("{\"id\":\"0\",\"title\":\"book #0\"}\n",
+        assertResponse("""
+                       {"id":"0","title":"book #0"}
+                       """,
                        null, "application/x-ndjson", 1);
     }
 
     @Tag("fast")
     @Test
     void testCSV1MIME() {
-        assertResponse("\"id\",\"title\",\"pages\"\n" +
-                       "\"0\",\"book #0\",\n",
+        assertResponse("""
+                       "id","title","pages"
+                       "0","book #0",
+                       """,
                        null, "text/csv", 1);
     }
 

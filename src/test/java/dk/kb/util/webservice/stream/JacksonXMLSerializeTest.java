@@ -29,25 +29,29 @@ class JacksonXMLSerializeTest {
     @Test
     void testJacksonXMLSerializationCustomObject() throws JsonProcessingException {
         XmlMapper mapper = new XmlMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         String xmlString = mapper.writeValueAsString(new Sample("Some_ID", "Some content"));
 
-        assertEquals("<sample id=\"Some_ID\">\n" +
-                     "  <content>Some content</content>\n" +
-                     "</sample>\n", xmlString);
+        assertEquals("""
+                     <sample id="Some_ID">
+                       <content>Some content</content>
+                     </sample>
+                     """, xmlString);
     }
 
     @Test
     void testJacksonXMLSerializationBook() throws JsonProcessingException {
         XmlMapper mapper = new XmlMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         String xmlString = mapper.writeValueAsString(new BookDto().id("Some_ID").title("Some title"));
 
-        assertEquals("<book id=\"Some_ID\">\n" +
-                     "  <title>Some title</title>\n" +
-                     "</book>\n", xmlString);
+        assertEquals("""
+                     <book id="Some_ID">
+                       <title>Some title</title>
+                     </book>
+                     """, xmlString);
     }
 
 

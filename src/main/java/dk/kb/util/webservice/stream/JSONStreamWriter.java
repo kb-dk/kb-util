@@ -96,7 +96,7 @@ public class JSONStreamWriter extends ExportWriter {
         }
 
         ObjectMapper mapper = createMapper();
-        mapper.setSerializationInclusion(writeNulls ? JsonInclude.Include.ALWAYS : JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(writeNulls ? JsonInclude.Include.ALWAYS : JsonInclude.Include.NON_NULL);
         jsonWriter = mapper.writer(new MinimalPrettyPrinter());
     }
 

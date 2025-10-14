@@ -84,7 +84,7 @@ public abstract class ExportWriter extends Writer {
 
         Module deserializerModule = new DeserializationModule().addDeserializer(Paths.class, new PathsDeserializer());
         mapper.registerModule(deserializerModule);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

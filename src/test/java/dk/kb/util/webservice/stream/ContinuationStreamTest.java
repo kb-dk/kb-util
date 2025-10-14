@@ -36,7 +36,7 @@ class ContinuationStreamTest {
                              new ByteArrayInputStream(JSONStreamUtilTest.RECORDS2.getBytes(StandardCharsets.UTF_8)),
                              124L, true, 2L) ;
              ContinuationStream<DsRecordDto, Long> recordStream = is.stream(DsRecordDto.class)) {
-            List<DsRecordDto> records = recordStream.collect(Collectors.toList());
+            List<DsRecordDto> records = recordStream.toList();
             assertEquals(2, records.size(), "There should be the right number of records");
             assertEquals("id1", records.get(0).getId(), "The first record should have the expected ID");
             assertEquals(is.getContinuationToken(), records.get(records.size()-1).getmTime(),
@@ -53,7 +53,7 @@ class ContinuationStreamTest {
                              new ByteArrayInputStream(JSONStreamUtilTest.RECORDS0.getBytes(StandardCharsets.UTF_8)),
                              null, false, 0L) ;
              ContinuationStream<DsRecordDto, Long> recordStream = is.stream(DsRecordDto.class)) {
-            List<DsRecordDto> records = recordStream.collect(Collectors.toList());
+            List<DsRecordDto> records = recordStream.toList();
             assertTrue(records.isEmpty(), "There should be no records");
             assertNull(is.getContinuationToken(), "There should be no continuation token");
             assertEquals(false, is.hasMore(), "The has more flag should be transfered");
