@@ -28,39 +28,46 @@ class ExportXMLStreamWriterTest {
     @Tag("fast")
     @Test
     void testBasicWriterEmptyXML() {
-        assertEquals("<books>\n</books>\n", getBookXML(0, "books", false));
+        assertEquals("""
+                     <books>
+                     </books>
+                     """, getBookXML(0, "books", false));
     }
 
     @Tag("fast")
     @Test
     void testBasicWriterSingleXML() {
-        assertEquals("<books><book id=\"0\">\n" +
-                     "  <title>book #0</title>\n" +
-                     "</book>\n" +
-                     "\n" +
-                     "</books>\n", getBookXML(1, "books", false));
+        assertEquals("""
+                     <books><book id="0">
+                       <title>book #0</title>
+                     </book>
+                     
+                     </books>
+                     """, getBookXML(1, "books", false));
     }
 
     @Tag("fast")
     @Test
     void testBasicWriterMultiXML() {
         // Why is there no linebreak after <books>?
-        assertEquals("<books><book id=\"0\">\n" +
-                     "  <title>book #0</title>\n" +
-                     "</book>\n" +
-                     "\n" +
-                     "<book id=\"1\">\n" +
-                     "  <title>book #1</title>\n" +
-                     "</book>\n" +
-                     "\n" +
-                     "</books>\n", getBookXML(2, "books", false));
+        assertEquals("""
+                     <books><book id="0">
+                       <title>book #0</title>
+                     </book>
+                     
+                     <book id="1">
+                       <title>book #1</title>
+                     </book>
+                     
+                     </books>
+                     """, getBookXML(2, "books", false));
     }
 
     private String getBookXML(int count, String wrapperElement, boolean includeNull) {
-        try (CharArrayWriter stringW = new CharArrayWriter() ;
-             ExportXMLStreamWriter XMLW = new ExportXMLStreamWriter(stringW, wrapperElement, includeNull)) {
-            getBooks(count).forEach(XMLW::write);
-            XMLW.close();
+        try (CharArrayWriter stringW = new CharArrayWriter()) {
+            try (ExportXMLStreamWriter XMLW = new ExportXMLStreamWriter(stringW, wrapperElement, includeNull)) {
+                getBooks(count).forEach(XMLW::write);
+            }
             return stringW.toString();
         }
     }

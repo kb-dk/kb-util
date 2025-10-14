@@ -30,46 +30,61 @@ class JSONStreamWriterTest {
     @Tag("fast")
     @Test
     void testBasicWriterEmptyJSON() {
-        assertEquals("[\n\n]\n", getBookJSON(0, JSONStreamWriter.FORMAT.json));
+        assertEquals("""
+                     [
+                     
+                     ]
+                     """, getBookJSON(0, JSONStreamWriter.FORMAT.json));
     }
 
     @Tag("fast")
     @Test
     void testBasicWriterSingleJSON() {
-        assertEquals("[\n" +
-                     "{\"id\":\"0\",\"title\":\"book #0\"}\n" +
-                     "]\n", getBookJSON(1, JSONStreamWriter.FORMAT.json));
+        assertEquals("""
+                     [
+                     {"id":"0","title":"book #0"}
+                     ]
+                     """, getBookJSON(1, JSONStreamWriter.FORMAT.json));
     }
 
     @Tag("fast")
     @Test
     void testBasicWriterMultiJSON() {
-        assertEquals("[\n" +
-                     "{\"id\":\"0\",\"title\":\"book #0\"},\n" +
-                     "{\"id\":\"1\",\"title\":\"book #1\"}\n" +
-                     "]\n", getBookJSON(2, JSONStreamWriter.FORMAT.json));
+        assertEquals("""
+                     [
+                     {"id":"0","title":"book #0"},
+                     {"id":"1","title":"book #1"}
+                     ]
+                     """, getBookJSON(2, JSONStreamWriter.FORMAT.json));
     }
+
     @Tag("fast")
     @Test
     void testCustomWriterMulti() {
-        assertEquals("<\n" +
-                     "{\"id\":\"0\",\"title\":\"b00k #0\"}; " +
-                     "{\"id\":\"1\",\"title\":\"b00k #1\"}\n" +
-                     ">\n", getCustomBookJSON(2, JSONStreamWriter.FORMAT.json));
+        assertEquals("""
+                     <
+                     {"id":"0","title":"b00k #0"}; \
+                     {"id":"1","title":"b00k #1"}
+                     >
+                     """, getCustomBookJSON(2, JSONStreamWriter.FORMAT.json));
     }
 
     @Tag("fast")
     @Test
     void testBasicWriterSingleJSONL() {
-        assertEquals("{\"id\":\"0\",\"title\":\"book #0\"}\n",
+        assertEquals("""
+                     {"id":"0","title":"book #0"}
+                     """,
                      getBookJSON(1, JSONStreamWriter.FORMAT.jsonl));
     }
 
     @Tag("fast")
     @Test
     void testBasicWriterMultiJSONL() {
-        assertEquals("{\"id\":\"0\",\"title\":\"book #0\"}\n" +
-                     "{\"id\":\"1\",\"title\":\"book #1\"}\n",
+        assertEquals("""
+                     {"id":"0","title":"book #0"}
+                     {"id":"1","title":"book #1"}
+                     """,
                      getBookJSON(2, JSONStreamWriter.FORMAT.jsonl));
     }
 
@@ -81,32 +96,31 @@ class JSONStreamWriterTest {
     }
 
     private String getBookJSON(int count, JSONStreamWriter.FORMAT format) {
-        try (CharArrayWriter stringW = new CharArrayWriter() ;
-             JSONStreamWriter jsonW = new JSONStreamWriter(stringW, format)) {
-            getBooks(count).forEach(jsonW::write);
-            jsonW.close();
+        try (CharArrayWriter stringW = new CharArrayWriter()) {
+            try (JSONStreamWriter jsonW = new JSONStreamWriter(stringW, format)) {
+                getBooks(count).forEach(jsonW::write);
+            }
             return stringW.toString();
         }
     }
 
     private String getCustomBookJSON(int count, JSONStreamWriter.FORMAT format) {
-        try (CharArrayWriter stringW = new CharArrayWriter() ;
-             JSONStreamWriter jsonW = new JSONStreamWriter(stringW, format)) {
-            jsonW.setPreOutput("<\n");
-            jsonW.setPostOutput("\n>\n");
-            jsonW.setElementDivider("; ");
-            jsonW.setAdjustPattern(Pattern.compile("o"));
-            jsonW.setAdjustReplacement("0");
-
-            getBooks(count).forEach(jsonW::write);
-            jsonW.close();
+        try (CharArrayWriter stringW = new CharArrayWriter()) {
+            try (JSONStreamWriter jsonW = new JSONStreamWriter(stringW, format)) {
+                jsonW.setPreOutput("<\n");
+                jsonW.setPostOutput("\n>\n");
+                jsonW.setElementDivider("; ");
+                jsonW.setAdjustPattern(Pattern.compile("o"));
+                jsonW.setAdjustReplacement("0");
+                getBooks(count).forEach(jsonW::write);
+            }
             return stringW.toString();
         }
     }
 
     private Stream<BookDto> getBooks(int count) {
         return IntStream.range(0, count)
-                .boxed()
-                .map(id -> new BookDto().id(Integer.toString(id)).title("book #" + id));
+                        .boxed()
+                        .map(id -> new BookDto().id(Integer.toString(id)).title("book #" + id));
     }
 }
