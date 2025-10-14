@@ -42,19 +42,19 @@ import java.util.Objects;
  */
 public class XMLUtil {
 
-
     private static final ThreadLocal<ReplaceReader> localEncoder =
-        new ThreadLocal<ReplaceReader>() {
-            @Override
-            protected ReplaceReader initialValue() {
-                return ReplaceFactory.getReplacer("&", "&amp;",
-                                                  "\"", "&quot;",
-                                                  "<", "&lt;",
-                                                  ">", "&gt;",
-                                                  "'", "&apos;");
-            }
-        };
-    private static Logger logger = LoggerFactory.getLogger(XMLUtil.class);
+            new ThreadLocal<ReplaceReader>() {
+                @Override
+                protected ReplaceReader initialValue() {
+                    return ReplaceFactory.getReplacer("&", "&amp;",
+                                                      "\"", "&quot;",
+                                                      "<", "&lt;",
+                                                      ">", "&gt;",
+                                                      "'", "&apos;");
+                }
+            };
+
+    private static final Logger logger = LoggerFactory.getLogger(XMLUtil.class);
 
     /**
      * Performs a simple entity-encoding of input, making it safe to include in XML.
