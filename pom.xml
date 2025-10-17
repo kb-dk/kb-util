@@ -6,18 +6,18 @@
         <groupId>org.sbforge</groupId>
         <artifactId>sbforge-parent</artifactId>
         <version>25</version>
-        <relativePath/><!-- override default parentpath of ../pom.xml which allows this to be a git submodule without reporting errors-->
+        <relativePath /><!-- override default parentpath of ../pom.xml which allows this to be a git submodule without reporting errors-->
     </parent>
 
     <groupId>dk.kb.util</groupId>
     <artifactId>kb-util</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
 
     <scm>
         <url>https://github.com/kb-dk/kb-util</url>
         <connection>scm:git:git@github.com:kb-dk/kb-util.git</connection>
         <developerConnection>scm:git:git@github.com:kb-dk/kb-util.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>kb-util-2.0.0</tag>
     </scm>
 
     <licenses>
