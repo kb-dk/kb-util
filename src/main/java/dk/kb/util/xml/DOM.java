@@ -207,9 +207,9 @@ public class DOM {
         }
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         if (standAlone) {
-            t.setOutputProperty(OutputKeys.STANDALONE, "no");
-        } else {
             t.setOutputProperty(OutputKeys.STANDALONE, "yes");
+        } else {
+            t.setOutputProperty(OutputKeys.STANDALONE, "no");
         }
 
         /* Transformer */
