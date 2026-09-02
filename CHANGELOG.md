@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [3.1.0]
+
+### Added - kb-util-xml
+Added class `Namespacing` to handle tasks about setting namespaces to xml documents
+
 ## [3.0.0]
 ### Changed
 Split into dedicated submodules
