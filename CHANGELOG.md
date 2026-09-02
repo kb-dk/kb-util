@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [3.0.0]
+### Changed
+Split into dedicated submodules
+* kb-util-core
+* kb-util-json
+* kb-util-xml
+* kb-util-yaml
+* kb-util-web
+* kb-util-other
+
 ## [2.0.0](https://github.com/kb-dk/kb-util/tree/kb-util-2.0.0) - 2025-10-14
 ### Changed
 - Switched from `javax` to `jakarta` and changed to java version to `17`
