@@ -127,7 +127,7 @@ public class DOMUtil {
      * @return A document object, parsed from the given XML string.
      */
     public static Document parseDocument(String xml) {
-        return XML.parser().withNamespaceAware(true).toDOM(xml);
+        return XML.parser().setNamespaceAware(true).toDOM(xml);
     }
 
     /**

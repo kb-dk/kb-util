@@ -80,7 +80,7 @@ public class DOM {
      */
     public static Document stringToDOM(String xmlString,
                                        boolean namespaceAware) {
-        return XML.parser().withNamespaceAware(namespaceAware).toDOM(xmlString);
+        return XML.parser().setNamespaceAware(namespaceAware).toDOM(xmlString);
     }
 
     /**
@@ -90,7 +90,7 @@ public class DOM {
      * @return The document in a DOM or {@code null} on errors.
      */
     public static Document stringToDOM(String xmlString) throws XMLException {
-        return XML.parser().withNamespaceAware(false).toDOM(xmlString);
+        return XML.parser().setNamespaceAware(false).toDOM(xmlString);
     }
 
     /**
@@ -104,7 +104,7 @@ public class DOM {
      */
     public static Document streamToDOM(InputStream xmlStream,
                                        boolean namespaceAware) {
-        return XML.parser().withNamespaceAware(namespaceAware).toDOM(xmlStream);
+        return XML.parser().setNamespaceAware(namespaceAware).toDOM(xmlStream);
     }
 
     /**
@@ -115,7 +115,7 @@ public class DOM {
      * @return The document in a DOM or {@code null} in case of errors
      */
     public static Document streamToDOM(InputStream xmlStream) throws XMLException {
-        return XML.parser().withNamespaceAware(false).toDOM(xmlStream);
+        return XML.parser().setNamespaceAware(false).toDOM(xmlStream);
     }
 
     /**
@@ -126,7 +126,7 @@ public class DOM {
      */
     public static String domToString(Node dom) {
         return DOM.serializer()
-                  .withXmlDeclaration(false)
+                  .setXmlDeclaration(false)
                   .domToString(dom);
     }
 
@@ -140,8 +140,8 @@ public class DOM {
      */
     public static String domToString(Node dom, boolean withXmlDeclaration) throws XMLException {
         return DOM.serializer()
-                  .withXmlDeclaration(withXmlDeclaration)
-                  .withStandAlone(false)
+                  .setXmlDeclaration(withXmlDeclaration)
+                  .setStandAlone(false)
                   .domToString(dom);
     }
 
@@ -157,8 +157,8 @@ public class DOM {
      */
     public static String domToString(Node dom, boolean withXmlDeclaration, boolean standAlone) throws XMLException {
         return DOM.serializer()
-                  .withXmlDeclaration(withXmlDeclaration)
-                  .withStandAlone(standAlone)
+                  .setXmlDeclaration(withXmlDeclaration)
+                  .setStandAlone(standAlone)
                   .domToString(dom);
     }
 

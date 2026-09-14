@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,9 +80,9 @@ public class XMLStepperTest {
     public void testGetSubXMLFromPath() throws XMLStreamException {
         final String EXPECTED = "<bar xmlns=\"http://www.example.com/bar_ns/\"><nam:subsub xmlns:nam=\"http://example.com/subsub_ns\">content1<!-- Sub comment --></nam:subsub><!-- Comment --></bar>";
         XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE, "foo/bar");
-        Assertions.assertNotNull(xmlReader, "Skipping to 'foo/bar' should work");
+        assertNotNull(xmlReader, "Skipping to 'foo/bar' should work");
         String subXML = XMLStepper.getSubXML(xmlReader, true);
-        Assertions.assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
     }
 
     @Test
@@ -89,9 +90,9 @@ public class XMLStepperTest {
         final String EXPECTED = "<bar this=\"isit\"><subsub>content2</subsub></bar>";
         final String XPATH = "foo/bar[@this='isit']";
         XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
-        Assertions.assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
+        assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
         String subXML = XMLStepper.getSubXML(xmlReader, true);
-        Assertions.assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
     }
 
     @Test
@@ -99,9 +100,9 @@ public class XMLStepperTest {
         final String EXPECTED = "<subsub>content2</subsub>";
         final String XPATH = "foo/bar[@this='isit']/subsub";
         XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
-        Assertions.assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
+        assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
         String subXML = XMLStepper.getSubXML(xmlReader, true);
-        Assertions.assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
     }
 
     @Test
@@ -109,9 +110,9 @@ public class XMLStepperTest {
         final String EXPECTED = "<bar this=\"isit\"><subsub>content2</subsub></bar>";
         final String XPATH = "//bar[@this='isit']";
         XMLStreamReader xmlReader = XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
-        Assertions.assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
+        assertNotNull(xmlReader, "Skipping to '" + XPATH + "' should work");
         String subXML = XMLStepper.getSubXML(xmlReader, true);
-        Assertions.assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
+        assertEquals(EXPECTED, subXML, "The extracted XML should be as exped");
     }
 
     @Test
@@ -120,8 +121,8 @@ public class XMLStepperTest {
         final String XPATH = "//bar[@this='isit']/subsub";
         try {
             XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
-            Assertions.fail("Using path '" + XPATH + "' should fail early as predicates for XPaths starting with '//' are " +
-                            "only supported for the last element");
+            fail("Using path '" + XPATH + "' should fail early as predicates for XPaths starting with '//' are " +
+                    "only supported for the last element");
         } catch (Exception e) {
             // Expected
         }
@@ -133,9 +134,9 @@ public class XMLStepperTest {
         final String XPATH = "digitalObjectBundle/digitalObject/datastream[@ID='ALTO']/datastreamVersion/xmlContent/alto";
 
         XMLStreamReader xmlALTOReader = XMLStepper.jumpToNextFakeXPath(FEDORA, XPATH);
-        Assertions.assertNotNull(xmlALTOReader, "ALTO block should be findable with path '" + XPATH + "'");
+        assertNotNull(xmlALTOReader, "ALTO block should be findable with path '" + XPATH + "'");
         String alto = XMLStepper.getSubXML(xmlALTOReader, true);
-        Assertions.assertNotNull(alto, "Extracted ALTO should not be null");
+        assertNotNull(alto, "Extracted ALTO should not be null");
         System.out.println(alto);
     }
 
@@ -211,7 +212,7 @@ public class XMLStepperTest {
     private void assertXPathShorthand(String xml, String[][] tests) throws XMLStreamException {
         for (String[] test : tests) {
             String result = XMLStepper.evaluateFakeXPath(xml, test[0]);
-            Assertions.assertEquals(test[1], result,
+            assertEquals(test[1], result,
                          "The single-xpath result for '" + test[0] + " should be as expected");
         }
     }
@@ -225,7 +226,7 @@ public class XMLStepperTest {
         for (int i = 0; i < tests.length; i++) {
             String[] test = tests[i];
             String result = results.get(i);
-            Assertions.assertEquals(test[1], result,
+            assertEquals(test[1], result,
                          "The multi-xpaths result for '" + test[0] + " should be as expected");
         }
     }
@@ -269,10 +270,10 @@ public class XMLStepperTest {
         for (int i = 0; i < tests.length; i++) {
             String[] test = tests[i];
             List<String> result = results.get(i);
-            Assertions.assertEquals(test.length - 1, result.size(),
+            assertEquals(test.length - 1, result.size(),
                          "The number of matches for " + test[0] + " should be as expected");
             for (int j = 0 ; j < test.length-1 ; j++) {
-                Assertions.assertEquals(test[j + 1], result.get(j),
+                assertEquals(test[j + 1], result.get(j),
                              "Result #" + j + " for " + test[0] + " should match");
             }
         }
@@ -296,7 +297,7 @@ public class XMLStepperTest {
                         "baz".equals(current);
             }
         });
-        Assertions.assertEquals(EXPECTED, actual,
+        assertEquals(EXPECTED, actual,
                                 "The text content replaced XML should be as expected");
     }
 
@@ -321,7 +322,7 @@ public class XMLStepperTest {
         String actual = Strings.flush(actualS);
         // TODO: Figure out why the streaming version keeps the header, while the direct one doesn't
         actual = actual.replace("<?xml version='1.0' encoding='UTF-8'?>", "").trim();
-        Assertions.assertEquals(EXPECTED, actual,
+        assertEquals(EXPECTED, actual,
                                 "The text content replaced XML should be as expected");
     }
 
@@ -368,10 +369,10 @@ public class XMLStepperTest {
                     return false;
                 }
             });
-            Assertions.assertEquals(2, zooCount.get(),
+            assertEquals(2, zooCount.get(),
                          "After iteration with step==" + step
                          + ", the stepper should have encountered 'zoo' the right number of times");
-            Assertions.assertEquals("bar", xml.getLocalName(),
+            assertEquals("bar", xml.getLocalName(),
                          "After iteration with step==" + step +
                          ", the reader should be positioned at the correct end tag");
         }
@@ -410,21 +411,21 @@ public class XMLStepperTest {
     }
 
     private static void assertInheritExtraction(List<String> records) {
-        Assertions.assertEquals(3, records.size(), "The expected number of records should be extracted");
+        assertEquals(3, records.size(), "The expected number of records should be extracted");
 
-        Assertions.assertTrue(records.get(0).contains("xmlns:inner=\"http://example.com/\""),
+        assertTrue(records.get(0).contains("xmlns:inner=\"http://example.com/\""),
                               "First inner record should have the inner namespace defined");
-        Assertions.assertTrue(records.get(0).contains("xmlns=\"http://defaultnamespace.example.com/\""),
+        assertTrue(records.get(0).contains("xmlns=\"http://defaultnamespace.example.com/\""),
                               "First inner record should have the default namespace defined");
 
-        Assertions.assertTrue(records.get(1).contains("xmlns:inner=\"http://example.com/\""),
+        assertTrue(records.get(1).contains("xmlns:inner=\"http://example.com/\""),
                               "Second inner record should have the inner namespace defined");
 
-        Assertions.assertTrue(records.get(2).contains("xmlns:inner=\"http://example.com/\""),
+        assertTrue(records.get(2).contains("xmlns:inner=\"http://example.com/\""),
                               "Third inner record should have the inner namespace defined");
-        Assertions.assertTrue(records.get(2).contains("xmlns=\"http://example.com/newdefault\""),
+        assertTrue(records.get(2).contains("xmlns=\"http://example.com/newdefault\""),
                               "Third inner record should have the overriding new default namespace defined");
-        Assertions.assertTrue(records.get(2).contains("<inherited>"),
+        assertTrue(records.get(2).contains("<inherited>"),
                 "Third inner record should NOT have a default namespace defined for inherited " +
                         "as is is already defined for record");
     }
@@ -440,7 +441,7 @@ public class XMLStepperTest {
             try {
                 XMLStreamReader xml = xmlFactory.createXMLStreamReader(new StringReader(test[0]));
                 lenientHelper(xml, false, test[1], test[2]);
-                Assertions.fail("Stepping past the current element with lenient==false should raise an exception for " + test[0]);
+                fail("Stepping past the current element with lenient==false should raise an exception for " + test[0]);
             } catch (IllegalStateException e) {
                 // Expected
             }
@@ -526,7 +527,7 @@ public class XMLStepperTest {
         log.info(String.format(Locale.ROOT, 
                 "Reduced %d blocks @ %dKB to %dKB at %.1f reductions/sec",
                 RUNS, SAMPLE.length() / 1024, reduced.length() / 1024, profiler.getBps(false)));
-        Assertions.assertTrue(reduced.contains("<datafield tag=\"LOC\""),
+        assertTrue(reduced.contains("<datafield tag=\"LOC\""),
                               "The reduced XML should contain datafields after the skipped ones");
     }
 
@@ -539,7 +540,7 @@ public class XMLStepperTest {
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         try {
             XMLStepper.limitXML(in, out, lims, true, true, false);
-            Assertions.fail("An XMLStreamException was expected here due to invalid input XML");
+            fail("An XMLStreamException was expected here due to invalid input XML");
         } catch (XMLStreamException e) {
             // Intended
         }
@@ -565,7 +566,7 @@ public class XMLStepperTest {
         log.info(String.format(Locale.ROOT, 
                 "Reduced %d blocks @ %dKB to %dKB at %.1f reductions/sec",
                 RUNS, SAMPLE.length() / 1024, reduced.length() / 1024, profiler.getBps(false)));
-        Assertions.assertTrue(reduced.contains("<datafield tag=\"LOC\""),
+        assertTrue(reduced.contains("<datafield tag=\"LOC\""),
                               "The reduced XML should contain datafields after the skipped ones");
     }
 
@@ -639,7 +640,7 @@ public class XMLStepperTest {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         XMLStepper.limitXML(in, out, lims, countPatterns, onlyElementMatch, discardNonMatched);
-        Assertions.assertEquals(expected, os.toString(StandardCharsets.UTF_8),
+        assertEquals(expected, os.toString(StandardCharsets.UTF_8),
                      "The input should be reduced properly for limits " + Strings.join(limits));
         assertLimitConvenience(input, expected, countPatterns, onlyElementMatch, discardNonMatched, limits);
         assertLimitPersistent(input, expected, countPatterns, onlyElementMatch, discardNonMatched, limits);
@@ -656,7 +657,7 @@ public class XMLStepperTest {
         }
 
         String os = XMLStepper.limitXML(input, lims, countPatterns, onlyElementMatch, discardNonMatched);
-        Assertions.assertEquals(expected, os,
+        assertEquals(expected, os,
                      "The input should be convenience reduced properly for limits " + Strings.join(limits));
     }
 
@@ -672,7 +673,7 @@ public class XMLStepperTest {
 
         XMLStepper.Limiter limiter = XMLStepper.createLimiter(lims, countPatterns, onlyElementMatch, discardNonMatched);
         String os = limiter.limit(input);
-        Assertions.assertEquals(expected, os,
+        assertEquals(expected, os,
                      "The input should be convenience reduced properly for limits " + Strings.join(limits));
     }
 
@@ -693,7 +694,7 @@ public class XMLStepperTest {
                 return false;
             }
         });
-        Assertions.assertEquals(1, count.get(),
+        assertEquals(1, count.get(),
                                 "Only a single content should be visited");
         assertTrue(XMLStepper.findTagStart(xml, "bar"),
                    "The second 'bar' should be findable");
@@ -723,7 +724,7 @@ public class XMLStepperTest {
         assertTrue(XMLStepper.findTagStart(in, "bar"),
                    "The first 'bar' should be findable");
         XMLStepper.pipeXML(in, out, false); // until first </bar>
-        Assertions.assertEquals(XMLStreamConstants.CHARACTERS, in.getEventType(),
+        assertEquals(XMLStreamConstants.CHARACTERS, in.getEventType(),
                      "The reader should be positioned at a character tag (newline) but was positioned at "
                                           + XMLUtil.eventID2String(in.getEventType()));
     }
@@ -734,7 +735,7 @@ public class XMLStepperTest {
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(SAMPLE));
         XMLStepper.pipeXML(in, out, false);
-        Assertions.assertEquals(SAMPLE, os.toString(StandardCharsets.UTF_8),
+        assertEquals(SAMPLE, os.toString(StandardCharsets.UTF_8),
                                 "Piped stream should match input stream");
     }
 
@@ -746,7 +747,7 @@ public class XMLStepperTest {
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(XML));
         in.next();
         String piped = XMLStepper.getSubXML(in, false, true);
-        Assertions.assertEquals(EXPECTED, piped,
+        assertEquals(EXPECTED, piped,
                                 "The output should contain the inner XML");
     }
 
@@ -756,7 +757,7 @@ public class XMLStepperTest {
         assertTrue(XMLStepper.findTagStart(in, "foo"),
                    "The first 'foo' should be findable");
         String piped = XMLStepper.getSubXML(in, false, true);
-        Assertions.assertEquals(OUTER_SNIPPET, piped,
+        assertEquals(OUTER_SNIPPET, piped,
                                 "The output should contain the inner XML");
     }
 
@@ -766,7 +767,7 @@ public class XMLStepperTest {
         assertTrue(XMLStepper.findTagStart(in, "foo"),
                    "The first 'foo' should be findable");
         String piped = XMLStepper.getSubXML(in, false, false);
-        Assertions.assertEquals("<foo><bar>bar1</bar><bar>bar2</bar></foo>", piped,
+        assertEquals("<foo><bar>bar1</bar><bar>bar2</bar></foo>", piped,
                                 "The output should contain the inner XML");
     }
 
@@ -806,7 +807,7 @@ public class XMLStepperTest {
     private void assertPipe(String expected, XMLStreamReader xml) throws XMLStreamException {
         String result = XMLStepper.getSubXML(xml, false);
         log.info("Sub-XML: " + result);
-        Assertions.assertEquals(expected, result,
+        assertEquals(expected, result,
                                 "The piper should reproduce the desired sub section of the XML");
     }
 }

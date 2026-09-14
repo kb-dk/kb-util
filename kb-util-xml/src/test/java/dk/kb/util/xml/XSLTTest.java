@@ -41,6 +41,8 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class XSLTTest {
@@ -53,13 +55,13 @@ public class XSLTTest {
         String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
         String expected1 = Resolver.resolveUTF8String("data/xml/expected1.xml");
         String result = XSLT.transform(xslt1, input);
-        Assertions.assertEquals(trim(expected1), trim(result),
+        assertEquals(trim(expected1), trim(result),
                                 "Sample 1 should transform correctly");
 
         URL xslt2 = getURL("data/xml/trivial_transform2.xslt");
         String expected2 = Resolver.resolveUTF8String("data/xml/expected2.xml");
         result = XSLT.transform(xslt2, input);
-        Assertions.assertEquals(trim(expected2), trim(result),
+        assertEquals(trim(expected2), trim(result),
                                 "Sample 2 should transform correctly");
     }
 
@@ -71,7 +73,7 @@ public class XSLTTest {
             URL xslt1 = getURL("data/xml/trivial_transform1.xslt");
             String expected1 = Resolver.resolveUTF8String("data/xml/expected1.xml");
             String result = pool.transform(xslt1, input, false);
-            Assertions.assertEquals(trim(expected1), trim(result),
+            assertEquals(trim(expected1), trim(result),
                                     "Sample 1 should transform correctly");
         }
 
@@ -79,7 +81,7 @@ public class XSLTTest {
             URL xslt2 = getURL("data/xml/trivial_transform2.xslt");
             String expected2 = Resolver.resolveUTF8String("data/xml/expected2.xml");
             String result = pool.transform(xslt2, input, false);
-            Assertions.assertEquals(trim(expected2), trim(result),
+            assertEquals(trim(expected2), trim(result),
                                     "Sample 2 should transform correctly");
         }
     }
@@ -96,7 +98,7 @@ public class XSLTTest {
         URL xslt1 = getURL("data/xml/parameter_transform.xslt");
         String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
         String expected1 = Resolver.resolveUTF8String("data/xml/parameter_expected.xml");
-        Assertions.assertEquals(trim(expected1), trim(XSLT.transform(xslt1, input, properties)),
+        assertEquals(trim(expected1), trim(XSLT.transform(xslt1, input, properties)),
                                 "Parameter should transform correctly");
 
     }
@@ -144,7 +146,7 @@ public class XSLTTest {
             thread.join();
         }
         log.debug("Finished " + transformationCount.get() + " transformations");
-        Assertions.assertEquals(threadCount * runs, transformationCount.get(),
+        assertEquals(threadCount * runs, transformationCount.get(),
                                 String.format(Locale.ROOT,
                                    "The amount of transformations should be threadCount * runs (%d * %d)", 
                                    threadCount, runs));
@@ -182,14 +184,14 @@ public class XSLTTest {
                     transforms++;
                     if (!trim(expected).equals(actual)) {
                         fullStop = true;
-                        Assertions.fail("Not the expected result for '" + xslt + "'. Expected:\n" + expected + "\nActual:\n"
+                        fail("Not the expected result for '" + xslt + "'. Expected:\n" + expected + "\nActual:\n"
                                         + actual);
 
                     }
                     transformationCount.addAndGet(1);
                 } catch (TransformerException e) {
                     fullStop = true;
-                    Assertions.fail("Error transforming with '" + xslt + "': " + e.getMessage());
+                    fail("Error transforming with '" + xslt + "': " + e.getMessage());
                 }
                 try {
                     Thread.sleep(random.nextInt(maxPause));
@@ -232,7 +234,7 @@ public class XSLTTest {
         String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
         String expected = Resolver.resolveUTF8String(
                 "data/xml/namespace_expected_faulty.xml");
-        Assertions.assertEquals(trim(expected), trim(XSLT.transform(xslt, input)),
+        assertEquals(trim(expected), trim(XSLT.transform(xslt, input)),
                                 "Fault namespaces should give faulty output");
     }
     @Test
@@ -241,7 +243,7 @@ public class XSLTTest {
         String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");
         String expected = Resolver.resolveUTF8String(
                 "data/xml/namespace_expected_correct.xml");
-        Assertions.assertEquals(trim(expected), trim(XSLT.transform(xslt, input, true)),
+        assertEquals(trim(expected), trim(XSLT.transform(xslt, input, true)),
                                 "Fault namespaces should give faulty output");
     }
 

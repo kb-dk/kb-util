@@ -28,27 +28,27 @@ public class XmlParser {
         return new XmlParser();
     }
 
-    public XmlParser withNamespaceAware(final boolean namespaceAware) {
+    public XmlParser setNamespaceAware(final boolean namespaceAware) {
         this.namespaceAware = namespaceAware;
         return this;
     }
 
-    public XmlParser withIgnoringComments(final boolean ignoringComments) {
+    public XmlParser setIgnoringComments(final boolean ignoringComments) {
         this.ignoringComments = ignoringComments;
         return this;
     }
 
-    public XmlParser withIgnoreWhitespace(final boolean ignoreWhitespace) {
+    public XmlParser setIgnoreWhitespace(final boolean ignoreWhitespace) {
         this.ignoreWhitespace = ignoreWhitespace;
         return this;
     }
 
-    public XmlParser withValidateDTD(final boolean validateDTD) {
+    public XmlParser setValidateDTD(final boolean validateDTD) {
         this.validateDTD = validateDTD;
         return this;
     }
 
-    public XmlParser withSchema(final Schema schema) {
+    public XmlParser setSchema(final Schema schema) {
         this.schema = schema;
         return this;
     }

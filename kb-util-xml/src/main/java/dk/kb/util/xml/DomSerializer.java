@@ -25,17 +25,17 @@ public class DomSerializer {
         return new DomSerializer();
     }
 
-    public DomSerializer withIndent(final boolean withIndent) {
+    public DomSerializer setIndent(final boolean withIndent) {
         this.withIndent = withIndent;
         return this;
     }
 
-    public DomSerializer withXmlDeclaration(final boolean withXmlDeclaration) {
+    public DomSerializer setXmlDeclaration(final boolean withXmlDeclaration) {
         this.withXmlDeclaration = withXmlDeclaration;
         return this;
     }
 
-    public DomSerializer withStandAlone(final boolean withStandAlone) {
+    public DomSerializer setStandAlone(final boolean withStandAlone) {
         this.withStandAlone = withStandAlone;
         return this;
     }

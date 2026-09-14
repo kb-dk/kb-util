@@ -8,7 +8,6 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-
 import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,8 +18,7 @@ import java.nio.charset.StandardCharsets;
 
 public class XML {
 
-
-    public static XmlParser parser(){
+    public static XmlParser parser() {
         return new XmlParser();
     }
 
@@ -32,7 +30,7 @@ public class XML {
      * @see DOM#domToString(Node)
      */
     public static String domToString(Node dom) {
-        return DOM.serializer().withIndent(true).domToString(dom);
+        return DOM.serializer().setIndent(true).domToString(dom);
     }
 
     /**
@@ -44,11 +42,9 @@ public class XML {
      * @see #domToString(Node) for an indented version of the same string
      * @see DOM#domToString(Node, boolean, boolean)
      */
-    public static String domToString(Node dom, boolean indent)  {
-        return DOM.serializer().withIndent(indent).domToString(dom);
+    public static String domToString(Node dom, boolean indent) {
+        return DOM.serializer().setIndent(indent).domToString(dom);
     }
-
-
 
     /**
      * Marshall the given object as xml
@@ -74,7 +70,7 @@ public class XML {
             throw new XMLException(e);
         }
     }
-    
+
     /**
      * Unmarshal the given xml back to a java object
      * @param xml the xml string
@@ -116,9 +112,9 @@ public class XML {
      */
     public static Document fromXML(String xmlString,
                                    boolean namespaceAware) throws UncheckedIOException, XMLException {
-        return XML.parser().withNamespaceAware(namespaceAware).toDOM(xmlString);
+        return XML.parser().setNamespaceAware(namespaceAware).toDOM(xmlString);
     }
-    
+
     /**
      * Parses a XML document from a stream to a DOM. The Stream will NOT be closed.
      *
@@ -131,6 +127,6 @@ public class XML {
      */
     public static Document fromXML(InputStream xmlStream,
                                    boolean namespaceAware) throws UncheckedIOException, XMLException {
-        return XML.parser().withNamespaceAware(namespaceAware).toDOM(xmlStream);
+        return XML.parser().setNamespaceAware(namespaceAware).toDOM(xmlStream);
     }
 }

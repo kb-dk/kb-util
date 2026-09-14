@@ -3,6 +3,7 @@ package dk.kb.util.xml;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class LRUCacheTest {
@@ -14,8 +15,8 @@ class LRUCacheTest {
         cache.put("2","b");
         cache.put("3","c");
         cache.put("4","d");
-        assertThat(cache.get("1"), CoreMatchers.nullValue());
-        assertThat(cache.get("2"), CoreMatchers.is("b"));
+        assertThat(cache.get("1"), nullValue());
+        assertThat(cache.get("2"), is("b"));
     }
     @Test
     public void testLRUCache2(){
@@ -25,7 +26,7 @@ class LRUCacheTest {
         cache.put("3","c");
         cache.get("1");
         cache.put("4","d");
-        assertThat(cache.get("1"), CoreMatchers.is("a"));
-        assertThat(cache.get("2"), CoreMatchers.nullValue());
+        assertThat(cache.get("1"), is("a"));
+        assertThat(cache.get("2"), nullValue());
     }
 }
