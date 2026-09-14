@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CallbackReplacerTest {
 

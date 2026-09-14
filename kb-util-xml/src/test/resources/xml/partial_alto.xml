@@ -3,7 +3,7 @@
         <foxml:datastream CONTROL_GROUP="M" ID="ALTO" STATE="A" VERSIONABLE="true">
             <foxml:datastreamVersion ALT_IDS="B4000/0173B.alto.xml" CREATED="2016-04-09T20:27:54.248Z" ID="ALTO.0" LABEL="" MIMETYPE="text/xml" SIZE="259901">
                 <foxml:xmlContent>
-                    <alto xmlns="http://www.loc.gov/standards/alto/ns-v2#" xsi:schemaLocation="http://example.com">
+                    <alto xmlns="http://www.loc.gov/standards/alto/ns-v2#">
                         <softwareCreator>FakeCreator</softwareCreator>
                     </alto>
                 </foxml:xmlContent>

@@ -13,8 +13,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import static dk.kb.util.xml.DOM.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static dk.kb.util.xml.DOM.XML_HEADER;
+import static dk.kb.util.xml.DOM.clearXPathCache;
+import static dk.kb.util.xml.DOM.selectBoolean;
+import static dk.kb.util.xml.DOM.selectDouble;
+import static dk.kb.util.xml.DOM.selectInteger;
+import static dk.kb.util.xml.DOM.selectNode;
+import static dk.kb.util.xml.DOM.selectNodeList;
+import static dk.kb.util.xml.DOM.selectString;
+import static dk.kb.util.xml.DOM.stringToDOM;
 
 /**
  * Test cases for the {@code DOM.select*} methods

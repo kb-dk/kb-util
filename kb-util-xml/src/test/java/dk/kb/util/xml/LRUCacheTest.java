@@ -3,8 +3,6 @@ package dk.kb.util.xml;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class LRUCacheTest {

@@ -1,5 +1,17 @@
 package dk.kb.util.webservice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
+import dk.kb.util.webservice.exception.InternalServiceException;
+import dk.kb.util.webservice.exception.InvalidArgumentServiceException;
+import dk.kb.util.webservice.exception.NotFoundServiceException;
+import dk.kb.util.webservice.exception.ServiceException;
+import org.apache.commons.io.IOUtils;
+import org.apache.cxf.jaxrs.utils.JAXRSUtils;
+import org.apache.cxf.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -10,20 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.cxf.jaxrs.utils.JAXRSUtils;
-import org.apache.cxf.message.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
-
-import dk.kb.util.webservice.exception.InternalServiceException;
-import dk.kb.util.webservice.exception.InvalidArgumentServiceException;
-import dk.kb.util.webservice.exception.NotFoundServiceException;
-import dk.kb.util.webservice.exception.ServiceException;
 
 /**
  * Service2Service call wrapper will inject an existing OAuth token into the next call.<

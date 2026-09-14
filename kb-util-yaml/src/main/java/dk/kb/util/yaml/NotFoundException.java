@@ -1,7 +1,5 @@
 package dk.kb.util.yaml;
 
-import dk.kb.util.yaml.YAMLException;
-
 /**
  * Thrown when attempting to lookup a path that does not exist in the YAML
  */

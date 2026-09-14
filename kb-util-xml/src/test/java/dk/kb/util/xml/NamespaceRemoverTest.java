@@ -24,7 +24,11 @@ import dk.kb.util.reader.CircularCharBuffer;
 import dk.kb.util.string.Strings;
 import org.junit.jupiter.api.Assertions;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

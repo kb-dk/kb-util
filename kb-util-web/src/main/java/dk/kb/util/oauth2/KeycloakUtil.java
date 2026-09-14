@@ -1,20 +1,18 @@
 package dk.kb.util.oauth2;
 
+import dk.kb.util.webservice.exception.InternalServiceException;
+import dk.kb.util.webservice.exception.ServiceException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-
-import javax.net.ssl.HttpsURLConnection;
-
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import dk.kb.util.webservice.exception.InternalServiceException;
-import dk.kb.util.webservice.exception.ServiceException;
 
 public class KeycloakUtil {
 
