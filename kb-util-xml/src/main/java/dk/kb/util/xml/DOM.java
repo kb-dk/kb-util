@@ -76,7 +76,8 @@ public class DOM {
      * @param xmlString      a String containing an XML document.
      * @param namespaceAware if {@code true} the parsed DOM will reflect any
      *                       XML namespaces declared in the document
-     * @return The document in a DOM or {@code null} on errors.
+     * @return The document in a DOM.
+     * @throws XMLException if the String cannot be parsed as XML.
      */
     public static Document stringToDOM(String xmlString,
                                        boolean namespaceAware) {
@@ -87,20 +88,21 @@ public class DOM {
      * Parses an XML document from a String disregarding namespaces
      *
      * @param xmlString a String containing an XML document.
-     * @return The document in a DOM or {@code null} on errors.
+     * @return The document in a DOM.
+     * @throws XMLException if the String cannot be parsed as XML.
      */
     public static Document stringToDOM(String xmlString) throws XMLException {
         return XML.parser().setNamespaceAware(false).toDOM(xmlString);
     }
 
     /**
-     * Parses a XML document from a stream to a DOM or return
-     * {@code null} on error.
+     * Parses a XML document from a stream to a DOM.
      *
      * @param xmlStream      a stream containing an XML document.
      * @param namespaceAware if {@code true} the constructed DOM will reflect
      *                       the namespaces declared in the XML document
-     * @return The document in a DOM or {@code null} in case of errors
+     * @return The document in a DOM.
+     * @throws XMLException if the stream cannot be read or parsed as XML.
      */
     public static Document streamToDOM(InputStream xmlStream,
                                        boolean namespaceAware) {
@@ -109,10 +111,10 @@ public class DOM {
 
     /**
      * Parses a XML document from a stream to a DOM disregarding namespaces.
-     * Returns {@code null} on error.
      *
      * @param xmlStream a stream containing an XML document.
-     * @return The document in a DOM or {@code null} in case of errors
+     * @return The document in a DOM.
+     * @throws XMLException if the stream cannot be read or parsed as XML.
      */
     public static Document streamToDOM(InputStream xmlStream) throws XMLException {
         return XML.parser().setNamespaceAware(false).toDOM(xmlStream);
