@@ -51,7 +51,32 @@ class NamedThreadTest {
         assertThat(Thread.currentThread().getName(), is(oldName));
         
     }
-    
+
+    @Test
+    void prefix() {
+        String oldName = Thread.currentThread().getName();
+        assertThat(oldName, is(not("testName")));
+
+        try (NamedThread ignored = NamedThread.prefix("testName")) {
+            assert ignored != null; //suppress the warning about ignored not being used
+            assertThat(Thread.currentThread().getName(), is(("testName->"+oldName)));
+        }
+        assertThat(Thread.currentThread().getName(), is(oldName));
+
+    }
+
+    @Test
+    void bothfix() {
+        String oldName = Thread.currentThread().getName();
+        assertThat(oldName, is(not("testName")));
+
+        try (NamedThread ignored = NamedThread.bothfix("prefix","postfix")) {
+            assert ignored != null; //suppress the warning about ignored not being used
+            assertThat(Thread.currentThread().getName(), is(("prefix->"+oldName+"->postfix")));
+        }
+        assertThat(Thread.currentThread().getName(), is(oldName));
+
+    }
     
     @Test
     void namedThreadFunction() {
