@@ -31,6 +31,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -60,7 +61,7 @@ public class NamespaceRemoverTest {
         for (String[] test : TESTS) {
             CircularCharBuffer out = new CircularCharBuffer(100, 100);
             remover.removeNamespace(test[1], out);
-            Assertions.assertEquals(test[0], out.toString(),
+            assertEquals(test[0], out.toString(),
                          "The input '" + test[1] + " should process correctly");
         }
     }
@@ -72,7 +73,7 @@ public class NamespaceRemoverTest {
                 XSLTTest.getURL("data/xml/namespace_removed.xml").getFile()));
         Reader sanitized = new NamespaceRemover(in);
         String actual = Strings.flush(sanitized);
-        Assertions.assertEquals(expected, actual,
+        assertEquals(expected, actual,
                                 "Namespaces should be removed");
     }
 
@@ -95,7 +96,7 @@ public class NamespaceRemoverTest {
         String orig1 = "<foo:bar/>";
         String orig2 = "<bazoo:baroo/>";
         NamespaceRemover ns = new NamespaceRemover(new StringReader(orig1));
-        Assertions.assertEquals("<bar/>", Strings.flushLocal(ns));
-        Assertions.assertEquals("<baroo/>", Strings.flushLocal(ns.setSource(new StringReader(orig2))));
+        assertEquals("<bar/>", Strings.flushLocal(ns));
+        assertEquals("<baroo/>", Strings.flushLocal(ns.setSource(new StringReader(orig2))));
     }
 }

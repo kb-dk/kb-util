@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -306,7 +307,7 @@ class YAMLTest {
     @Test
     public void testFailingListEntryExtrapolated() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test");
-        Assertions.assertThrows(Exception.class,
+        assertThrows(Exception.class,
                 () -> yaml.getString("arrayofstrings[3]"),
                 "Requesting an index in a collection greater than or equal to list length should fail");
     }
@@ -375,7 +376,7 @@ class YAMLTest {
 
     @Test
     public void testFailingMultiConfig() {
-        Assertions.assertThrows(FileNotFoundException.class,
+        assertThrows(FileNotFoundException.class,
                 () -> YAML.resolveMultiConfig("Not_there.yml", "Not_there_2.yml"),
                 "Attempting to resolve non-existing multi-config should throw an Exception");
     }
@@ -383,11 +384,11 @@ class YAMLTest {
     @Test
     public void testFailingParse() {
         File nonExisting = new File("Non-existing");
-        Assertions.assertThrows(FileNotFoundException.class,
+        assertThrows(FileNotFoundException.class,
                 () -> YAML.parse(nonExisting),
                 "Attempting to resolve non-existing config File should throw an Exception");
 
-        Assertions.assertThrows(FileNotFoundException.class,
+        assertThrows(FileNotFoundException.class,
                 () -> YAML.parse(nonExisting.toPath()),
                 "Attempting to resolve non-existing config Path should throw an Exception");
     }
@@ -401,18 +402,18 @@ class YAMLTest {
 
         // Check that the temp file was created correctly
         assertThat("Test file '" + nonRead + "' exists", Files.exists(nonRead));
-        Assertions.assertThrows(AccessDeniedException.class, () -> Files.readString(nonRead),
+        assertThrows(AccessDeniedException.class, () -> Files.readString(nonRead),
                 "Reading test file '" + nonRead + "' should throw an Exception");
 
 
         // Test that YAML throws appropriate exceptions when the resource cannot be read
-        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.parse(nonRead),
+        assertThrows(AccessDeniedException.class, () -> YAML.parse(nonRead),
                 "Parsing  test file '" + nonRead + "' directly should throw an Exception");
 
-        Assertions.assertThrows(AccessDeniedException.class, () -> new YAML(nonRead.toString()),
+        assertThrows(AccessDeniedException.class, () -> new YAML(nonRead.toString()),
                 "Parsing  test file '" + nonRead + "' using constructor should throw an Exception");
 
-        Assertions.assertThrows(AccessDeniedException.class, () -> YAML.resolveLayeredConfigs(nonRead.toString()),
+        assertThrows(AccessDeniedException.class, () -> YAML.resolveLayeredConfigs(nonRead.toString()),
                 "Parsing  test file '" + nonRead + "' using resolve should throw an Exception");
 
         Files.delete(nonRead);
@@ -469,7 +470,7 @@ class YAMLTest {
     @Test
     public void testFailingListEntry() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
-        Assertions.assertThrows(Exception.class,
+        assertThrows(Exception.class,
                 () -> yaml.getString("arrayofstrings[3]"),
                 "Requesting an index in a collection greater than or equal to list length should fail");
     }

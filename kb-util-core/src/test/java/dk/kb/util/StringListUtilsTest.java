@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.*;
 
 class StringListUtilsTest {
     
@@ -162,14 +163,14 @@ class StringListUtilsTest {
         List<String> immutable = Collections.emptyList();
         try {
             immutable.add("test");
-            Assertions.fail("empty list is not immutable, what magic is this?");
+            fail("empty list is not immutable, what magic is this?");
         } catch (UnsupportedOperationException e){
             //expected
         }
         List<String> list = StringListUtils.toModifiableList(immutable);
-        Assertions.assertEquals(0,list.size());
+        assertEquals(0,list.size());
         list.add("Test");
-        Assertions.assertEquals(list.get(0),("Test"));
+        assertEquals(list.get(0),("Test"));
     }
     
     @Test
@@ -177,14 +178,14 @@ class StringListUtilsTest {
         List<String> immutable = List.of();
         try {
             immutable.add("test");
-            Assertions.fail("empty list is not immutable, what magic is this?");
+            fail("empty list is not immutable, what magic is this?");
         } catch (UnsupportedOperationException e){
             //expected
         }
         List<String> list = StringListUtils.toModifiableList(immutable);
-        Assertions.assertEquals(0,list.size());
+        assertEquals(0,list.size());
         list.add("Test");
-        Assertions.assertEquals(list.get(0),("Test"));
+        assertEquals(list.get(0),("Test"));
     }
     
     @Test
@@ -192,14 +193,14 @@ class StringListUtilsTest {
         List<String> immutable = Arrays.asList();
         try {
             immutable.add("test");
-            Assertions.fail("empty list is not immutable, what magic is this?");
+            fail("empty list is not immutable, what magic is this?");
         } catch (UnsupportedOperationException e){
             //expected
         }
         List<String> list = StringListUtils.toModifiableList(immutable);
-        Assertions.assertEquals(0,list.size());
+        assertEquals(0,list.size());
         list.add("Test");
-        Assertions.assertEquals(list.get(0),("Test"));
+        assertEquals(list.get(0),("Test"));
     }
     
     
@@ -208,7 +209,7 @@ class StringListUtilsTest {
         List<String> immutable = new UnmodifiableList<>(new ArrayList<>());
         try {
             immutable.add("test");
-            Assertions.fail("empty list is not immutable, what magic is this?");
+            fail("empty list is not immutable, what magic is this?");
         } catch (UnsupportedOperationException e){
             //expected
         }
@@ -225,9 +226,9 @@ class StringListUtilsTest {
     private void testToModifiableList(List<String> immutableList) {
         final int startSize = immutableList.size();
         List<String> list = StringListUtils.toModifiableList(immutableList);
-        Assertions.assertEquals(startSize, list.size());
+        assertEquals(startSize, list.size());
         list.add("Test");
-        Assertions.assertEquals(list.get(startSize),("Test"));
+        assertEquals(list.get(startSize),("Test"));
     }
 /*
     // Checking for immutability on an ArrayList (an extremely common scenario) causes an expansion of the ArrayList
@@ -237,14 +238,14 @@ class StringListUtilsTest {
         ArrayList<String> arrayList = new ArrayList<>(Arrays.asList("foo", "bar"));
     
         final int startCapacity = getInternalCapacity(arrayList);
-        Assertions.assertEquals(2, startCapacity,
+        assertEquals(2, startCapacity,
                                 "Start capacity should equal the number of initial elements");
     
         StringListUtils.toModifiableList(arrayList);
     
         //Here we IGNORE the returned list. We just check if the input list have changed internal capacity due to the heuristics
         final int finalCapacity = getInternalCapacity(arrayList);
-        Assertions.assertEquals(2, finalCapacity,
+        assertEquals(2, finalCapacity,
                                 "Final capacity should equal the number of initial elements");
     
     
@@ -262,8 +263,8 @@ class StringListUtilsTest {
         List<String> testList = new LinkedList<>();
         List<String> modifiableTestList = StringListUtils.toModifiableList(testList);
         //Same object, not same contents in new wrapping
-        Assertions.assertEquals(testList, modifiableTestList);
-        Assertions.assertEquals(0,testList.size());
+        assertEquals(testList, modifiableTestList);
+        assertEquals(0,testList.size());
     }
     
     
@@ -302,15 +303,15 @@ class StringListUtilsTest {
         };
         try {
             evergrowing.remove("test");
-            Assertions.fail("appendOnlyList allows removes..., what magic is this?");
+            fail("appendOnlyList allows removes..., what magic is this?");
         } catch (UnsupportedOperationException e){
             //expected
         }
         List<String> list = StringListUtils.toModifiableList(evergrowing);
-        Assertions.assertEquals(1,list.size());
+        assertEquals(1,list.size());
         list.add("Test2");
-        Assertions.assertEquals(list.get(0),("Test"));
-        Assertions.assertEquals(list.get(1),("Test2"));
+        assertEquals(list.get(0),("Test"));
+        assertEquals(list.get(1),("Test2"));
     
     }
 }
