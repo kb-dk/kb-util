@@ -33,7 +33,7 @@ class ExtractionUtilsTest {
     void testPartitionList() {
         Stream<List<Integer>> out = ExtractionUtils.splitToLists(Stream.of(1, 2, 3, 4, 5), 2);
 
-        List<List<Integer>> outLists = out.collect(Collectors.toList());
+        List<List<Integer>> outLists = out.toList();
 
         assertEquals(3, outLists.size(), "There should be 3 streams in the output");
 
@@ -50,7 +50,7 @@ class ExtractionUtilsTest {
 
         List<List<Integer>> outLists = out.
                 map(stream -> stream.collect(Collectors.toList())).
-                collect(Collectors.toList());
+                toList();
 
         assertEquals(3, outLists.size(), "There should be 3 streams in the output");
 
@@ -67,7 +67,7 @@ class ExtractionUtilsTest {
 
         List<List<Integer>> outLists = out.
                 map(stream -> stream.collect(Collectors.toList())).
-                collect(Collectors.toList());
+                toList();
 
         assertEquals(3, outLists.size(), "There should be 3 streams in the output");
 
@@ -75,7 +75,7 @@ class ExtractionUtilsTest {
         assertEquals(2, outLists.get(1).size(), "The second stream should contain a stream of the expected size");
         assertEquals(1, outLists.get(2).size(), "The third stream should contain a stream of the expected size");
         
-        List<Integer> sorted = outLists.stream().flatMap(Collection::stream).sorted().collect(Collectors.toList());
+        List<Integer> sorted = outLists.stream().flatMap(Collection::stream).sorted().toList();
         assertEquals("[1, 2, 3, 4, 5]", sorted.toString(), "All values should be present in the output");
     }
 
