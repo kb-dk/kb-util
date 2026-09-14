@@ -115,10 +115,10 @@ public class DOMUtil {
      * Otherwise, the initial xmlString given as argument is returned.
      */
     public static String removeElementFromXml(String xmlString, String elementTag) {
-        Document document =  XmlParser.newInstance().toDOM(xmlString);
+        Document document =  XMLParser.newInstance().toDOM(xmlString);
         Element rootElement = document.getDocumentElement();
         removeElementFromXml(rootElement, elementTag);
-        return DomSerializer.newInstance().domToString(document);
+        return DOMSerializer.newInstance().domToString(document);
     }
 
     /**
@@ -138,7 +138,7 @@ public class DOMUtil {
      * Otherwise, the initial xmlString given as argument is returned.
      */
     public static String removeElementFromXml(String xmlString, String elementTag, String xmlns) {
-        Document document = XmlParser.newInstance().toDOM(xmlString);
+        Document document = XMLParser.newInstance().toDOM(xmlString);
         if (document == null) {
             return xmlString;
         }

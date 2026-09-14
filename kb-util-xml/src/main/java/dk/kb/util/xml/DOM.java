@@ -64,8 +64,8 @@ public class DOM {
         return sw.toString();
     }
 
-    public static DomSerializer serializer() {
-        return new DomSerializer();
+    public static DOMSerializer serializer() {
+        return new DOMSerializer();
     }
 
     /* **************************************** */

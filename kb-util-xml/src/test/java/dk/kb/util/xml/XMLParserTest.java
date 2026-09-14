@@ -21,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for the {@link XmlParser} class
+ * Tests for the {@link XMLParser} class
  */
-public class XmlParserTest {
+public class XMLParserTest {
 
     private static final String SIMPLE_XML = "<root><child>text</child></root>";
 
@@ -36,12 +36,12 @@ public class XmlParserTest {
 
     @Test
     void newInstanceIsNamespaceAwareByDefault() {
-        assertTrue(XmlParser.newInstance().namespaceAware());
+        assertTrue(XMLParser.newInstance().namespaceAware());
     }
 
     @Test
     void settersAreFluentAndAffectState() {
-        XmlParser parser = XmlParser.newInstance();
+        XMLParser parser = XMLParser.newInstance();
         assertSame(parser, parser.setNamespaceAware(false));
         assertFalse(parser.namespaceAware());
         assertSame(parser, parser.setNamespaceAware(true));
@@ -54,7 +54,7 @@ public class XmlParserTest {
 
     @Test
     void toDOMFromStringParsesDocument() throws Exception {
-        Document document = XmlParser.newInstance().toDOM(SIMPLE_XML);
+        Document document = XMLParser.newInstance().toDOM(SIMPLE_XML);
 
         assertNotNull(document);
         Element root = document.getDocumentElement();
@@ -67,7 +67,7 @@ public class XmlParserTest {
         ByteArrayInputStream stream =
                 new ByteArrayInputStream(SIMPLE_XML.getBytes(StandardCharsets.UTF_8));
 
-        Document document = XmlParser.newInstance().toDOM(stream);
+        Document document = XMLParser.newInstance().toDOM(stream);
 
         assertNotNull(document);
         assertEquals("root", document.getDocumentElement().getTagName());
@@ -77,7 +77,7 @@ public class XmlParserTest {
     void toDOMFromInputSourceParsesDocument() throws Exception {
         InputSource inputSource = new InputSource(new StringReader(SIMPLE_XML));
 
-        Document document = XmlParser.newInstance().toDOM(inputSource);
+        Document document = XMLParser.newInstance().toDOM(inputSource);
 
         assertNotNull(document);
         assertEquals("root", document.getDocumentElement().getTagName());
@@ -85,7 +85,7 @@ public class XmlParserTest {
 
     @Test
     void toDOMResolvesNamespacesWhenAware() throws Exception {
-        Document document = XmlParser.newInstance()
+        Document document = XMLParser.newInstance()
                 .setNamespaceAware(true)
                 .toDOM(NAMESPACED_XML);
 
@@ -99,7 +99,7 @@ public class XmlParserTest {
 
     @Test
     void toDOMKeepsNamespaceDeclarationWhenNotAware() throws Exception {
-        Document document = XmlParser.newInstance()
+        Document document = XMLParser.newInstance()
                 .setNamespaceAware(false)
                 .toDOM(NAMESPACED_XML);
 
@@ -110,7 +110,7 @@ public class XmlParserTest {
 
     @Test
     void toDOMKeepsCommentsByDefault() throws Exception {
-        Document document = XmlParser.newInstance().toDOM(XML_WITH_COMMENT);
+        Document document = XMLParser.newInstance().toDOM(XML_WITH_COMMENT);
 
         assertTrue(hasComment(document.getDocumentElement()),
                    "Comment should be present when ignoringComments is false");
@@ -118,7 +118,7 @@ public class XmlParserTest {
 
     @Test
     void toDOMRemovesCommentsWhenIgnoring() throws Exception {
-        Document document = XmlParser.newInstance()
+        Document document = XMLParser.newInstance()
                 .setIgnoringComments(true)
                 .toDOM(XML_WITH_COMMENT);
 
@@ -130,7 +130,7 @@ public class XmlParserTest {
     void ignoreWhitespaceParsesWithoutError() throws Exception {
         String xml = "<root>\n  <child>text</child>\n</root>";
 
-        Document document = XmlParser.newInstance()
+        Document document = XMLParser.newInstance()
                 .setIgnoreWhitespace(true)
                 .toDOM(xml);
 
@@ -140,7 +140,7 @@ public class XmlParserTest {
 
     @Test
     void toDOMThrowsXMLExceptionOnMalformedXML() {
-        XmlParser parser = XmlParser.newInstance();
+        XMLParser parser = XMLParser.newInstance();
 
         XMLException exception =
                 assertThrows(XMLException.class, () -> parser.toDOM("<root><unclosed></root>"));
@@ -159,7 +159,7 @@ public class XmlParserTest {
                 "</xs:element>" +
                 "</xs:schema>");
 
-        XmlParser parser = XmlParser.newInstance().setSchema(schema);
+        XMLParser parser = XMLParser.newInstance().setSchema(schema);
 
         // A document conforming to the schema should parse fine
         assertNotNull(parser.toDOM("<root><name>x</name></root>"));
@@ -167,7 +167,7 @@ public class XmlParserTest {
 
     @Test
     void newDocumentReturnsEmptyDocument() {
-        Document document = XmlParser.newInstance().newDocument();
+        Document document = XMLParser.newInstance().newDocument();
 
         assertNotNull(document);
         assertNull(document.getDocumentElement());

@@ -18,8 +18,8 @@ import java.nio.charset.StandardCharsets;
 
 public class XML {
 
-    public static XmlParser parser() {
-        return new XmlParser();
+    public static XMLParser parser() {
+        return new XMLParser();
     }
 
     /**

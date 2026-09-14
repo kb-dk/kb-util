@@ -9,19 +9,19 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for the {@link DomSerializer} class
+ * Tests for the {@link DOMSerializer} class
  */
-public class DomSerializerTest {
+public class DOMSerializerTest {
 
     private static final String SIMPLE_XML = "<root><child>text</child></root>";
 
     private static Document parse(String xml) {
-        return XmlParser.newInstance().toDOM(xml);
+        return XMLParser.newInstance().toDOM(xml);
     }
 
     @Test
     void settersAreFluent() {
-        DomSerializer serializer = DomSerializer.newInstance();
+        DOMSerializer serializer = DOMSerializer.newInstance();
         assertSame(serializer, serializer.setIndent(true));
         assertSame(serializer, serializer.setXmlDeclaration(true));
         assertSame(serializer, serializer.setStandAlone(true));
@@ -29,7 +29,7 @@ public class DomSerializerTest {
 
     @Test
     void domToStringOmitsXmlDeclarationByDefault() {
-        String result = DomSerializer.newInstance().domToString(parse(SIMPLE_XML));
+        String result = DOMSerializer.newInstance().domToString(parse(SIMPLE_XML));
 
         assertNotNull(result);
         assertFalse(result.startsWith("<?xml"),
@@ -40,7 +40,7 @@ public class DomSerializerTest {
 
     @Test
     void domToStringIncludesXmlDeclarationWhenRequested() {
-        String result = DomSerializer.newInstance()
+        String result = DOMSerializer.newInstance()
                 .setXmlDeclaration(true)
                 .domToString(parse(SIMPLE_XML));
 
@@ -50,12 +50,12 @@ public class DomSerializerTest {
 
     @Test
     void domToStringStandaloneFlagReflectsSetting() {
-        String yes = DomSerializer.newInstance()
+        String yes = DOMSerializer.newInstance()
                 .setXmlDeclaration(true).setStandAlone(true)
                 .domToString(parse(SIMPLE_XML));
         assertTrue(yes.contains("standalone=\"yes\""), "Unexpected output: " + yes);
 
-        String no = DomSerializer.newInstance()
+        String no = DOMSerializer.newInstance()
                 .setXmlDeclaration(true).setStandAlone(false)
                 .domToString(parse(SIMPLE_XML));
         assertTrue(no.contains("standalone=\"no\""), "Unexpected output: " + no);
@@ -65,7 +65,7 @@ public class DomSerializerTest {
     void domToStringWithoutIndentIsSingleLineAndEscapesNewlines() {
         String xml = "<root>line1\nline2</root>";
 
-        String result = DomSerializer.newInstance()
+        String result = DOMSerializer.newInstance()
                 .setIndent(false)
                 .domToString(parse(xml));
 
@@ -77,7 +77,7 @@ public class DomSerializerTest {
 
     @Test
     void domToStringWithIndentProducesIndentedOutput() {
-        String result = DomSerializer.newInstance()
+        String result = DOMSerializer.newInstance()
                 .setIndent(true)
                 .domToString(parse(SIMPLE_XML));
 
@@ -89,8 +89,8 @@ public class DomSerializerTest {
     void roundTripPreservesContent() {
         Document document = parse(SIMPLE_XML);
 
-        String serialized = DomSerializer.newInstance().domToString(document);
-        Document reparsed = XmlParser.newInstance().toDOM(serialized);
+        String serialized = DOMSerializer.newInstance().domToString(document);
+        Document reparsed = XMLParser.newInstance().toDOM(serialized);
 
         assertTrue(document.isEqualNode(reparsed),
                    "Reparsed document should equal original: " + serialized);
