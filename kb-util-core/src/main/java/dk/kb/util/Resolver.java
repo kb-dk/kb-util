@@ -318,11 +318,7 @@ public class Resolver {
                 log.warn("Failed to find file {}, returning null", name);
                 return null;
             } else {
-
-                try (var o = new ByteArrayOutputStream()) {
-                    Streams.pipe(resourceAsStream, o);
-                    return o.toString(StandardCharsets.UTF_8);
-                }
+                return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8);
             }
         }
     }
