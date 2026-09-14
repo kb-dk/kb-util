@@ -33,15 +33,15 @@ public class DOMSelectTest {
 
     static final String SIMPLE_XML =
         XML_HEADER +
-        "<body version=\"1.0\" xmlns=\"http://statsbiblioteket.dk/2010/Body\">" +
-        "  <double>1.1234</double>" +
-        "  <sub>" +
-        "    <inner>is</inner>" +
-        "  </sub>" +
-        "  <boolean>true</boolean>" +
-        "  <string>foobar</string>" +
-        "  <integer>27</integer>" +
-        "</body>";
+            "<body version=\"1.0\" xmlns=\"http://statsbiblioteket.dk/2010/Body\">" +
+            "  <double>1.1234</double>" +
+            "  <sub>" +
+            "    <inner>is</inner>" +
+            "  </sub>" +
+            "  <boolean>true</boolean>" +
+            "  <string>foobar</string>" +
+            "  <integer>27</integer>" +
+            "</body>";
     static final String BIG_XML;
 
     static {
