@@ -34,22 +34,6 @@ class ContinuationStreamTest {
     public static final String RECORDS0 = "[]";
     public static final String RECORDS2 = "[" + RECORD1 + ", " + RECORD2 + "]";
 
-    public static class DsRecordDto {
-        public static final String JSON_PROPERTY_ID = "id";
-        private String id;
-
-        public static final String JSON_PROPERTY_M_TIME = "mTime";
-        private Long mTime;
-
-        public String getId() {
-            return id;
-        }
-
-        public Long getmTime() {
-            return mTime;
-        }
-    }
-
     @Test
     public void testMultiLevel() throws IOException {
         try (ContinuationInputStream<Long> is =
