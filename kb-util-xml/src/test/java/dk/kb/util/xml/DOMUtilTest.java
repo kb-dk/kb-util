@@ -9,6 +9,7 @@ import org.w3c.dom.Element;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
 
@@ -31,8 +32,8 @@ public class DOMUtilTest {
         Document parsedDocument = DOM.stringToDOM(xml);
         String parsedDocumentXml = DOM.domToString(parsedDocument);
 
-        Assertions.assertTrue(parsedDocument.isEqualNode(originalDocument),
-                              () -> "\nExpected:\n" + xml + "\nbut was:\n" + parsedDocumentXml);
+        assertTrue(parsedDocument.isEqualNode(originalDocument),
+                   () -> "\nExpected:\n" + xml + "\nbut was:\n" + parsedDocumentXml);
     }
 
     @Test
@@ -44,7 +45,7 @@ public class DOMUtilTest {
                 + "</radiotvTranscodingStatus>";
         String updatedStatus = DOMUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus");
         assertThat(updatedStatus,
-                                 isIdenticalTo(
+                   isIdenticalTo(
                            "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
                            + "<transcodingReady>true</transcodingReady>"
                            + "</radiotvTranscodingStatus>"));
@@ -62,7 +63,7 @@ public class DOMUtilTest {
                                                             "http://id.kb.dk/schemas/radiotv_access/transcoding_status");
 
         assertThat(updatedStatus,
-                                 isIdenticalTo(
+                   isIdenticalTo(
                            "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
                            + "<transcodingReady>true</transcodingReady>"
                            + "</radiotvTranscodingStatus>"));
@@ -77,7 +78,7 @@ public class DOMUtilTest {
                 + "</radiotvTranscodingStatus>").getDocumentElement();
         String updatedStatus = DOM.domToString(DOMUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus"));
         assertThat(updatedStatus,
-                                 isIdenticalTo(
+                   isIdenticalTo(
                            "<radiotvTranscodingStatus xmlns=\"http://id.kb.dk/schemas/radiotv_access/transcoding_status\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
                            + "<transcodingReady>true</transcodingReady>"
                            + "</radiotvTranscodingStatus>"));
@@ -90,16 +91,14 @@ public class DOMUtilTest {
                 + "<transcodingReady>true</transcodingReady>"
                 + "</radiotvTranscodingStatus>";
         String updatedStatus = DOMUtil.removeElementFromXml(oldStatusMetadata, "transcodingStatus");
-        assertThat(updatedStatus,
-                                 isIdenticalTo(oldStatusMetadata));
+        assertThat(updatedStatus, isIdenticalTo(oldStatusMetadata));
     }
 
     @Test
     void testCreateDocumentWithRootElementNoExtraAttributes() {
         Document document = DOMUtil.createDocument();
         DOMUtil.addRootElementToDocument(document, "testRootElement", "testxmlns");
-        assertThat(DOM.domToString(document),
-                   isIdenticalTo("<testRootElement xmlns=\"testxmlns\"/>"));
+        assertThat(DOM.domToString(document), isIdenticalTo("<testRootElement xmlns=\"testxmlns\"/>"));
     }
 
     @Test
@@ -127,16 +126,14 @@ public class DOMUtilTest {
     void testParseValidXml() {
         String validXml = "<root><child>value</child></root>";
         Document document = DOMUtil.parseDocument(validXml);
-        Assertions.assertNotNull(document, "Document should not be null for valid XML.");
-        Assertions.assertEquals("root", document.getDocumentElement().getNodeName(), "Root element name should be 'root'.");
+        assertNotNull(document, "Document should not be null for valid XML.");
+        assertEquals("root", document.getDocumentElement().getNodeName(), "Root element name should be 'root'.");
     }
 
     @Test
     void testParseEmptyXml() {
         String emptyXml = "";
-        assertThrows(XMLException.class, () -> {
-            DOMUtil.parseDocument(emptyXml);
-        }, "Parsing empty XML should throw XMLException.");
+        assertThrows(XMLException.class, () -> DOMUtil.parseDocument(emptyXml), "Parsing empty XML should throw XMLException.");
     }
 
     @Test
@@ -151,17 +148,17 @@ public class DOMUtilTest {
     void testParseXmlWithNamespaces() {
         String xmlWithNamespace = "<root xmlns=\"http://example.com\"><child>value</child></root>";
         Document document = DOMUtil.parseDocument(xmlWithNamespace);
-        Assertions.assertNotNull(document, "Document should not be null for valid XML with namespaces.");
-        Assertions.assertEquals("root", document.getDocumentElement().getNodeName(), "Root element name should be 'root'.");
-        Assertions.assertEquals("http://example.com", document.getDocumentElement().getNamespaceURI(), "Namespace URI should match.");
+        assertNotNull(document, "Document should not be null for valid XML with namespaces.");
+        assertEquals("root", document.getDocumentElement().getNodeName(), "Root element name should be 'root'.");
+        assertEquals("http://example.com",
+                     document.getDocumentElement().getNamespaceURI(),
+                     "Namespace URI should match.");
     }
 
     @Test
     void testParseXmlWithInvalidCharacters() {
         String invalidXml = "<root><child>Invalid character: &#x1F;</child></root>"; // Invalid XML character
-        assertThrows(XMLException.class, () -> {
-            DOMUtil.parseDocument(invalidXml);
-        }, "Parsing XML with invalid characters should throw XMLException.");
+        assertThrows(XMLException.class, () -> DOMUtil.parseDocument(invalidXml), "Parsing XML with invalid characters should throw XMLException.");
     }
 
 }

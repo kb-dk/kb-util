@@ -108,8 +108,9 @@ public class XmlParser {
             dbFact.setSchema(schema);
             documentBuilder = dbFact.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            throw new XMLException("Parser configuration error when parsing XML stream: "
-                                   + e.getMessage(), e);
+            throw new XMLException(
+                    "Parser configuration error when parsing XML stream: " + e.getMessage(),
+                    e);
         }
         return documentBuilder;
     }

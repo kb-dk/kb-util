@@ -22,6 +22,9 @@ import static dk.kb.util.xml.DOM.selectNode;
 import static dk.kb.util.xml.DOM.selectNodeList;
 import static dk.kb.util.xml.DOM.selectString;
 import static dk.kb.util.xml.DOM.stringToDOM;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Test cases for the {@code DOM.select*} methods
@@ -52,85 +55,85 @@ public class DOMSelectTest {
     public void setUp() {
         clearXPathCache();
         dom = stringToDOM(SIMPLE_XML);
-        Assertions.assertNotNull(dom);
+        assertNotNull(dom);
     }
 
     @Test
     public void testSelectInteger() {
         Integer i = selectInteger(dom, "asdfg");
-        Assertions.assertEquals(null, i);
+        assertEquals(null, i);
 
         i = selectInteger(dom, "asdfg", 1);
-        Assertions.assertEquals(1, i.intValue());
+        assertEquals(1, i.intValue());
 
         i = selectInteger(dom, "/body/integer");
-        Assertions.assertEquals(27, i.intValue());
+        assertEquals(27, i.intValue());
     }
 
     @Test
     public void testSelectDouble() {
         Double d = selectDouble(dom, "asdfg");
-        Assertions.assertEquals(null, d);
+        assertEquals(null, d);
 
         d = selectDouble(dom, "asdfg", 1.1);
-        Assertions.assertEquals(1.1, d);
+        assertEquals(1.1, d);
 
         d = selectDouble(dom, "/body/double");
-        Assertions.assertEquals(1.1234, d);
+        assertEquals(1.1234, d);
     }
 
     @Test
     public void testSelectBoolean() {
         Boolean b = selectBoolean(dom, "asdfg");
-        Assertions.assertEquals(Boolean.FALSE, b);
+        assertEquals(Boolean.FALSE, b);
 
         b = selectBoolean(dom, "asdfg", false);
-        Assertions.assertEquals(Boolean.FALSE, b);
+        assertEquals(Boolean.FALSE, b);
 
         b = selectBoolean(dom, "asdfg", null);
-        Assertions.assertEquals(null, b);
+        assertEquals(null, b);
 
         b = selectBoolean(dom, "/body/boolean");
-        Assertions.assertEquals(Boolean.TRUE, b);
+        assertEquals(Boolean.TRUE, b);
     }
 
     @Test
     public void testSelectString() {
         String s = selectString(dom, "asdfg");
-        Assertions.assertEquals("", s);
+        assertEquals("", s);
 
         s = selectString(dom, "asdfg", "sbutil");
-        Assertions.assertEquals("sbutil", s);
+        assertEquals("sbutil", s);
 
         s = selectString(dom, "asdfg", null);
-        Assertions.assertEquals(null, s);
+        assertEquals(null, s);
 
         s = selectString(dom, "/body/string");
-        Assertions.assertEquals("foobar", s);
+        assertEquals("foobar", s);
 
         s = selectString(dom, "/body/string", "baz");
-        Assertions.assertEquals("foobar", s);
+        assertEquals("foobar", s);
     }
 
     @Test
     public void testSelectNode() {
         Node n = selectNode(dom, "asdfg");
-        Assertions.assertEquals(null, n);
+        assertEquals(null, n);
 
         n = selectNode(dom, "/body");
-        Assertions.assertSame(dom.getFirstChild(), n);
+        assertSame(dom.getFirstChild(), n);
     }
 
     @Test
     public void testSelectNodeList() {
         List<Node> l = selectNodeList(dom, "asdfg");
-        Assertions.assertEquals(0, l.size());
+        assertEquals(0, l.size());
 
         // We use /body/node() because /body/* doesn't select the text nodes
         l = selectNodeList(dom, "/body/node()");
         NodeList expected = dom.getFirstChild().getChildNodes();
-        Assertions.assertSame(expected.getLength(), l.size());
-        Assertions.assertEquals(10, l.size());
+        assertSame(expected.getLength(), l.size());
+        assertEquals(10, l.size());
         boolean subExist = false;
         for (int i = 0; i < expected.getLength(); i++) {
             if (expected.item(i).getNodeName().equals("sub")) {
@@ -139,7 +142,7 @@ public class DOMSelectTest {
             }
         }
         if (!subExist) {
-            Assertions.fail("'sub' isn't found");
+            fail("'sub' isn't found");
         }
     }
 
@@ -166,7 +169,7 @@ public class DOMSelectTest {
                                 String bleh = selectString(
                                         dom, "/body/a" + random.nextInt(),
                                         "bleh, no such node");
-                                Assertions.assertEquals("bleh, no such node", bleh);
+                                assertEquals("bleh, no such node", bleh);
                             }
                         }
                     }
@@ -193,7 +196,7 @@ public class DOMSelectTest {
             for (Throwable t : errors) {
          //       t.printStackTrace();
             }
-            Assertions.fail("Uncaught exceptions in threads");
+            fail("Uncaught exceptions in threads");
         }
     }
 
