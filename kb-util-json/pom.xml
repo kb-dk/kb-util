@@ -29,7 +29,7 @@
                 <directory>src/main/resources/</directory>
                 <includes>
                     <!-- Normally named 'build.properties', but prefixed here to avoid class path resource load clashes -->
-                    <include>kbutil.build.properties</include>
+                    <include>${project.artifactId}.build.properties</include>
                 </includes>
                 <filtering>true</filtering>
             </resource>
