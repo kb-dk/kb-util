@@ -5,12 +5,12 @@
     <parent>
         <groupId>dk.kb.util</groupId>
         <artifactId>kb-util</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.1-SNAPSHOT</version>
     </parent>
 
     <groupId>dk.kb.util</groupId>
     <artifactId>kb-util-json</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1-SNAPSHOT</version>
 
 
     <build>

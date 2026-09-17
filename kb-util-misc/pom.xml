@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.kb.util</groupId>
         <artifactId>kb-util</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>kb-util-misc</artifactId>
