@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TimingTest {
 
+    @Test
     public void testTrivial() throws InterruptedException {
         Timing timing = new Timing("foo");
         Thread.sleep(50);
@@ -48,7 +48,7 @@ public class TimingTest {
                    "Timing info should be >= sleep time (50ms) but was " + ms);
 
         long ns = timing.getNS();
-        assertTrue(ns >= 50*1000000,
+        assertTrue(ns >= 50 * 1000000,
                    "Timing info should be >= sleep time (50*1000000ns) but was " + ns);
     }
 
@@ -62,7 +62,7 @@ public class TimingTest {
         assertEquals(40, subA.addMS(10),
                      "Adding 10 ms extra should return 40 ms");
         timing.getChild("sub_b", "#87");
-        timing.getChild("sub_c").addNS(3*1000000);
+        timing.getChild("sub_c").addNS(3 * 1000000);
         timing.getChild("sub_d").getChild("sub_d_a");
         timing.getChild("sub_e").getChild("sub_e_a");
 
@@ -97,10 +97,6 @@ public class TimingTest {
             assertFalse(child.toString().contains("util"),
                     "Simple stats for child should not contain utilization, even when parent showStat has changed");
         }
-        Function<Integer, Integer> myFunction = num -> num+1;
-        Function<Integer, Integer> measuredF = num -> parent.measure(() -> myFunction.apply(num));
-
-        Stream.of(1, 2, 3).map(measuredF).collect(Collectors.toList());
     }
 
     @Test
@@ -139,7 +135,7 @@ public class TimingTest {
     public void testWrapFunction() {
         Timing myTimer = new Timing("timer");
 
-        Function<Integer, Integer> incrementer = num -> num+1;
+        Function<Integer, Integer> incrementer = num -> num + 1;
         Function<Integer, Integer> wrappedIncrementer = myTimer.wrap(incrementer);
         int sum = Stream.of(1, 2, 3).map(wrappedIncrementer).mapToInt(Integer::intValue).sum();
         assertEquals(9, sum, "Sum over incremented should match");

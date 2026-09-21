@@ -65,7 +65,7 @@ public class OpenApiResource extends ImplBase {
      * Pattern to allow search-replace for variabels defined as ${config.yaml.path} in OpenAPI specifications.
      * Everything after 'config.' is treated as a path to an entry in the backing configuration.
      */
-    private static final Pattern CONFIG_REPLACEMENT= Pattern.compile("\\$\\{config:([^}]+)}");
+    private static final Pattern CONFIG_REPLACEMENT = Pattern.compile("\\$\\{config:([^}]+)}");
 
     /**
      * Replacer that use {@link #CONFIG_REPLACEMENT} for matching and {@link #getReplacementForMatch(String)}
@@ -225,6 +225,3 @@ public class OpenApiResource extends ImplBase {
         return jsonMapper.enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(yamlObject);
     }
 }
-
-
-

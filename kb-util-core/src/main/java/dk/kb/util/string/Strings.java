@@ -31,6 +31,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.IntStream;
 
 /**
  * Convenience methods for string manipulations.
@@ -148,7 +149,7 @@ public class Strings {
         StringBuilder b = new StringBuilder();
         long counter = 0;
         for (Object o : c) {
-            if (b.length() != 0) {
+            if (! b.isEmpty()) {
                 b.append(delimiter);
             }
             if (counter++ == max) {
@@ -208,7 +209,7 @@ public class Strings {
 
         long counter = 0;
         for (Object o : a) {
-            if (b.length() != 0) {
+            if (! b.isEmpty()) {
                 b.append(delimiter);
             }
             if (counter++ == max) {
@@ -236,7 +237,7 @@ public class Strings {
 
         long counter = 0;
         for (int value : values) {
-            if (b.length() != 0) {
+            if (! b.isEmpty()) {
                 b.append(delimiter);
             }
             if (counter++ == max) {
@@ -250,12 +251,12 @@ public class Strings {
     }
 
     /**
-     * Read all character data from {@code r} and create a String based on
+     * <p>Read all character data from {@code r} and create a String based on
      * that data. The reader is guaranteed to be closed when this method
-     * returns.
+     * returns.</p>
      *
-     * This method is optimized to only allocate the needed space for the final
-     * string and not any intermediate buffers.
+     * <p>This method is optimized to only allocate the needed space for the final
+     * string and not any intermediate buffers.</p>
      *
      * @param r the reader to flush
      * @return a string representation of the character stream
@@ -266,12 +267,10 @@ public class Strings {
         char[] buf = new char[1024];
         StringBuilder b = new StringBuilder();
 
-        try {
+        try (r) {
             while ((numRead = r.read(buf)) != -1) {
                 b.append(buf, 0, numRead);
             }
-        } finally {
-            r.close();
         }
 
         return b.toString();
@@ -289,17 +288,17 @@ public class Strings {
     }
 
     /**
-     * Read all character data from {@code r} and create a String based on
+     * <p>Read all character data from {@code r} and create a String based on
      * that data. The reader is guaranteed to be closed when this method
-     * returns.
+     * returns.</p>
      *
-     * The difference from this method to
-     * {@link #flush(java.io.Reader)} is that it can not throw an IOException.
+     * <p>The difference from this method to
+     * {@link #flush(Reader)} is that it can not throw an IOException.
      * It is expected that the caller guarantees that the character stream is
-     * based on a local memory buffer.
+     * based on a local memory buffer.</p>
      *
-     * This method is optimized to only allocate the needed space for the final
-     * string and not any intermediate buffers.
+     * <p>This method is optimized to only allocate the needed space for the final
+     * string and not any intermediate buffers.</p>
      *
      * @param r the reader to flush
      * @return a string representation of the character stream
@@ -325,12 +324,12 @@ public class Strings {
     }
 
     /**
-     * Wrap a {@code char} array as a {@link CharSequence} without doing any
-     * memory- allocations or copying.
+     * <p>Wrap a {@code char} array as a {@link CharSequence} without doing any
+     * memory- allocations or copying.</p>
      *
-     * Note that since the original array underneath the returned character
+     * <p>Note that since the original array underneath the returned character
      * sequence is exactly {@code chars} any changes made to {@code chars}
-     * will be reflected in the returned character sequence as well.
+     * will be reflected in the returned character sequence as well.</p>
      *
      * @param chars the character array to wrap
      * @return {@code chars} wrapped as a {@link CharSequence}
@@ -376,7 +375,7 @@ public class Strings {
     }
 
     /**
-     * Finds the first index of the occurence of {@code c} in {@code chars}
+     * Finds the first index of the occurrence of {@code c} in {@code chars}
      * or returns -1.
      *
      * @param c     the character to look for.
@@ -386,11 +385,9 @@ public class Strings {
      *         {@code c} doesn't exist in {@code chars}
      */
     public static int indexOf(char c, int offset, CharSequence chars) {
-        for (int i = offset; i < chars.length(); i++) {
-            if (c == chars.charAt(i)) {
-                return i;
-            }
-        }
-        return -1;
+        return IntStream.range(offset, chars.length())
+                .filter(i -> chars.charAt(i) == c)
+                .findFirst()
+                .orElse(-1);
     }
 }

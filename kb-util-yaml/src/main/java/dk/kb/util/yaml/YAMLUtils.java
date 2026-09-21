@@ -63,9 +63,9 @@ public class YAMLUtils {
     }
     
     /**
-     * Converts the YAML object into list of leaf values.
+     * <p>Converts the YAML object into list of leaf values.</p>
      *
-     * The entries will be sorted by their key
+     * <p>The entries will be sorted by their key</p>
      *
      * @param collection the yaml
      * @return a list of all the values in the YAML
@@ -112,4 +112,3 @@ public class YAMLUtils {
     }
     
 }
-

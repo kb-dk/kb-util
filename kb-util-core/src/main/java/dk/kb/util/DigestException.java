@@ -22,20 +22,22 @@
  */
 package dk.kb.util;
 
+import java.security.NoSuchAlgorithmException;
+
 /**
- * A {@link RuntimeException} thrown when there is unexpected errors
- * computing a digest.
+ * <p>A {@link RuntimeException} thrown when there is unexpected errors
+ * computing a digest.</p>
  *
- * For example when you checksum a fixed {@link String} with
- * a well known digest such as MD5, errors a re not expected.
+ * <p>For example when you checksum a fixed {@link String} with
+ * a well known digest such as MD5, errors a re not expected.</p>
  *
- * It is also used to hide explicit code to handle {@link java.security.NoSuchAlgorithmException}s
+ * <p>It is also used to hide explicit code to handle {@link NoSuchAlgorithmException}s
  * in cases where you request algorithms required by the
  * <a href="http://java.sun.com/j2se/1.5.0/docs/guide/security/CryptoSpec.html">Java CryptoSpec</a>. Fx
- * {@code MD5} and {@code SHA-1}.
+ * {@code MD5} and {@code SHA-1}.</p>
  */
 public class DigestException extends RuntimeException {
-    static final long serialVersionUID = 7818375828146091237L;
+    private static final long serialVersionUID = 7818375828146091237L;
 
     public DigestException(String message) {
         super(message);

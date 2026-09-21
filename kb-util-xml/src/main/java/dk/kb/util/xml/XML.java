@@ -24,6 +24,7 @@ public class XML {
 
     /**
      * Serialises the given Document as a (human-readable) String with indents and linebreaks
+     *
      * @param dom the dom
      * @return the doc in string form
      * @see #domToString(Node, boolean) for a more compact machine-readable version
@@ -34,7 +35,8 @@ public class XML {
     }
 
     /**
-     * Serialiseses the given Document as a String, with optional indent.
+     * Serialises the given Document as a String, with optional indent.
+     *
      * @param dom the dom
      * @param indent if true, the output will be indented. If false, output will be a single line.
      * @return the doc in string form
@@ -48,6 +50,7 @@ public class XML {
 
     /**
      * Marshall the given object as xml
+     *
      * @param object the object to convert to xml
      * @param <T> the type of object
      * @return the object serialised as xml (UTF-8)
@@ -73,6 +76,7 @@ public class XML {
 
     /**
      * Unmarshal the given xml back to a java object
+     *
      * @param xml the xml string
      * @param type the class of object to create
      * @param <T> the type of object
@@ -116,7 +120,7 @@ public class XML {
     }
 
     /**
-     * Parses a XML document from a stream to a DOM. The Stream will NOT be closed.
+     * Parses an XML document from a stream to a DOM. The Stream will NOT be closed.
      *
      * @param xmlStream      a stream containing an XML document.
      * @param namespaceAware if {@code true} the constructed DOM will reflect

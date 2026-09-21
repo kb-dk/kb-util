@@ -98,8 +98,6 @@ public class StringReplacer extends ReplaceReader {
      *
      * @return a clone of this ReplaceReader.
      */
-    @SuppressWarnings({"CloneDoesntCallSuperClone",
-                       "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
     public Object clone() {
         return new StringReplacer(minBufferSize, tree);
@@ -114,7 +112,7 @@ public class StringReplacer extends ReplaceReader {
 
     private char[] returnReplacement(CircularCharBuffer source) {
         tempOutBuffer.clear();
-        while (source.size() > 0) {
+        while (! source.isEmpty()) {
             Node replacement = tree.getReplacement(source, 0);
             if (replacement == null) { // Copy a char, then repeat
                 tempOutBuffer.put(source.take());
@@ -157,14 +155,14 @@ public class StringReplacer extends ReplaceReader {
     @Override
     public synchronized int read() throws IOException {
         ensureBuffers(1);
-        if (destinationBuffer.size() > 0) {
+        if (! destinationBuffer.isEmpty()) {
             return destinationBuffer.take();
         }
         return -1;
     }
 
     @Override
-    public synchronized int read(char cbuf[], int off, int len) throws IOException {
+    public synchronized int read(char[] cbuf, int off, int len) throws IOException {
         ensureBuffers(len); // Dangerous as we risk large buffer
         return destinationBuffer.read(cbuf, off, len);
     }
@@ -180,7 +178,7 @@ public class StringReplacer extends ReplaceReader {
     private void ensureBuffers(int minSize) throws IOException {
         while (destinationBuffer.size() < minSize) {
             CircularCharBuffer source = getSourceBuffer();
-            if (source.size() == 0) { // Source dried up
+            if (source.isEmpty()) { // Source dried up
                 return;
             }
             Node replacement = tree.getReplacement(source, 0);

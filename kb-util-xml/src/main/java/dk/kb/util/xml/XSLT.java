@@ -140,13 +140,13 @@ public class XSLT {
             ERRORLISTENER = new ErrorListener() {
                 @Override
                 public void warning(TransformerException exception) {
-                    warnlog.debug("A transformer warning occured", exception);
+                    warnlog.debug("A transformer warning occurred", exception);
                 }
 
                 @Override
                 public void error(TransformerException exception)
                         throws TransformerException {
-                    throw new TransformerException("A Transformer error occured", exception);
+                    throw new TransformerException("A Transformer error occurred", exception);
                 }
 
                 @Override

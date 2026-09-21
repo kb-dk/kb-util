@@ -34,7 +34,7 @@ import java.io.StringReader;
  */
 public abstract class ReplaceReader extends FilterReader implements TextTransformer, Cloneable {
 
-    protected CircularCharBuffer sourceBuffer = null;
+    protected CircularCharBuffer sourceBuffer;
 
     public ReplaceReader(Reader reader) {
         super(dummyIfNull(reader));
@@ -79,7 +79,6 @@ public abstract class ReplaceReader extends FilterReader implements TextTransfor
         }
     }
 
-    @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException"})
     @Override
     public abstract Object clone();
 

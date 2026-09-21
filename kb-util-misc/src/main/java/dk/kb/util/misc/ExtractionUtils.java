@@ -15,7 +15,6 @@
 package dk.kb.util.misc;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.UnmodifiableIterator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.Spliterators;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -44,16 +42,18 @@ import java.util.stream.StreamSupport;
 public class ExtractionUtils {
 
     /**
-     * Lazily partition the input to the given partitionSize.
+     * <p>Lazily partition the input to the given partitionSize.</p>
      *
-     * All partitions will have exactly partitionSize elements, except for the last partition which will contain
-     * {@code input_size % partitionSize} elements.
+     * <p>All partitions will have exactly partitionSize elements, except for the last partition which will contain
+     * {@code input_size % partitionSize} elements.</p>
      *
-     * The implementation is fully streaming and only holds the current partition in memory.
+     * <p>The implementation is fully streaming and only holds the current partition in memory.</p>
      *
-     * The implementation does not support parallelism: If source is parallel, it will be sequentialized.
+     * <p>The implementation does not support parallelism: If source is parallel, it will be sequentialized.</p>
      *
-     * If the end result should be a list of lists, use {@code splitToList(myStream, 87).collect(Collectors.toList())}.
+     * <p>If the end result should be a list of lists,
+     * use {@code splitToList(myStream, 87).collect(Collectors.toList())}.</p>
+     *
      * @param source any stream.
      * @param partitionSize the maximum size for the partitions.
      * @return the input partitioned into lists, each with partitionSize elements.
@@ -63,14 +63,15 @@ public class ExtractionUtils {
     }
 
     /**
-     * Lazily partition the input to the given partitionSize.
+     * <p>Lazily partition the input to the given partitionSize.</p>
      *
-     * All partitions will have exactly partitionSize elements, except for the last partition which will contain
-     * {@code input_size % partitionSize} elements.
+     * <p>All partitions will have exactly partitionSize elements, except for the last partition which will contain
+     * {@code input_size % partitionSize} elements.</p>
      *
-     * The implementation is fully streaming and only holds the current partition in memory.
+     * <p>The implementation is fully streaming and only holds the current partition in memory.</p>
      *
-     * The implementation does not support parallelism: If source is parallel, it will be sequentialized.
+     * <p>The implementation does not support parallelism: If source is parallel, it will be sequentialized.</p>
+     *
      * @param source any stream.
      * @param partitionSize the maximum size for the partitions.
      * @return the input partitioned into streams, each with partitionSize elements.
@@ -85,7 +86,7 @@ public class ExtractionUtils {
     }
 
     /**
-     * Returns a random element from a stream. This involves collecting all elements temporarily.
+     * <p>Returns a random element from a stream. This involves collecting all elements temporarily.</p>
      *
      * Usage sample
      * <pre>
@@ -102,7 +103,7 @@ public class ExtractionUtils {
     }
 
     /**
-     * Pick a random element from a stream. This involves collecting all elements temporarily.
+     * <p>Pick a random element from a stream. This involves collecting all elements temporarily.</p>
      *
      * Usage sample
      * <pre>
@@ -113,6 +114,7 @@ public class ExtractionUtils {
      * </pre>
      *
      * Note: If sample is called extensively, consider creating an instance of the collector and reusing it.
+     *
      * @param random generator used for selecting the random value.
      * @return a random value.
      */
@@ -151,8 +153,8 @@ public class ExtractionUtils {
     }
 
     /**
-     * Pick a list of random element from a stream. This involves collecting all elements temporarily.
-     * The original order of the elements is preserved.
+     * <p>Pick a list of random element from a stream. This involves collecting all elements temporarily.
+     * The original order of the elements is preserved.</p>
      *
      * Usage sample
      * <pre>
@@ -169,8 +171,8 @@ public class ExtractionUtils {
     }
     
     /**
-     * Pick a list of random elements from a stream. This involves collecting all elements temporarily.
-     * The original order of the elements is preserved.
+     * <p>Pick a list of random elements from a stream. This involves collecting all elements temporarily.
+     * The original order of the elements is preserved.</p>
      *
      * Usage sample
      * <pre>
@@ -180,6 +182,7 @@ public class ExtractionUtils {
      * </pre>
      *
      * Note: If sample is called extensively, consider creating an instance of the collector and reusing it.
+     *
      * @param maxSampleSize the number of random elements to extract.
      * @param random generator used for selecting random values.
      * @return a random value.
@@ -224,10 +227,11 @@ public class ExtractionUtils {
     }
 
     /**
-     * Pick a list of random elements from the given list.
+     * <p>Pick a list of random elements from the given list.</p>
      *
-     * The sampler does not change the given collection. It preserves the order of elements:
-     * {@code sample({5, 1, 2, 3}, 2)} might give {@code {1, 3}} but never {@code {3, 1}}.
+     * <p>The sampler does not change the given collection. It preserves the order of elements:
+     * {@code sample({5, 1, 2, 3}, 2)} might give {@code {1, 3}} but never {@code {3, 1}}.</p>
+     *
      * @param values the source to sample.
      * @param maxSampleSize the number of random elements to extract.
      *                      If the number exceeds the size of the input, it will be rounded down.
@@ -238,10 +242,11 @@ public class ExtractionUtils {
     }
 
     /**
-     * Pick a list of random elements from the given input.
+     * <p>Pick a list of random elements from the given input.</p>
      *
-     * The sampler does not change the given collection. It preserves the order of elements:
-     * {@code sample({5, 1, 2, 3}, 2, new Random())} might give {1, 3} but never {3, 1}.
+     * <p>The sampler does not change the given collection. It preserves the order of elements:
+     * {@code sample({5, 1, 2, 3}, 2, new Random())} might give {1, 3} but never {3, 1}.</p>
+     *
      * @param values the source to sample.
      * @param maxSampleSize the number of random elements to extract.
      *                      If the number exceeds the size of the input, it will be rounded down.
@@ -288,11 +293,12 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all minimum values from the input, where the minima are determined by natural order:
-     * {@code getMin([4, 5, 1, 3, 2, 5, 5, 1]) -> [1, 1]}.
+     * <p>Extract all minimum values from the input, where the minima are determined by natural order:
+     * {@code getMin([4, 5, 1, 3, 2, 5, 5, 1]) -> [1, 1]}.</p>
      *
-     * Similar to {@link java.util.Collections#min(Collection)} with the change that all values with equal compare
-     * results are returned.
+     * <p>Similar to {@link Collections#min(Collection)} with the change that all values with equal compare
+     * results are returned.</p>
+     *
      * @param values a finite stream of comparable values.
      * @return all minimum values from the input, by value order.
      * @param <T> any Comparable.
@@ -302,11 +308,12 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all minimum values from the input, where the minima are determined by natural order:
-     * {@code getMin([4, 5, 1, 3, 2, 5, 5, 1]) -> [1, 1]}.
+     * <>Extract all minimum values from the input, where the minima are determined by natural order:
+     * {@code getMin([4, 5, 1, 3, 2, 5, 5, 1]) -> [1, 1]}.</>
      *
-     * Similar to {@link java.util.Collections#min(Collection)} with the change that all values with equal compare
-     * results are returned.
+     * <p>Similar to {@link Collections#min(Collection)} with the change that all values with equal compare
+     * results are returned.</p>
+     *
      * @param values a collection of comparable values.
      * @return all minimum values from the input, by value order.
      * @param <T> any Comparable.
@@ -316,11 +323,12 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all maximum values from the input, where the maxima are determined by natural order:
-     * {@code getMax([4, 5, 1, 3, 2, 5, 5, 1]) -> [5, 5, 5]}.
+     * <p>Extract all maximum values from the input, where the maxima are determined by natural order:
+     * {@code getMax([4, 5, 1, 3, 2, 5, 5, 1]) -> [5, 5, 5]}.</p>
      *
-     * Similar to {@link java.util.Collections#max(Collection)} with the change that all values with equal compare
-     * results are returned.
+     * <p>Similar to {@link Collections#max(Collection)} with the change that all values with equal compare
+     * results are returned.</p>
+     *
      * @param values a finite stream of comparable values.
      * @return all maximum values from the input, by value order.
      * @param <T> any Comparable.
@@ -330,11 +338,12 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all maximum values from the input, where the maxima are determined by natural order:
-     * {@code getMax([4, 5, 1, 3, 2, 5, 5, 1]) -> [5, 5, 5]}.
+     * <p>Extract all maximum values from the input, where the maxima are determined by natural order:
+     * {@code getMax([4, 5, 1, 3, 2, 5, 5, 1]) -> [5, 5, 5]}.</p>
      *
-     * Similar to {@link java.util.Collections#max(Collection)} with the change that all values with equal compare
-     * results are returned.
+     * <p>Similar to {@link Collections#max(Collection)} with the change that all values with equal compare
+     * results are returned.</p>
+     *
      * @param values a collection of comparable values.
      * @return all maximum values from the input, by value order.
      * @param <T> any Comparable.
@@ -344,10 +353,11 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all minimum values from the input, similar to {@link #minima(Stream)} but with an explicit comparator.
+     * <p>Extract all minimum values from the input, similar to {@link #minima(Stream)} but with an explicit comparator.</p>
      *
-     * Similar to {@link java.util.Collections#min(Collection, Comparator)} with the change that all values with equal
-     * compare results are returned.
+     * <p>Similar to {@link Collections#min(Collection, Comparator)} with the change that all values with equal
+     * compare results are returned.</p>
+     *
      * @param values any finite stream of values.
      * @param comparator determines order of values.
      * @return all minimum values from the input, by comparator order.
@@ -368,10 +378,11 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all minimum values from the input, similar to {@link #minima(Collection)} but with an explicit comparator.
+     * <p>Extract all minimum values from the input, similar to {@link #minima(Collection)} but with an explicit comparator.</p>
      *
-     * Similar to {@link java.util.Collections#min(Collection, Comparator)} with the change that all values with equal
-     * compare results are returned.
+     * <p>Similar to {@link Collections#min(Collection, Comparator)} with the change that all values with equal
+     * compare results are returned.</p>
+     *
      * @param values a collection of values.
      * @param comparator determines order of values.
      * @return all minimum values from the input, by comparator order.
@@ -382,10 +393,11 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all maximum values from the input, similar to {@link #maxima(Stream)} but with an explicit comparator.
+     * <p>Extract all maximum values from the input, similar to {@link #maxima(Stream)} but with an explicit comparator.</p>
      *
-     * Similar to {@link java.util.Collections#max(Collection, Comparator)} with the change that all values with equal
-     * compare results are returned.
+     * <p>Similar to {@link Collections#max(Collection, Comparator)} with the change that all values with equal
+     * compare results are returned.</p>
+     *
      * @param values any finite stream of values.
      * @param comparator determines order of values.
      * @return all maximum values from the input, by comparator order.
@@ -396,10 +408,11 @@ public class ExtractionUtils {
     }
 
     /**
-     * Extract all maximum values from the input, similar to {@link #maxima(Collection)} but with an explicit comparator.
+     * <p>Extract all maximum values from the input, similar to {@link #maxima(Collection)} but with an explicit comparator.</p>
      *
-     * Similar to {@link java.util.Collections#max(Collection, Comparator)} with the change that all values with equal
-     * compare results are returned.
+     * <p>Similar to {@link Collections#max(Collection, Comparator)} with the change that all values with equal
+     * compare results are returned.</p>
+     *
      * @param values a collection of values.
      * @param comparator determines order of values.
      * @return all maximum values from the input, by comparator order.

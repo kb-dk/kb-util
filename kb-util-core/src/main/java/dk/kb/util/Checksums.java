@@ -38,17 +38,19 @@ public class Checksums {
     /**
      * Calculate the checksum of a given {@link InputStream}.
      * The stream is guaranteed to be closed after ended operation.
-     * If you need a  String version of the digest use {@link Bytes#toHex(byte[])}.
+     * If you need a String version of the digest, use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param algorithm the algorithm to use to compute the digest.
-     *                  Possible values can be found in the <a href="http://java.sun.com/j2se/1.5.0/docs/guide/security/CryptoSpec.html">Java CryptoSpec</a>.
+     *                  Possible values can be found in the
+     *                  <a href="https://docs.oracle.com/en/java/javase/26/docs/specs/security/standard-names.html#messagedigest-algorithms">Java
+     *                  Security Standard Algorithm Names</a>.
      * @param in        the stream to digest
      * @return the computed digest in a byte array
      * @throws IOException              if there is an error reading the input stream
      * @throws NoSuchAlgorithmException if the algorithm requested in {@code algorithm} isn't known to the jvm.
      */
     public static byte[] digest(String algorithm, InputStream in) throws IOException, NoSuchAlgorithmException {
-        try {
+        try (in) {
             MessageDigest md = MessageDigest.getInstance(algorithm);
 
             byte[] buffer = new byte[bufferSize];
@@ -57,17 +59,16 @@ public class Checksums {
                 md.update(buffer, 0, count);
             }
             return md.digest();
-        } finally {
-            in.close();
         }
     }
 
     /**
      * Calculate the checksum of a byte array. The array will be read in one chunk. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest, use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param algorithm the algorithm to use to compute the digest. Possible values can be found in the
-     *                 <a href="http://java.sun.com/j2se/1.5.0/docs/guide/security/CryptoSpec.html">Java CryptoSpec</a>.
+     *                  <a href="https://docs.oracle.com/en/java/javase/26/docs/specs/security/standard-names.html#messagedigest-algorithms">Java
+     *                  Security Standard Algorithm Names</a>.
      * @param in        array the byte array to compute the digest of.
      * @return the computed digest in a byte array.
      * @throws NoSuchAlgorithmException if the algorithm requested in {@code algorithm} isn't known to the jvm.
@@ -80,7 +81,7 @@ public class Checksums {
 
     /**
      * Calculate the checksum of a given {@link String}. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param algorithm the algorithm to use, e.g. {@code SHA-1}.
      * @param in the input to digest.
@@ -94,7 +95,7 @@ public class Checksums {
 
     /**
      * Calculate the checksum of a given {@link File}. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest, use {@code HexFormat.of().formatHex(byte[])}.
      * @param algorithm the algorithm to use, e.g. {@code SHA-1}.
      * @param in the input to digest.
      * @return the digested input.
@@ -108,7 +109,7 @@ public class Checksums {
 
     /**
      * Calculate the {@code SHA-1} checksum of a given stream. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param in the input to digest.
      * @return the digested input.
@@ -124,7 +125,7 @@ public class Checksums {
 
     /**
      * Calculate the {@code SHA-1} checksum of a string. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest, use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param in the input to digest.
      * @return the digested input.
@@ -140,7 +141,7 @@ public class Checksums {
 
     /**
      * Calculate the {@code SHA-1} checksum of a {@link File}. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param in the input to digest.
      * @return the digested input.
@@ -157,7 +158,7 @@ public class Checksums {
 
     /**
      * Calculate the {@code MD5} checksum of a given stream. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest, use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param in the input to digest.
      * @return the digested input.
@@ -174,7 +175,7 @@ public class Checksums {
 
     /**
      * Calculate the {@code MD5} checksum of a string. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest, use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param in the input to digest.
      * @return the digested input.
@@ -190,7 +191,7 @@ public class Checksums {
 
     /**
      * Calculate the {@code MD5} checksum of a {@link File}. If you need a
-     * String version of the digest use {@link Bytes#toHex(byte[])}.
+     * String version of the digest, use {@code HexFormat.of().formatHex(byte[])}.
      *
      * @param in the input to digest.
      * @return the digested input.

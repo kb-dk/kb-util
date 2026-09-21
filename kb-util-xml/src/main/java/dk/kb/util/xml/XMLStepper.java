@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -59,6 +60,7 @@ public class XMLStepper {
 
     private static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     private static final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
+
     static {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
         // No resolving of external DTDs
@@ -72,7 +74,8 @@ public class XMLStepper {
     /**
      * Iterates through the start tags in the stream until the current sub tree in the DOM is depleted
      * Leaves the cursor after END_ELEMENT.
-     * @param xml the stream to iterate.
+     *
+     * @param xml      the stream to iterate.
      * @param callback called for each start element.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
      */
@@ -83,24 +86,26 @@ public class XMLStepper {
     /**
      * Iterates through the start tags in the stream until the current sub tree in the DOM is depleted
      * Leaves the cursor after END_ELEMENT.
-     * @param xml the stream to iterate.
-     * @param lenient if true, the iterator tries to compensate for element-exceeding advances in the XML stream by the callback.
+     *
+     * @param xml      the stream to iterate.
+     * @param lenient  if true, the iterator tries to compensate for element-exceeding advances in the XML stream by the callback.
      * @param callback called for each start element.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
      */
     public static void iterateTags(XMLStreamReader xml, boolean lenient, Callback callback) throws XMLStreamException {
-        List<String> tagStack = new ArrayList<String>(10);
+        List<String> tagStack = new ArrayList<>(10);
         while (true) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
                 String currentTag = xml.getLocalName();
                 tagStack.add(currentTag);
-                switch(callback.elementStart2(xml, tagStack, currentTag)) {
+                switch (callback.elementStart2(xml, tagStack, currentTag)) {
                     case requests_stop_success:
                     case requests_stop_fail:
                         callback.end();
                         return;
-                    case no_action: xml.next();
-                    // Ignore no_action
+                    case no_action:
+                        xml.next();
+                        // Ignore no_action
                 }
                 continue;
             }
@@ -110,13 +115,13 @@ public class XMLStepper {
                     callback.end();
                     return;
                 }
-                if (!currentTag.equals(tagStack.get(tagStack.size()-1))) {
+                if (!currentTag.equals(tagStack.get(tagStack.size() - 1))) {
                     boolean fail = true;
                     if (lenient) {
                         fail = !reduceStack(tagStack, currentTag);
                     }
                     if (fail) {
-                        throw new IllegalStateException(String.format(Locale.ROOT, 
+                        throw new IllegalStateException(String.format(Locale.ROOT,
                                 "Encountered end tag '%s' where '%s' from the stack %s were expected",
                                 currentTag, tagStack.get(tagStack.size() - 1), Strings.join(tagStack, ", ")));
                     }
@@ -129,7 +134,7 @@ public class XMLStepper {
             try {
                 xml.next();
             } catch (XMLStreamException e) {
-                throw new XMLStreamException(String.format(Locale.ROOT, 
+                throw new XMLStreamException(String.format(Locale.ROOT,
                         "XMLStreamException with lenient=%b, stack=[%s], type=%s, content='%s'",
                         lenient, Strings.join(tagStack), XMLUtil.eventID2String(xml.getEventType()),
                         xml.getEventType() == XMLStreamReader.CHARACTERS ? xml.getText() : "N/A"),
@@ -138,18 +143,19 @@ public class XMLStepper {
         }
     }
 
-   /**
+    /**
      * Reduce the stack from the end until the last element is equal to tag.
+     *
      * @param stack a stack of tags.
-     * @param tag    the tag to reduce to
+     * @param tag   the tag to reduce to
      * @return true if it was possible to reduce the stack.
      */
     private static boolean reduceStack(List<String> stack, String tag) {
-        for (int i = 0 ; i < stack.size() ; i++) {
+        for (int i = 0; i < stack.size(); i++) {
             if (stack.get(i).equals(tag)) {
                 // Found a match, so we know we can reduce
-                while (!tag.equals(stack.get(stack.size()-1))) {
-                   stack.remove(stack.size()-1);
+                while (!tag.equals(stack.get(stack.size() - 1))) {
+                    stack.remove(stack.size() - 1);
                 }
                 return true;
             }
@@ -159,6 +165,7 @@ public class XMLStepper {
 
     /**
      * Shorthand for {@link #isWellformed(javax.xml.stream.XMLStreamReader)}.
+     *
      * @param xml the XML to check.
      * @return true if the XML is well formed.
      */
@@ -169,9 +176,11 @@ public class XMLStepper {
             return false;
         }
     }
+
     /**
      * Iterates the given XML stream and checks if it is well-formed (basic syntax check).
      * No check for validity is performed.
+     *
      * @param xml the input to be checked. This will be iterated all the way through and closed, unless an
      *            error is encountered during iteration.
      * @return true if the XML is well-formed, else false.
@@ -191,7 +200,8 @@ public class XMLStepper {
     /**
      * Equivalent to {@link #pipeXML(javax.xml.stream.XMLStreamReader, javax.xml.stream.XMLStreamWriter, boolean)} but
      * returns the sub XML as a String instead of piping the result. For performance, it is recommended to
-     * @param in must be positioned at START_ELEMENT and be coalescing.
+     *
+     * @param in          must be positioned at START_ELEMENT and be coalescing.
      * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
      *                    if false, unrecognized elements will be ignored.
      * @return the sub XML as a String.
@@ -206,17 +216,18 @@ public class XMLStepper {
     }
 
     /**
-     * Equivalent to
-     * {@link #pipeXML(javax.xml.stream.XMLStreamReader, javax.xml.stream.XMLStreamWriter, boolean, boolean)} but
-     * returns the sub XML as a String instead of piping the result.
+     * <p>Equivalent to
+     * {@link #pipeXML(XMLStreamReader, XMLStreamWriter, boolean, boolean)} but
+     * returns the sub XML as a String instead of piping the result.</p>
      *
-     * Note: This methods is resilient against the multiple root-problem in pipeXML. This also means that the returned
-     *       String is not necessarily valid XML.
-     * @param in must be positioned at START_ELEMENT and be coalescing.
+     * <p>Note: This methods is resilient against the multiple root-problem in pipeXML.
+     *          This also means that the returned String is not necessarily valid XML.</p>
+     *
+     * @param in          must be positioned at START_ELEMENT and be coalescing.
      * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
      *                    if false, unrecognized elements will be ignored.
+     * @param onlyInner   if true, the start- and end-tag of the current element are not piped to out.
      * @return the sub XML as a String.
-     * @param onlyInner  if true, the start- and end-tag of the current element are not piped to out.
      * @throws XMLStreamException if in was faulty.
      */
     public static String getSubXML(XMLStreamReader in, boolean failOnError, boolean onlyInner)
@@ -236,7 +247,8 @@ public class XMLStepper {
      * The processing runs in its own thread, shared between calls with a thread pool. For very small inputs, it is
      * better to call {@link #replaceElementText(String, ContentReplaceCallback)} or
      * {@link #replaceElementText(XMLStreamReader, XMLStreamWriter, boolean, ContentReplaceCallback)}.
-     * @param xml the input for the replacer. This will be parsed as XML.
+     *
+     * @param xml      the input for the replacer. This will be parsed as XML.
      * @param replacer the replacer for handling element text.
      * @return a stream with the output from the replacement of text in the input xml.
      * @throws IOException if the xml content could not be read.
@@ -271,6 +283,7 @@ public class XMLStepper {
 
     /**
      * Wrapper for {@link #replaceElementText(XMLStreamReader, XMLStreamWriter, boolean, ContentReplaceCallback)}.
+     *
      * @param xml      the XML to process.
      * @param replacer the replacer for handling element text.
      * @return the xml with element text being processed by the replacer.
@@ -295,12 +308,12 @@ public class XMLStepper {
      * To ensure namespaces are handled properly, set the {@link XMLOutputFactory#IS_REPAIRING_NAMESPACES} to true using
      * {@link XMLOutputFactory#setProperty(String, Object)} before creating an {@link XMLStreamWriter}.
      *
-     * @param in must be positioned at START_ELEMENT and be coalescing.
-     * @param out the destination for the traversed XML.
+     * @param in          must be positioned at START_ELEMENT and be coalescing.
+     * @param out         the destination for the traversed XML.
      * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
      *                    if false, unrecognized elements will be ignored.
-     * @param replacer at each elementStart, the replacer will be called allowing for selective replacement of element
-     *                 text.
+     * @param replacer    at each elementStart, the replacer will be called allowing for selective replacement of element
+     *                    text.
      * @throws XMLStreamException if in was faulty.
      */
     public static void replaceElementText(
@@ -317,8 +330,9 @@ public class XMLStepper {
      * Note: The method does not repair namespaces automatically.
      * To ensure namespaces are handled properly, set the {@link XMLOutputFactory#IS_REPAIRING_NAMESPACES} to true using
      * {@link XMLOutputFactory#setProperty(String, Object)} before creating an {@link XMLStreamWriter}.
-     * @param in must be positioned at START_ELEMENT and be coalescing.
-     * @param out the destination for the traversed XML.
+     *
+     * @param in          must be positioned at START_ELEMENT and be coalescing.
+     * @param out         the destination for the traversed XML.
      * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
      *                    if false, unrecognized elements will be ignored.
      * @throws XMLStreamException if in was faulty.
@@ -340,11 +354,12 @@ public class XMLStepper {
      * If the destination (out) is empty and in contains multiple sub-elements, the piping will fail with an Exception
      * stating "Trying to output second root". In order to avoid that, the destination needs to have at least one
      * open element.
-     * @param in must be positioned at START_ELEMENT and be coalescing.
-     * @param out the destination for the traversed XML.
+     *
+     * @param in          must be positioned at START_ELEMENT and be coalescing.
+     * @param out         the destination for the traversed XML.
      * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
      *                    if false, unrecognized elements will be ignored.
-     * @param onlyInner  if true, the start- and end-tag of the current element are not piped to out.
+     * @param onlyInner   if true, the start- and end-tag of the current element are not piped to out.
      * @throws XMLStreamException if in was faulty.
      */
     public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError, boolean onlyInner)
@@ -365,8 +380,9 @@ public class XMLStepper {
      * If the destination (out) is empty and in contains multiple sub-elements, the piping will fail with an Exception
      * stating "Trying to output second root". In order to avoid that, the destination needs to have at least one
      * open element.
-     * @param in must be positioned at START_ELEMENT and be coalescing.
-     * @param out the destination for the traversed XML.
+     *
+     * @param in           must be positioned at START_ELEMENT and be coalescing.
+     * @param out          the destination for the traversed XML.
      * @param ignoreErrors if false, unrecognized elements will result in an UnsupportedOperationException.
      *                     if true, unrecognized elements will be ignored.
      * @param onlyInner    if true, the start- and end-tag of the current element are not piped to out.
@@ -378,22 +394,23 @@ public class XMLStepper {
      * @throws XMLStreamException if in was faulty.
      */
     public static boolean pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean ignoreErrors, boolean onlyInner,
-                                   Callback callback) throws XMLStreamException {
+                                  Callback callback) throws XMLStreamException {
         if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
-            Boolean.TRUE != in.getProperty(XMLInputFactory.IS_COALESCING)) {
+                in.getProperty(XMLInputFactory.IS_COALESCING) != Boolean.TRUE) {
             throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
         }
         if (!ignoreErrors) {
-            return pipeXML(in, out, false, onlyInner, new ArrayList<String>(), callback);
+            return pipeXML(in, out, false, onlyInner, new ArrayList<>(), callback);
         }
         try {
-            return pipeXML(in, out, true, onlyInner, new ArrayList<String>(), callback);
+            return pipeXML(in, out, true, onlyInner, new ArrayList<>(), callback);
         } catch (XMLStreamException e) {
             // Ignoring exception as ignoreErrors == true
             out.flush();
         }
         return true;
     }
+
     /**
      * @param in           XML, optionally positioned inside the stream.
      * @param out          the piped content will be send to this.
@@ -413,7 +430,7 @@ public class XMLStepper {
             if (XMLStreamReader.START_ELEMENT != in.getEventType()) {
                 throw new IllegalStateException(
                         "onlyInner == true, but the input was not positioned at START_ELEMENT. Current element is "
-                        + XMLUtil.eventID2String(in.getEventType()));
+                                + XMLUtil.eventID2String(in.getEventType()));
             }
             String element = in.getLocalName();
             elementStack.add(element);
@@ -426,7 +443,7 @@ public class XMLStepper {
             switch (in.getEventType()) {
                 case XMLStreamReader.START_DOCUMENT: {
                     if ((in.getEncoding() != null && !in.getEncoding().isEmpty()) ||
-                        (in.getVersion() != null && !"1.0".equals(in.getVersion()))) {
+                            (in.getVersion() != null && !"1.0".equals(in.getVersion()))) {
                         // Only write a declaration if the source has one
                         out.writeStartDocument(in.getEncoding(), in.getVersion());
                     }
@@ -444,32 +461,35 @@ public class XMLStepper {
                     Callback.PROCESS_ACTION callResult = callback == null ? Callback.PROCESS_ACTION.no_action :
                             callback.elementStart2(in, elementStack, element);
                     switch (callResult) {
-                        case no_action:
+                        case no_action -> {
                             copyStartElement(in, out);
                             in.next();
                             if (pipeXML(in, out, ignoreErrors, false, elementStack, callback)) {
                                 out.flush();
                                 return true;
                             }
-                            break;
-                        case called_next: // callback handled the element so we do not pipe the END_ELEMENT
+                        }
+                        case called_next -> {
                             if (XMLStreamReader.END_ELEMENT != in.getEventType()) {
-                                throw new IllegalStateException(String.format(Locale.ROOT, 
+                                throw new IllegalStateException(String.format(Locale.ROOT,
                                         "Callback for %s returned calles_next, but did not position the XML stream at "
-                                        + "END_ELEMENT. Current eventType is %s",
+                                                + "END_ELEMENT. Current eventType is %s",
                                         Strings.join(elementStack, ", "),
                                         XMLUtil.eventID2String(in.getEventType())));
                             }
-                            elementStack.remove(elementStack.size()-1);
-                            break;
-                        case requests_stop_success:
+                            elementStack.remove(elementStack.size() - 1);
+                        }
+                        case requests_stop_success -> {
                             out.writeEndDocument();
                             out.flush();
                             return true;
-                        case requests_stop_fail:
+                        }
+                        case requests_stop_fail -> {
                             out.flush(); // No end document af processing failed
-                            return false;
-                        default: throw new UnsupportedOperationException("Unknown PROCESS_ACTION '" + callResult + "'");
+                            return false; // No end document af processing failed
+                        }
+                        default ->
+                                throw new UnsupportedOperationException("Unknown PROCESS_ACTION '" + callResult + "'");
                     }
                     break;
                 }
@@ -482,12 +502,12 @@ public class XMLStepper {
                         return true;
                     }
                     String element = in.getLocalName();
-                    if (!element.equals(elementStack.get(elementStack.size()-1))) {
-                        throw new IllegalStateException(String.format(Locale.ROOT, 
+                    if (!element.equals(elementStack.get(elementStack.size() - 1))) {
+                        throw new IllegalStateException(String.format(Locale.ROOT,
                                 "Encountered end tag '%s' where '%s' from the stack %s were expected",
-                                element, elementStack.get(elementStack.size()-1), Strings.join(elementStack, ", ")));
+                                element, elementStack.get(elementStack.size() - 1), Strings.join(elementStack, ", ")));
                     }
-                    String popped = elementStack.remove(elementStack.size()-1);
+                    String popped = elementStack.remove(elementStack.size() - 1);
                     if (callback != null && !(elementStack.isEmpty() && onlyInner)) {
                         callback.elementEnd(popped);
                     }
@@ -514,10 +534,11 @@ public class XMLStepper {
                     out.writeComment(in.getText());
                     break;
                 }
-                default: if (!ignoreErrors) {
-                    throw new UnsupportedOperationException(
-                            "pipeXML does not support event type " + XMLUtil.eventID2String(in.getEventType()));
-                }
+                default:
+                    if (!ignoreErrors) {
+                        throw new UnsupportedOperationException(
+                                "pipeXML does not support event type " + XMLUtil.eventID2String(in.getEventType()));
+                    }
             }
             in.next();
         }
@@ -534,15 +555,15 @@ public class XMLStepper {
             if (in.getNamespaceURI() == null || in.getNamespaceURI().isEmpty()) {
                 throw new XMLStreamException(
                         "Encountered element '" + in.getLocalName() + "' with prefix '" + in.getPrefix()
-                        + "' but no namespace URI");
+                                + "' but no namespace URI");
             } else {
                 out.writeStartElement(in.getPrefix(), in.getLocalName(), in.getNamespaceURI());
             }
         }
-        for (int i = 0 ; i < in.getNamespaceCount() ; i++) {
+        for (int i = 0; i < in.getNamespaceCount(); i++) {
             out.writeNamespace(in.getNamespacePrefix(i), in.getNamespaceURI(i));
         }
-        for (int i = 0 ; i < in.getAttributeCount() ; i++) {
+        for (int i = 0; i < in.getAttributeCount(); i++) {
             if (in.getAttributeNamespace(i) == null || in.getAttributeNamespace(i).isEmpty()) {
                 out.writeAttribute(in.getAttributeLocalName(i), in.getAttributeValue(i));
             } else {
@@ -554,133 +575,133 @@ public class XMLStepper {
 
     /**
      * Steps through the provided XML and returns the text content of the first element with the given tag.
+     *
      * @param xml the XML to extract text from.
      * @param tag the designation of the element to extract text from.
      * @return the text of the element with the given tag or null if the tag could not be found. If the tag is empty,
-     *         the empty String will be returned.
+     * the empty String will be returned.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
      */
     public static String getFirstElementText(CharSequence xml, String tag) throws XMLStreamException {
-        final MutablePair<Boolean, String> result = new MutablePair<Boolean, String>(false, null);
+        final MutablePair<Boolean, String> result = new MutablePair<>(false, null);
         XMLStepper.iterateElements(xmlFactory.createXMLStreamReader(new CharSequenceReader(xml)),
-                                   "", tag, new XMLStepper.XMLCallback() {
-            @Override
-            public void execute(XMLStreamReader xml) throws XMLStreamException {
-                if (result.getKey().equals(false)) { // We only want the first one
-                    result.setKey(true);
-                    result.setValue(xml.getElementText());
-                }
-            }
-        });
+                "", tag, new XMLStepper.XMLCallback() {
+                    @Override
+                    public void execute(XMLStreamReader xml) throws XMLStreamException {
+                        if (result.getKey().equals(false)) { // We only want the first one
+                            result.setKey(true);
+                            result.setValue(xml.getElementText());
+                        }
+                    }
+                });
         return result.getValue();
     }
 
     /**
      * Extraction of an XPath-like query, returning at most 1 result.
-     * @param xml        the XML to extract text from.
-     * @param fakeXPath  the fakeXPath to evaluate.
-     * @see FakeXPath
+     *
+     * @param xml       the XML to extract text from.
+     * @param fakeXPath the fakeXPath to evaluate.
      * @return the result of the evaluation or null if there was no match.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     * @see FakeXPath
      */
     public static String evaluateFakeXPath(CharSequence xml, String fakeXPath) throws XMLStreamException {
         return evaluateFakeXPathsSingleResultsPremade(xml, parsePaths(Collections.singletonList(fakeXPath))).get(0);
     }
 
     /**
-     * Extraction of an XPath-like query, returning at most 1 result.
-     * @param xml        the XML to extract text from.
-     * @param fakeXPath  the fakeXPath to evaluate.
-     * @see FakeXPath
-     * @return the result of the evaluation or null if there was no match.
-     * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
-     */
-    public static String evaluateFakeXPath(CharSequence xml, FakeXPath fakeXPath) throws XMLStreamException {
-        return evaluateFakeXPathsSingleResultsPremade(xml, Collections.singletonList(fakeXPath)).get(0);
-    }
-    /**
      * Extraction of values with an XPath-like query, returning at most 1 result/FakeXPath.
+     *
      * @param xml        the XML to extract text from.
      * @param fakeXPaths list of fakeXPaths to evaluate.
-     * @see FakeXPath
      * @return a list with the same number of elements as fakeXPaths with the results of the XPaths matching the order,
-     *         null as a xpath-result means no match.
+     * null as a xpath-result means no match.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     * @see FakeXPath
      */
     public static List<String> evaluateFakeXPathsSingleResults(
             CharSequence xml, List<String> fakeXPaths) throws XMLStreamException {
         return evaluateFakeXPathsSingleResultsPremade(xml, parsePaths(fakeXPaths));
     }
+
     /**
      * Extraction of values with an XPath-like query, returning at most 1 result/FakeXPath.
+     *
      * @param xml        the XML to extract text from.
      * @param fakeXPaths list of fakeXPaths to evaluate.
-     * @see FakeXPath
      * @return a list with the same number of elements as fakeXPaths with the results of the XPaths matching the order,
-     *         null as a xpath-result means no match.
+     * null as a xpath-result means no match.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     * @see FakeXPath
      */
-    public static List<String> evaluateFakeXPathsSingleResultsPremade(
-            CharSequence xml, List<FakeXPath> fakeXPaths) throws XMLStreamException {
+    static List<String> evaluateFakeXPathsSingleResultsPremade(CharSequence xml, List<FakeXPath> fakeXPaths)
+            throws XMLStreamException {
         List<List<String>> nested = evaluateFakeXPathsPremade(xml, fakeXPaths, 1);
-        List<String> single = new ArrayList<String>(nested.size());
-        for (List<String> entry: nested) {
+        List<String> single = new ArrayList<>(nested.size());
+        for (List<String> entry : nested) {
             single.add(entry.isEmpty() ? null : entry.get(0));
         }
         return single;
     }
+
     /**
      * Extraction of values with an XPath-like query.
-     * @param xml        the XML to extract text from.
-     * @param fakeXPaths list of fakeXPaths to evaluate.
+     *
+     * @param xml                    the XML to extract text from.
+     * @param fakeXPaths             list of fakeXPaths to evaluate.
      * @param maxResultsPerFakeXPath maximum numbers of results per XPath, -1 means no limit.
-     * @see FakeXPath
      * @return a list with the same number of elements as fakeXPaths with the results of the XPaths matching the order.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
+     * @see FakeXPath
      */
     public static List<List<String>> evaluateFakeXPaths(
             CharSequence xml, List<String> fakeXPaths, final int maxResultsPerFakeXPath) throws XMLStreamException {
         return evaluateFakeXPaths(xmlFactory.createXMLStreamReader(new CharSequenceReader(xml)),
                                   parsePaths(fakeXPaths), maxResultsPerFakeXPath);
     }
+
     private static List<FakeXPath> parsePaths(List<String> fakeXPaths) {
-        List<FakeXPath> fxs = new ArrayList<FakeXPath>(fakeXPaths.size());
-        for (String fakeXPathString: fakeXPaths) {
+        List<FakeXPath> fxs = new ArrayList<>(fakeXPaths.size());
+        for (String fakeXPathString : fakeXPaths) {
             fxs.add(new FakeXPath(fakeXPathString));
         }
         return fxs;
     }
+
     /**
      * Extraction of values with an XPath-like query.
-     * @param xml        the XML to extract text from.
-     * @param fakeXPaths list of fakeXPaths to evaluate.
+     *
+     * @param xml                    the XML to extract text from.
+     * @param fakeXPaths             list of fakeXPaths to evaluate.
      * @param maxResultsPerFakeXPath maximum numbers of results per XPath, -1 means no limit.
      * @return a list with the same number of elements as fakeXPaths with the results of the XPaths matching the order.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
      */
     // Problem: foo matches foo/bar . Trailing /?
-    public static List<List<String>> evaluateFakeXPathsPremade(
+    static List<List<String>> evaluateFakeXPathsPremade(
             CharSequence xml, final List<FakeXPath> fakeXPaths, final int maxResultsPerFakeXPath)
             throws XMLStreamException {
         return evaluateFakeXPaths(
                 xmlFactory.createXMLStreamReader(new CharSequenceReader(xml)), fakeXPaths, maxResultsPerFakeXPath);
     }
+
     /**
      * Specialized extraction of values with an XPath-like query.
-     * @param xml        the XML to extract text from.
-     * @param fakeXPaths list of fakeXPaths to evaluate.
+     *
+     * @param xml                    the XML to extract text from.
+     * @param fakeXPaths             list of fakeXPaths to evaluate.
      * @param maxResultsPerFakeXPath maximum numbers of results per XPath, -1 means no limit.
      * @return a list with the same number of elements as fakeXPaths with the results of the XPaths matching the order.
      * @throws XMLStreamException if the xml was not valid or XML processing failed for other reasons.
      */
     // Problem: foo matches foo/bar . Trailing /?
-    public static List<List<String>> evaluateFakeXPaths(
-            XMLStreamReader xml, final List<FakeXPath> fakeXPaths, final int maxResultsPerFakeXPath)
+    static List<List<String>> evaluateFakeXPaths(XMLStreamReader xml,
+                                                 final List<FakeXPath> fakeXPaths,
+                                                 final int maxResultsPerFakeXPath)
             throws XMLStreamException {
-        final List<List<String>> matches = new ArrayList<List<String>>(fakeXPaths.size());
-        for (int i = 0 ; i < fakeXPaths.size() ; i++) {
-            matches.add(new ArrayList<String>());
-        }
+        final List<List<String>> matches =
+                Stream.<List<String>>generate(ArrayList::new).limit(fakeXPaths.size()).toList();
         final AtomicInteger totalCollects = new AtomicInteger(0);
 
         iterateTags(xml, new Callback() {
@@ -688,7 +709,7 @@ public class XMLStepper {
             public PROCESS_ACTION elementStart2(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
                 PROCESS_ACTION action = PROCESS_ACTION.no_action; // Default
-                for (int i = 0 ; i < fakeXPaths.size() ; i++) {
+                for (int i = 0; i < fakeXPaths.size(); i++) {
                     List<String> localMatches = matches.get(i);
                     if (maxResultsPerFakeXPath != -1 && localMatches.size() >= maxResultsPerFakeXPath) {
                         continue;
@@ -696,7 +717,7 @@ public class XMLStepper {
                     FakeXPath fakeXPath = fakeXPaths.get(i);
                     if (fakeXPath.matches(xml, tags)) { // We have a match
                         localMatches.add(fakeXPath.getValue(xml));
-                        if (totalCollects.incrementAndGet() == fakeXPaths.size()*maxResultsPerFakeXPath) {
+                        if (totalCollects.incrementAndGet() == fakeXPaths.size() * maxResultsPerFakeXPath) {
                             return PROCESS_ACTION.requests_stop_success; // All full, so we stop at once
                         }
                         action = PROCESS_ACTION.called_next; // No early break as we might have more matches
@@ -712,6 +733,7 @@ public class XMLStepper {
     /**
      * Skips to the next position in the XML matching the given fakeXPath.
      * If the fakeXPath cannot be matched, the xml stream will be depleted and false will be returned.
+     *
      * @param xml       the XML to iterate for the given fakeXPath.
      * @param fakeXPath a {@link FakeXPath}, as described in the class javaDoc.
      * @return true if the fakeXPath was matched, else false. If false, the xml will be depleted.
@@ -738,6 +760,7 @@ public class XMLStepper {
     /**
      * Skips to the next position in the XML matching the given fakeXPath.
      * If the fakeXPath cannot be matched, the xml stream will be depleted and null will be returned.
+     *
      * @param xml       the XML to iterate for the given fakeXPath.
      * @param fakeXPath a {@link FakeXPath}, as described in the class javaDoc.
      * @return an XMLStreamReader positioned at the given fakeXPath or null if there were no match.
@@ -749,21 +772,21 @@ public class XMLStepper {
     }
 
     /**
-     * Subset of XPath @{url https://www.w3schools.com/xml/xpath_syntax.asp}.
+     * <p>Subset of XPath @{url https://www.w3schools.com/xml/xpath_syntax.asp}.
      * Parsing always start from the root of the document, so @{code foo} and {@code /foo} are equal.
      * For the same reason, {@code ..} is not supported.
-     * {@code //} is supported, but not in combination with attributes on any element besides the last one.
+     * {@code //} is supported, but not in combination with attributes on any element besides the last one.</p>
      *
-     * Predicate support:
+     * <p>Predicate support:
      * {@code foo[@bar]}: The element foo with the attribute bar.
-     * {@code foo[@bar='zoo']}: The element foo with the attribute bar with value zoo.
+     * {@code foo[@bar='zoo']}: The element foo with the attribute bar with value zoo.</p>
      *
-     * Wildcard support:
+     * <p>Wildcard support:
      * {@code *}: Any element node.
      * {@code @*}: Any attribute node.
-     * Not supported: {@code node()}.
+     * Not supported: {@code node()}.</p>
      *
-     * Trailing {@code /text()} is treated as element text and ignored.
+     * <p>Trailing {@code /text()} is treated as element text and ignored.</p>
      */
     // TODO: /foo/[@bar=zoo]@baz
     // TODO: /foo/[@bar=zoo]/*
@@ -791,37 +814,37 @@ public class XMLStepper {
                 }
             }
             if (fakeXPath.endsWith("/text()")) {
-                fakeXPath = fakeXPath.substring(0, fakeXPath.length()-"/text()".length());
+                fakeXPath = fakeXPath.substring(0, fakeXPath.length() - "/text()".length());
             }
             this.xpathString = fakeXPath;
 
             String[] potentialPath = fakeXPath.split("/");
-            PathElement extractionCandidate = new PathElement(potentialPath[potentialPath.length-1]);
+            PathElement extractionCandidate = new PathElement(potentialPath[potentialPath.length - 1]);
             int convertCount;
             if (extractionCandidate.isAttribute) {
                 extraction = extractionCandidate;
-                convertCount = potentialPath.length-1;
+                convertCount = potentialPath.length - 1;
             } else {
                 extraction = PathElement.ELEMENT_TEXT;
                 convertCount = potentialPath.length;
             }
             path = new PathElement[convertCount];
-            for (int i = 0 ; i < convertCount ; i++) {
+            for (int i = 0; i < convertCount; i++) {
                 try {
                     path[i] = new PathElement(potentialPath[i]);
                 } catch (Exception e) {
                     throw new IllegalArgumentException("Unable to parse FakeXPath element '" + potentialPath[i] +
-                                                       "' from full expression '" + fakeXPath + "'", e);
+                            "' from full expression '" + fakeXPath + "'", e);
                 }
             }
 
             // Check for unsupported XPaths
             if (locationIndependent) {
-                for (int i = 0 ; i < path.length-1 ; i++) { // -1 as the last element supports predicates
+                for (int i = 0; i < path.length - 1; i++) { // -1 as the last element supports predicates
                     if (path[i].hasPredicate) {
                         throw new UnsupportedOperationException(
                                 "Currently only the last path element supports attributes. Got elements " +
-                                Arrays.toString(path));
+                                        Arrays.toString(path));
                     }
                 }
             }
@@ -833,10 +856,10 @@ public class XMLStepper {
                 return matchesLocationIndependent(xml, tags);
             }
             // Adjust tracker to match tag-chain size
-            while(matchTracker.size() > tags.size()) {
-                matchTracker.remove(matchTracker.size()-1);
+            while (matchTracker.size() > tags.size()) {
+                matchTracker.remove(matchTracker.size() - 1);
             }
-            while(matchTracker.size() < tags.size()) {
+            while (matchTracker.size() < tags.size()) {
                 matchTracker.add(false);
             }
             if (path.length < tags.size()) {
@@ -844,7 +867,7 @@ public class XMLStepper {
             }
 
             // Update tracker
-            final int current = tags.size()-1;
+            final int current = tags.size() - 1;
             matchTracker.set(current, path[current].matches(xml, tags.get(current)));
             // Check for match
             if (path.length != tags.size()) {
@@ -852,6 +875,7 @@ public class XMLStepper {
             }
             return !matchTracker.contains(Boolean.FALSE);
         }
+
         public boolean matchesLocationIndependent(XMLStreamReader xml, List<String> tags) {
             if (path.length < tags.size()) {
                 int offset = tags.size() - path.length;
@@ -860,12 +884,7 @@ public class XMLStepper {
             if (path.length != tags.size()) {
                 return false;
             }
-            for (int i = 0 ; i < path.length ; i++) {
-                if (!path[i].matches(xml, tags.get(i))) {
-                    return false;
-                }
-            }
-            return true;
+            return IntStream.range(0, path.length).allMatch(i -> path[i].matches(xml, tags.get(i)));
         }
 
         public String getValue(XMLStreamReader xml) throws XMLStreamException {
@@ -910,7 +929,7 @@ public class XMLStepper {
                     hasPredicate = true;
                     int start = element.indexOf("[") + 1;
                     int end = element.indexOf("]");
-                    key = element.substring(0, start-1);
+                    key = element.substring(0, start - 1);
                     wildcard = "*".equals(key);
 
                     // @bar='zoo'
@@ -941,6 +960,7 @@ public class XMLStepper {
                 predicateAttributeName = null;
                 predicateAttributeValue = null;
             }
+
             public boolean matches(XMLStreamReader xml, String elementName) { // Always at element_start
                 if (isAttribute) {
                     return getAttribute(xml, key, null) != null;
@@ -959,6 +979,7 @@ public class XMLStepper {
                 }
                 return true;
             }
+
             // Always advances, expects match
             public String value(XMLStreamReader xml) throws XMLStreamException {
                 if (!isAttribute) {
@@ -994,10 +1015,11 @@ public class XMLStepper {
 
     /**
      * Skips everything until a start tag is reacted or the readers is depleted.
+     *
      * @param xml the stream to iterate over.
      * @return the name of the start tag or null if EOD.
      * @throws javax.xml.stream.XMLStreamException if there was an error
-     * accessing the xml stream.
+     *                                             accessing the xml stream.
      */
     public static String jumpToNextTagStart(XMLStreamReader xml)
             throws XMLStreamException {
@@ -1017,13 +1039,14 @@ public class XMLStepper {
 
     /**
      * Extracts the value from the attribute with the given name. This does not advance the xml stream.
-     * @param xml stream positioned at a start tag.
+     *
+     * @param xml           stream positioned at a start tag.
      * @param attributeName the wanted attribute
-     * @param defaultValue the value to return if the attributes is not present.
+     * @param defaultValue  the value to return if the attributes is not present.
      * @return the attribute content og the default value.
      */
     public static String getAttribute(XMLStreamReader xml, String attributeName, String defaultValue) {
-        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
+        for (int i = 0; i < xml.getAttributeCount(); i++) {
             if (xml.getAttributeLocalName(i).equals(attributeName)) {
                 return xml.getAttributeValue(i);
             }
@@ -1033,14 +1056,15 @@ public class XMLStepper {
 
     /**
      * Iterates over the xml until a start tag with startTagName is reached.
+     *
      * @param xml          the stream to iterate over.
      * @param startTagName the name of the tag to locate.
      * @return true if the tag was found, else false.
      * @throws javax.xml.stream.XMLStreamException if there were an error
-     * seeking the xml stream.
+     *                                             seeking the xml stream.
      */
     public static boolean findTagStart(XMLStreamReader xml, String startTagName) throws XMLStreamException {
-        while (true)  {
+        while (true) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT && startTagName.equals(xml.getLocalName())) {
                 return true;
             }
@@ -1056,7 +1080,7 @@ public class XMLStepper {
     }
 
     public static boolean findTagEnd(XMLStreamReader xml, String endTagName) throws XMLStreamException {
-        while (true)  {
+        while (true) {
             if (xml.getEventType() == XMLStreamReader.END_ELEMENT && endTagName.equals(xml.getLocalName())) {
                 return true;
             }
@@ -1074,21 +1098,19 @@ public class XMLStepper {
     /**
      * Iterates over elements in the stream until end element is encountered or end of document is reached.
      * For each element matching actionElement, callback is called.
-     * @param xml        the stream to iterate.
-     * @param endElement the stopping element.
+     *
+     * @param xml           the stream to iterate.
+     * @param endElement    the stopping element.
      * @param actionElement callback is activated when encountering elements with this name.
-     * @param callback   called for each encountered element.
+     * @param callback      called for each encountered element.
      * @throws javax.xml.stream.XMLStreamException if the stream could not be iterated or an error occurred during
-     * callback.
+     *                                             callback.
      */
     public static void iterateElements(XMLStreamReader xml, String endElement, String actionElement,
                                        XMLCallback callback) throws XMLStreamException {
         iterateElements(xml, endElement, actionElement, true, callback);
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT ||
-                (xml.getEventType() == XMLStreamReader.END_ELEMENT && xml.getLocalName().equals(endElement))) {
-                break;
-            }
+        while (xml.getEventType() != XMLStreamReader.END_DOCUMENT &&
+                (xml.getEventType() != XMLStreamReader.END_ELEMENT || !xml.getLocalName().equals(endElement))) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT && xml.getLocalName().equals(actionElement)) {
                 callback.execute(xml);
             }
@@ -1106,17 +1128,14 @@ public class XMLStepper {
      * @param actionElement callback is activated when encountering elements with this name.
      * @param advanceOnHit  if true, the iterator always calls {@code xml.next()}. If false, next is only called if
      *                      no callback has been issued.
-     * @param callback   called for each encountered element.
+     * @param callback      called for each encountered element.
      * @throws javax.xml.stream.XMLStreamException if the stream could not
-     * be iterated or an error occured during callback.
+     *                                             be iterated or an error occurred during callback.
      */
     public static void iterateElements(XMLStreamReader xml, String endElement, String actionElement,
                                        boolean advanceOnHit, XMLCallback callback) throws XMLStreamException {
-        while (true) {
-            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT ||
-                (xml.getEventType() == XMLStreamReader.END_ELEMENT && xml.getLocalName().equals(endElement))) {
-                break;
-            }
+        while (xml.getEventType() != XMLStreamReader.END_DOCUMENT &&
+                (xml.getEventType() != XMLStreamReader.END_ELEMENT || !xml.getLocalName().equals(endElement))) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT && xml.getLocalName().equals(actionElement)) {
                 callback.execute(xml);
                 if (advanceOnHit) {
@@ -1136,8 +1155,9 @@ public class XMLStepper {
      * embedded records, the serialized records will have the namespace defined and (hopefully) be valid XML.
      * <p>
      * Note: The given {@code xml} will NOT be automatically closed after use.
-     * @param xml an InputStream containing XML.
-     * @param subElement the element name to look for when locating sub element start, without namespace.
+     *
+     * @param xml            an InputStream containing XML.
+     * @param subElement     the element name to look for when locating sub element start, without namespace.
      * @param addDeclaration if true, an XML declaration will be added at the top of each serialized sub element.
      * @return a stream of serialized sub elements for the given {@code xml}.
      * @see #serializeSubElements(Reader, String, boolean)
@@ -1160,8 +1180,9 @@ public class XMLStepper {
      * embedded records, the serialized records will have the namespace defined and (hopefully) be valid XML.
      * <p>
      * Note: The given {@code xml} will NOT be automatically closed after use.
-     * @param xml a reader containing XML.
-     * @param subElement the element name to look for when locating sub element start, without namespace.
+     *
+     * @param xml            a reader containing XML.
+     * @param subElement     the element name to look for when locating sub element start, without namespace.
      * @param addDeclaration if true, an XML declaration will be added at the top of each serialized sub element.
      * @return a stream of serialized sub elements for the given {@code xml}.
      * @see #serializeSubElements(InputStream, String, boolean)
@@ -1184,8 +1205,9 @@ public class XMLStepper {
      * embedded records, the serialized records will have the namespace defined and (hopefully) be valid XML.
      * <p>
      * The given {@code xml} will be fully iterated and closed after use.
-     * @param xml an XML stream, typically positioned at the beginning.
-     * @param subElement the element name to look for when locating sub element start, without namespace.
+     *
+     * @param xml            an XML stream, typically positioned at the beginning.
+     * @param subElement     the element name to look for when locating sub element start, without namespace.
      * @param addDeclaration if true, an XML declaration will be added at the top of each serialized sub element.
      * @return a stream of serialized sub elements for the given {@code xml}.
      * @see #serializeSubElements(InputStream, String, boolean)
@@ -1257,8 +1279,7 @@ public class XMLStepper {
     public static void skipSubTree(XMLStreamReader xml) throws XMLStreamException {
         iterateTags(xml, new Callback() {
             @Override
-            public PROCESS_ACTION elementStart2(XMLStreamReader xml, List<String> tags, String current)
-                    throws XMLStreamException {
+            public PROCESS_ACTION elementStart2(XMLStreamReader xml, List<String> tags, String current) {
                 return PROCESS_ACTION.no_action; // Ignore everything until end of sub tree
             }
         });
@@ -1267,13 +1288,12 @@ public class XMLStepper {
     public static void skipElement(XMLStreamReader xml) throws XMLStreamException {
         if (XMLStreamReader.START_ELEMENT != xml.getEventType()) {
             throw new IllegalStateException("The reader must be positioned at START_ELEMENT but was positioned at "
-                                            + XMLUtil.eventID2String(xml.getEventType()));
+                    + XMLUtil.eventID2String(xml.getEventType()));
         }
         xml.next();
         iterateTags(xml, new Callback() {
             @Override
-            public PROCESS_ACTION elementStart2(XMLStreamReader xml, List<String> tags, String current)
-                    throws XMLStreamException {
+            public PROCESS_ACTION elementStart2(XMLStreamReader xml, List<String> tags, String current) {
                 return PROCESS_ACTION.no_action; // Ignore everything until end of sub tree
             }
         });
@@ -1295,6 +1315,7 @@ public class XMLStepper {
 
         /**
          * Apply the specified limitations on the XML and return the result.
+         *
          * @param xml an XML block that should be reduced.
          * @return the processed XML.
          * @throws javax.xml.stream.XMLStreamException if there was a problem reading or writing XML.
@@ -1302,10 +1323,12 @@ public class XMLStepper {
         public String limit(String xml) throws XMLStreamException {
             return limitXML(xml, limits, countPatterns, onlyCheckElementPaths, discardNonMatched);
         }
+
         /**
          * Apply the specified limitations on the in XML, writing the result to out.
-         * @param in     XML stream positioned at the point from which reduction should occur (normally the start).
-         * @param out    the reduced XML.
+         *
+         * @param in  XML stream positioned at the point from which reduction should occur (normally the start).
+         * @param out the reduced XML.
          * @throws javax.xml.stream.XMLStreamException if there was a problem reading (in) or writing (out) XML.
          */
         public void limit(XMLStreamReader in, XMLStreamWriter out) throws XMLStreamException {
@@ -1315,20 +1338,21 @@ public class XMLStepper {
         @Override
         public String toString() {
             return "XMLStepper.Limiter(#limits=" + limits.size() + ", countPatterns=" + countPatterns
-                   + ", onlyCheckElementPaths=" + onlyCheckElementPaths + ", discardNonMatched=" + discardNonMatched
-                   + ")";
+                    + ", onlyCheckElementPaths=" + onlyCheckElementPaths + ", discardNonMatched=" + discardNonMatched
+                    + ")";
         }
     }
 
     /**
      * Packaging of {@link #limitXML(String, java.util.Map, boolean, boolean, boolean)} with pre-defined setup.
-     * @param limits patterns and max occurrences for entries. The limits are processed in entrySet order.
-     *               If max occurrence is -1 there is no limit for the given pattern.
-     * @param countPatterns if true, the limit applies to matched patterns. If false, the limit if for each regexp.
-     *                      If the limit is {code ".*", 10}, only 10 elements in total is kept.
+     *
+     * @param limits                patterns and max occurrences for entries. The limits are processed in entrySet order.
+     *                              If max occurrence is -1 there is no limit for the given pattern.
+     * @param countPatterns         if true, the limit applies to matched patterns. If false, the limit if for each regexp.
+     *                              If the limit is {code ".*", 10}, only 10 elements in total is kept.
      * @param onlyCheckElementPaths if true, only element names are matched, not attributes.
      *                              Setting this to true speeds up processing.
-     * @param discardNonMatched if true, paths that are not matched by any limit are discarded.
+     * @param discardNonMatched     if true, paths that are not matched by any limit are discarded.
      * @return an XML processor ready for limiting XML with the given constraints.
      */
     public static Limiter createLimiter(final Map<Pattern, Integer> limits, final boolean countPatterns,
@@ -1339,14 +1363,15 @@ public class XMLStepper {
     /**
      * Convenience wrapper for {@link #limitXML(javax.xml.stream.XMLStreamReader, javax.xml.stream.XMLStreamWriter, java.util.Map, boolean, boolean, boolean)}
      * that takes care of constructing and deconstructing XML streams.
-     * @param xml an XML block that should be reduced.
-     * @param limits patterns and max occurrences for entries. The limits are processed in entrySet order.
-     *               If max occurrence is -1 there is no limit for the given pattern.
-     * @param countPatterns if true, the limit applies to matched patterns. If false, the limit if for each regexp.
-     *                      If the limit is {code ".*", 10}, only 10 elements in total is kept.
+     *
+     * @param xml                   an XML block that should be reduced.
+     * @param limits                patterns and max occurrences for entries. The limits are processed in entrySet order.
+     *                              If max occurrence is -1 there is no limit for the given pattern.
+     * @param countPatterns         if true, the limit applies to matched patterns. If false, the limit if for each regexp.
+     *                              If the limit is {code ".*", 10}, only 10 elements in total is kept.
      * @param onlyCheckElementPaths if true, only element names are matched, not attributes.
      *                              Setting this to true speeds up processing.
-     * @param discardNonMatched if true, paths that are not matched by any limit are discarded.
+     * @param discardNonMatched     if true, paths that are not matched by any limit are discarded.
      * @return the processed XML.
      * @throws javax.xml.stream.XMLStreamException if there was a problem reading or writing XML.
      */
@@ -1361,39 +1386,45 @@ public class XMLStepper {
     }
 
     /**
-     * Iterates the given input, counting occurrences of limit-matches and skipping matching elements when the limits
-     * are reached.
+     * <p>Iterates the given input, counting occurrences of limit-matches and skipping matching elements when the limits
+     * are reached.</p>
      *
-     * Every tag and every attribute (optional) is matched against the limits. Tags are represented as
+     * <p>Every tag and every attribute (optional) is matched against the limits. Tags are represented as
      * {@code /rootelement/subelement}, attributes as {@code /rootelement/subelement#attributename=value}.
-     * Namespaces are not part of the representation.
+     * Namespaces are not part of the representation.</p>
+     * <p>
+     * Sample: in={@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar
+     * zoo="false"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}
+     * <ul>
+     * <li>Limits {@code "/foo/bar", 1} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}</li>
+     * <li>Limits {@code "bar", 1} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}</li>
+     * <li>Limits {@code "/foo/bar", 2} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}</li>
+     * <li>Limits {@code "/foo/bar", 0} -&gt; {@code &lt;foo&gt;&lt;baz&gt;&lt;/baz&gt;&lt;/foo&gt;}</li>
+     * <li>Limits {@code "/foo/bar#zoo=true", 1} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar zoo="false"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}</li>
+     * </ul>
      *
-     * Sample: in={@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar zoo="false"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}
-     * Limits {@code "/foo/bar", 1} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}
-     * Limits {@code "bar", 1} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}
-     * Limits {@code "/foo/bar", 2} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}
-     * Limits {@code "/foo/bar", 0} -&gt; {@code &lt;foo&gt;&lt;baz&gt;&lt;/baz&gt;&lt;/foo&gt;}
-     * Limits {@code "/foo/bar#zoo=true", 1} -&gt; {@code &lt;foo&gt;&lt;bar zoo="true"&gt;&lt;/bar&gt;&lt;bar zoo="false"&gt;&lt;/bar&gt;&lt;baz /&gt;&lt;/foo&gt;}
+     * <ul>
+     * <li>Example: limits={@code ["/foo$", -1], ["/foo/bar", 1]}, countPatterns=false, onlyCheckElementPaths=true,
+     * discardNonMatched=true} -&gt; {@code "&lt;foo&gt;&lt;bar zoo=\"true\" /&gt;&lt;/foo&gt;"}</li>
+     * <li>Example: limits={@code ["/foo$", -1], ["/foo/bar", 1]}, countPatterns=false, onlyCheckElementPaths=true,
+     * discardNonMatched=false} -&gt; {@code "&lt;foo&gt;&lt;bar zoo=\"true\" /&gt;&lt;baz /&gt;&lt;/foo&gt;"}</li>
+     * </ul>
      *
-     * Example: limits={@code ["/foo$", -1], ["/foo/bar", 1]}, countPatterns=false, onlyCheckElementPaths=true,
-                discardNonMatched=true} -&gt; {@code "&lt;foo&gt;&lt;bar zoo=\"true\" /&gt;&lt;/foo&gt;"}
-     * Example: limits={@code ["/foo$", -1], ["/foo/bar", 1]}, countPatterns=false, onlyCheckElementPaths=true,
-                discardNonMatched=false} -&gt; {@code "&lt;foo&gt;&lt;bar zoo=\"true\" /&gt;&lt;baz /&gt;&lt;/foo&gt;"}
-     * @param in     XML stream positioned at the point from which reduction should occur (normally the start).
-     * @param out    the reduced XML.
-     * @param limits patterns and max occurrences for entries. The limits are processed in entrySet order.
-     *               If max occurrence is -1 there is no limit for the given pattern.
-     * @param countPatterns if true, the limit applies to matched patterns. If false, the limit if for each regexp.
-     *                      If the limit is {code ".*", 10}, only 10 elements in total is kept.
+     * @param in                    XML stream positioned at the point from which reduction should occur (normally the start).
+     * @param out                   the reduced XML.
+     * @param limits                patterns and max occurrences for entries. The limits are processed in entrySet order.
+     *                              If max occurrence is -1 there is no limit for the given pattern.
+     * @param countPatterns         if true, the limit applies to matched patterns. If false, the limit if for each regexp.
+     *                              If the limit is {code ".*", 10}, only 10 elements in total is kept.
      * @param onlyCheckElementPaths if true, only element names are matched, not attributes.
      *                              Setting this to true speeds up processing.
-     * @param discardNonMatched if true, paths that are not matched by any limit are discarded.
+     * @param discardNonMatched     if true, paths that are not matched by any limit are discarded.
      * @throws javax.xml.stream.XMLStreamException if there was a problem reading (in) or writing (out) XML.
      */
     public static void limitXML(final XMLStreamReader in, XMLStreamWriter out, final Map<Pattern, Integer> limits,
                                 final boolean countPatterns, final boolean onlyCheckElementPaths,
                                 final boolean discardNonMatched) throws XMLStreamException {
-        final Map<Object, Integer> counters = new HashMap<Object, Integer>();
+        final Map<Object, Integer> counters = new HashMap<>();
         pipeXML(in, out, false, false, new Callback() {
             @Override
             public PROCESS_ACTION elementStart2(
@@ -1408,7 +1439,7 @@ public class XMLStepper {
 
             private Set<RESULT> exceeded(Map<Object, Integer> counters, XMLStreamReader xml, List<String> tags) {
                 Set<RESULT> result = EnumSet.noneOf(RESULT.class);
-                for (Map.Entry<Pattern, Integer> limit: limits.entrySet()) {
+                for (Map.Entry<Pattern, Integer> limit : limits.entrySet()) {
                     final Pattern pattern = limit.getKey();
                     final int max = limit.getValue();
 
@@ -1418,7 +1449,7 @@ public class XMLStepper {
                         return result;
                     }
                     if (!onlyCheckElementPaths) {
-                        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
+                        for (int i = 0; i < xml.getAttributeCount(); i++) {
                             final String merged =
                                     element + "#" + xml.getAttributeLocalName(i) + "=" + xml.getAttributeValue(i);
                             exceeded(result, counters, pattern, max, merged, countPatterns);
@@ -1449,6 +1480,7 @@ public class XMLStepper {
 
         });
     }
+
     enum RESULT {match, exceeded}
 
     public abstract static class ContentReplaceCallback extends Callback {
@@ -1477,16 +1509,16 @@ public class XMLStepper {
         }
 
         /**
-         * @param tags the tags for the current branch of the XML-tree.
-         * @param current the current element.
+         * @param tags         the tags for the current branch of the XML-tree.
+         * @param current      the current element.
          * @param originalText the text of the current element.
          * @return the text to be used instead of originalText.
          */
         protected abstract String replace(List<String> tags, String current, String originalText);
 
         /**
-         * @param xml the xml stream.
-         * @param tags the tags for the current branch of the XML-tree.
+         * @param xml     the xml stream.
+         * @param tags    the tags for the current branch of the XML-tree.
          * @param current the current element.
          * @return true if the text content of the element should be replaced.
          */
@@ -1498,30 +1530,37 @@ public class XMLStepper {
      */
     public abstract static class Callback {
         public enum PROCESS_ACTION {
-            /** The processing did not change the state of the XMLStreamReader (did not call .next() et al) */
+            /**
+             * The processing did not change the state of the XMLStreamReader (did not call .next() et al)
+             */
             no_action,
-            /** The processing called .next() or similar XMLStreamReader-advancing code at least once */
+            /**
+             * The processing called .next() or similar XMLStreamReader-advancing code at least once
+             */
             called_next,
-            /** The processing has finished all processing on the current stream and requests that further processing
+            /**
+             * The processing has finished all processing on the current stream and requests that further processing
              * is halted. All is ok.
              */
             requests_stop_success,
-            /** The processing has finished all processing on the current stream and requests that further processing
+            /**
+             * The processing has finished all processing on the current stream and requests that further processing
              * is halted. The processing was not a success.
              */
             requests_stop_fail
-        };
+        }
+
         /**
          * Called for each encountered START_ELEMENT in the part of the xml that is within scope. If the implementation
          * calls {@code xml.next()} or otherwise advances the position in the stream, it must ensure that the list of
          * tags is consistent with the position in the DOM.
          *
-         * @param xml        the Stream.
-         * @param tags       the start tags encountered in the current sub tree.
-         * @param current    the local name of the current tag.
+         * @param xml     the Stream.
+         * @param tags    the start tags encountered in the current sub tree.
+         * @param current the local name of the current tag.
          * @return true if the implementation called {@code xml.next()} one or more times, else false.
-         * @deprecated use {@link #elementStart2(XMLStreamReader, List, String)} instead.
          * @throws XMLStreamException if processing failed.
+         * @deprecated use {@link #elementStart2(XMLStreamReader, List, String)} instead.
          */
         @Deprecated
         public boolean elementStart(
@@ -1534,13 +1573,12 @@ public class XMLStepper {
          * calls {@code xml.next()} or otherwise advances the position in the stream, it must ensure that the list of
          * tags is consistent with the position in the DOM.
          *
-         * @param xml        the Stream.
-         * @param tags       the start tags encountered in the current sub tree.
-         * @param current    the local name of the current tag.
+         * @param xml     the Stream.
+         * @param tags    the start tags encountered in the current sub tree.
+         * @param current the local name of the current tag.
          * @return the action taken by the implementation that affects overall processing of the xml stream.
          * @throws XMLStreamException if processing failed.
          */
-        @SuppressWarnings("deprecation")
         public PROCESS_ACTION elementStart2(
                 XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
             return elementStart(xml, tags, current) ? PROCESS_ACTION.called_next : PROCESS_ACTION.no_action;
@@ -1548,20 +1586,22 @@ public class XMLStepper {
 
         /**
          * Called for each encountered ELEMENT_END in the part of the XML that is within scope.
+         *
          * @param element the name of the element that ends.
          */
         @SuppressWarnings("UnusedParameters")
-        public void elementEnd(String element) { }
+        public void elementEnd(String element) {
+        }
 
         /**
          * Called when the last END_ELEMENT is encountered or PROCESS_ACTION.requests_stop_success has been returned.
          */
-        public void end() { }
+        public void end() {
+        }
 
     }
 
     public abstract static class XMLCallback {
         public abstract void execute(XMLStreamReader xml) throws XMLStreamException;
-        public void close() { } // Called when iteration has finished
     }
 }

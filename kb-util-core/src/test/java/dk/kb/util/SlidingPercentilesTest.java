@@ -24,18 +24,19 @@ package dk.kb.util;
 
 
 import dk.kb.util.string.Strings;
+import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class SlidingPercentilesTest {
 
     public static final double FUZZY = 0.001; // For comparing doubles
     public static final Random random = new Random();
 
+    @Test
     public void testOrdering() {
         int[] values = new int[]{0, 1, 2, 3};
         SlidingPercentiles original = toSlider(values);
@@ -46,14 +47,16 @@ public class SlidingPercentilesTest {
         System.out.println(Strings.join(shuffled.getSortedValuesRaw()));
     }
 
+    @Test
     public void testPercentilesMean() {
         assertPercentile(new int[]{0, 1, 2, 3}, 0.5, 1.0, true);
         assertPercentile(new int[]{0, 1, 2, 3, 4}, 0.5, 1.5, true);
     }
 
+    @Test
     public void testMonkeyAverage() {
         final int RUNS = 10;
-        final int COUNT=100;
+        final int COUNT = 100;
 
         Random random = new Random(87);
         for (int r = 0 ; r < RUNS ; r++) {
@@ -69,6 +72,7 @@ public class SlidingPercentilesTest {
         }
     }
 
+    @Test
     public void testMonkeyDelayedSort() {
         final int RUNS = 100;
         final int MAX_SIZE = 100;
@@ -90,6 +94,7 @@ public class SlidingPercentilesTest {
         }
     }
 
+    @Test
     public void testPerformance() {
         final Random contRandom = new Random(87);
         final Random delayedRandom = new Random(87);
@@ -110,13 +115,14 @@ public class SlidingPercentilesTest {
             }
             delayedTime += System.nanoTime();
 
-            System.out.println(String.format(
+            System.out.printf(
                     Locale.ROOT, "Run %2d/%d with %d insertions took %3dms at %5dns/insertion for plain and" +
-                                 " %3dms at %5dns/insertion for delayed",
-                    i+1, RUNS, COUNT, contTime/1000000, contTime/COUNT, delayedTime/1000000, delayedTime/COUNT));
+                            " %3dms at %5dns/insertion for delayed%n",
+                    i+1, RUNS, COUNT, contTime/1000000, contTime/COUNT, delayedTime/1000000, delayedTime/COUNT);
         }
     }
 
+    @Test
     public void testPercentilesMisc() {
         assertPercentile(new int[]{0, 1, 2, 3, 4}, 0.8, 3.0, true);
     }
@@ -143,12 +149,9 @@ public class SlidingPercentilesTest {
 
     private void assertPercentile(int[] input, double percentile, double expected) {
         SlidingPercentiles slider = toSlider(input);
-        if (expected < slider.getPercentile(percentile) + FUZZY
-            && expected > slider.getPercentile(percentile) - FUZZY) {
-            return;
-        }
-        fail(String.format(Locale.ROOT, "The percentile %f for input %s should be %f but was %f",
-                           percentile, Strings.join(input), expected, slider.getPercentile(percentile)));
+        assertEquals(expected, slider.getPercentile(percentile), FUZZY,
+                String.format(Locale.ROOT, "The percentile %f for input %s should be %f but was %f",
+                        percentile, Strings.join(input), expected, slider.getPercentile(percentile)));
     }
 
     private SlidingPercentiles toSlider(int[] input) {

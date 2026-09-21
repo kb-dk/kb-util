@@ -8,10 +8,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Handling of auto-reloading of YAML configs with notification og changes to listeners.
- * See {@link {@url https://en.wikipedia.org/wiki/Observer_pattern}}
+ * <p>Handling of auto-reloading of YAML configs with notification og changes to listeners.
+ * See {@link {@url https://en.wikipedia.org/wiki/Observer_pattern}}</p>
  *
- * If wanted, changes to the configuration source (typically files) can result in an update and
+ * <p>If wanted, changes to the configuration source (typically files) can result in an update and
  * a callback to relevant classes. To enable this, add autoupdate keys to the YAML config:
  * <pre>
  * config:
@@ -19,16 +19,16 @@ import java.util.Set;
  *     enabled: true
  *     intervalms: 60000
  * </pre>
- * Notifications on config changes can be received using {@link #registerObserver(Observer)}.
+ * Notifications on config changes can be received using {@link #registerObserver(Observer)}.</p>
  *
- * Alternatively {@link #AUTO_UPDATE_DEFAULT} and {@link #AUTO_UPDATE_MS_DEFAULT} can be set so that auto-update is
- * enabled by default for the application.
+ * <p>Alternatively {@link #AUTO_UPDATE_DEFAULT} and {@link #AUTO_UPDATE_MS_DEFAULT} can be set so that auto-update is
+ * enabled by default for the application.</p>
  *
- * Implementation note: Watching for changes is a busy-wait, i.e. the ServiceConfig actively reloads the configuration
+ * <p>Implementation note: Watching for changes is a busy-wait, i.e. the ServiceConfig actively reloads the configuration
  * each {@link #autoUpdateMS} milliseconds and checks if is has changed. This is necessary as the source for the
  * configuration is not guaranteed to be a file (it could be a URL or packed in a WAR instead), so watching for file
  * system changes is not solid enough. This also means that the check does have a non-trivial overhead so setting the
- * autoupdate interval to less than a minute is not recommended.
+ * autoupdate interval to less than a minute is not recommended.</p>
  */
 public class AutoYAML {
     private static final Logger log = LoggerFactory.getLogger(AutoYAML.class);
@@ -74,7 +74,7 @@ public class AutoYAML {
     /**
      * Construct a potentially auto loading YAML resource.
      * @param configSource the configuration to load. Can be null.
-     * @param defaultAutoUpdate   whether or not auto updating of the config is enabled per default.
+     * @param defaultAutoUpdate   whether auto updating of the config is enabled per default.
      *                            This can be overridden in the configSource.
      *                            If null, the default value (false) will be used.
      * @param defaultAutoUpdateMS if auto update is enabled, checking for changes will be performed periodically
@@ -132,13 +132,14 @@ public class AutoYAML {
     }
 
     /**
-     * Direct access to the backing YAML-class is used for configurations with more flexible content
-     * and/or if the service developer prefers key-based property access.
+     * <p>Direct access to the backing YAML-class is used for configurations with more flexible content
+     * and/or if the service developer prefers key-based property access.</p>
      *
-     * Note that reloading of the configuration, either by explicit call to {@link #initialize(String)}
+     * <p>Note that reloading of the configuration, either by explicit call to {@link #initialize(String)}
      * or by the auto refreshing framework, does NOT change the {@code YAML} itself as it is immutable.
      * If auto reloading is used, either call {@code getYAML()} each time properties need to be read or
-     * subscribe to changes with {@link #registerObserver(Observer)}.
+     * subscribe to changes with {@link #registerObserver(Observer)}.</p>
+     *
      * @return the current backing YAML-handler for the configuration.
      */
     public YAML getYAML() {
@@ -162,12 +163,13 @@ public class AutoYAML {
     /* -------------------------------------------------------------------------------------------------------------- */
 
     /**
-     * Register an observer of configuration changes.
-     * If the configuration has already been loaded, which is the default case, the observer is notified immediately.
+     * <p>Register an observer of configuration changes.
+     * If the configuration has already been loaded, which is the default case, the observer is notified immediately.</p>
      *
-     * Reloading of the configuration is project dependent and must be enabled for the observer to be notified on
+     * <p>Reloading of the configuration is project dependent and must be enabled for the observer to be notified on
      * subsequent changes to the configuration.
-     * Call {@link #isAutoUpdating()} to determine whether the configuration might be updated post-initialization.
+     * Call {@link #isAutoUpdating()} to determine whether the configuration might be updated post-initialization.</p>
+     *
      * @param observer called upon registration if a config exists, and if the configuration changes.
      */
     public synchronized void registerObserver(Observer observer) {
@@ -180,6 +182,7 @@ public class AutoYAML {
 
     /**
      * Unregisters a previously registered configuration change observer.
+     *
      * @param observer an observer previously added with {@link #registerObserver(Observer)}.
      * @return true if the observer was previously registered, else false.
      */

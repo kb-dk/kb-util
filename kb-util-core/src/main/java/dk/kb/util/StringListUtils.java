@@ -117,12 +117,11 @@ public class StringListUtils {
     public static List<String> removeEmpties(String... list) {
         return Arrays.stream(list)
                      .filter(Objects::nonNull)
-                     .filter(number -> !number.trim().isEmpty())
+                     .filter(element -> ! element.trim().isEmpty())
                      .distinct()
                      .collect(Collectors.toList());
     }
-    
-    
+
     /**
      * Remove any entries in the list that are contained in any other entries in the list
      *
@@ -249,8 +248,7 @@ public class StringListUtils {
             if (added) { //added is NOT always true, see org.apache.commons.collections4.list.SetUniqueList#add
                 list.remove(orig_size);
             }
-            
-            
+
             return list;
         } catch (Exception e) { //Is ANYTHING went wrong in the heuristics, make a new list
             //Use sublist to ensure that we do not include any elements added in heuristics
@@ -273,33 +271,33 @@ public class StringListUtils {
         string = notNull(string);
         
         while (startIndex < 0) {
-            if (string.length() > 0) {
+            if (string.isEmpty()) {
+                //String is length 0 so break the loop
+                startIndex = 0;
+            } else {
                 //Negative index so subtract it from the length of the string
                 //This allows you to use a negative index to start a number of chars from the END of the string
                 startIndex = startIndex + string.length();
-            } else {
-                //String is length 0 so break the loop
-                startIndex = 0;
             }
         }
         
         while (endIndex < 0) {
-            if (string.length() > 0) {
+            if (string.isEmpty()) {
+                //String is length 0 so break the loop
+                endIndex = 0;
+            } else {
                 //Negative index so subtract it from the length of the string
                 //This allows you to use a negative index to start a number of chars from the END of the string
                 endIndex = endIndex + string.length();
-            } else {
-                //String is length 0 so break the loop
-                endIndex = 0;
             }
         }
         
-        //If index is beyound the string length, set it to the the string length
+        //If index is beyond the string length, set it to the the string length
         startIndex = Math.min(startIndex, string.length());
         endIndex   = Math.min(endIndex, string.length());
         
         if (startIndex > endIndex) {
-            //If start is beyound end, substring as two strings
+            //If start is beyond end, substring as two strings
             //First part is from the start to the end_of_string
             String first = string.substring(startIndex);
             //Second part is from the start_of_string to endIndex
@@ -331,8 +329,7 @@ public class StringListUtils {
         int endStringLength = Math.floorDiv(maxLength, 2);
         String startString = substring(string, 0, startStringLength);
         String endString = substring(string, string.length() - 1 - endStringLength, string.length());
-        
-        int numberRemovedChars = string.length() - maxLength;
+
         return startString + truncateString + endString;
         
     }
@@ -355,6 +352,5 @@ public class StringListUtils {
         String startString = substring(string, 0, maxLength);
         
         return startString + truncateString;
-        
     }
 }

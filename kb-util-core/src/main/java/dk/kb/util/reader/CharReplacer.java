@@ -30,13 +30,13 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
- * A highly speed-optimized single char to single char replacer.
+ * <p>A highly speed-optimized single char to single char replacer.
  * The implementation maintains an array of all possible char values (65536)
- * mapped to their replacements, thereby making lookup of a single char O(1).
+ * mapped to their replacements, thereby making lookup of a single char O(1).</p>
  *
- * This implementation is semi-thread safe. All methods except
- * {@link #setSource(java.io.Reader)} and {@link #setSource(CircularCharBuffer)}
- * can be called safely from different threads.
+ * <p>This implementation is semi-thread safe. All methods except
+ * {@link #setSource(Reader)} and {@link #setSource(CircularCharBuffer)}
+ * can be called safely from different threads.</p>
  *
  * @see CharArrayReplacer
  */
@@ -51,7 +51,7 @@ public class CharReplacer extends ReplaceReader {
      *
      * @param in    the character stream in which to replace substrings
      * @param rules the rules used for replacing chars
-     * @throws IllegalArgumentException if one or more of the reules are illegal for this {@link TextTransformer}
+     * @throws IllegalArgumentException if one or more of the rules are illegal for this {@link TextTransformer}
      */
     public CharReplacer(Reader in, Map<String, String> rules) {
         super(in);
@@ -65,27 +65,26 @@ public class CharReplacer extends ReplaceReader {
             char[] destination = entry.getValue().toCharArray();
             if (target.length != 1 || destination.length != 1) {
                 throw new IllegalArgumentException(String.format(Locale.ROOT,
-                        "The rule '" + entry.getKey() + "' => '"
-                        + entry.getValue() + "' was not single char to single char. The input had length "
-                        + entry.getKey().length()));
+                        "The rule '%s' => '%s' was not single char to single char. The input had length %d.",
+                        entry.getKey(), entry.getValue(), entry.getKey().length()));
             }
             this.rules[target[0]] = destination[0];
         }
     }
 
     /**
-     * Create a new CharReplacer with an empty input character stream set,
+     * <p>Create a new CharReplacer with an empty input character stream set,
      * based on a map with rules consisting of target chars and replacement
-     * chars.
+     * chars.</p>
      *
-     * Before calling any other methods on this reader you must call
-     * {@link CharReplacer#setSource(java.io.Reader)}.
+     * <p>Before calling any other methods on this reader you must call
+     * {@link CharReplacer#setSource(Reader)}.</p>
      *
-     * If a rule contains a target or a replacement that isn't exactly 1
-     * char long, an exception is thrown.
+     * <p>If a rule contains a target or a replacement that isn't exactly 1
+     * char long, an exception is thrown.</p>
      *
      * @param rules the rules used for replacing chars
-     * @throws IllegalArgumentException if one or more of the reules are
+     * @throws IllegalArgumentException if one or more of the rules are
      *                                  illegal for this {@link TextTransformer}
      */
     public CharReplacer(Map<String, String> rules) {
@@ -104,7 +103,6 @@ public class CharReplacer extends ReplaceReader {
      *
      * @return a clone of this ReplaceReader.
      */
-    @SuppressWarnings({"CloneDoesntCallSuperClone", "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
     public Object clone() {
         return new CharReplacer(rules);

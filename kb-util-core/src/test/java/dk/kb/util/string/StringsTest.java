@@ -34,7 +34,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test suite for the {@link Strings} class.
@@ -51,6 +51,7 @@ public class StringsTest {
         assertNotNull(trace);
         assertNotEquals("", trace);
     }
+
     @Test
     public void testJoinSimple() {
         assertEquals("abe", Strings.join(List.of("abe"), "."));
@@ -59,28 +60,22 @@ public class StringsTest {
         assertEquals("abe", Strings.join(new String[]{"abe"}, "."));
         assertEquals("abe.foo", Strings.join(new String[]{"abe", "foo"}, "."));
     }
+
     @Test
     public void testJoinExtended() {
         assertEquals("abe, ged, ...", Strings.join(Arrays.asList("abe", "ged", "so"), ", ", 2));
     }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     public void testJoinNulls() {
-        List<Object> l = new ArrayList<Object>();
+        List<Object> l = new ArrayList<>();
 
-        try {
-            Strings.join(l, null);
-            fail("A null delimiter should cause a NPE");
-        } catch (NullPointerException e) {
-            // expected
-        }
+        assertThrows(NullPointerException.class, () -> Strings.join(l, null),
+                "A null delimiter should cause a NPE");
 
-        try {
-            Strings.join((Collection) null, "");
-            fail("A null collection should cause a NPE");
-        } catch (NullPointerException e) {
-            // expected
-        }
+        assertThrows(NullPointerException.class, () -> Strings.join((Collection) null, ""),
+                "A null collection should cause a NPE");
 
         // Check that we do not fail if the list contains a null
         l.add("foo");
@@ -88,28 +83,27 @@ public class StringsTest {
         l.add("bar");
         System.out.println(Strings.join(l, ":"));
     }
-    @SuppressWarnings({"unchecked", "rawtypes"})
+
     @Test
     public void testJoinEmptyList() {
-        String s = Strings.join(new ArrayList(), ":");
+        String s = Strings.join(List.of(), ":");
         assertEquals("", s);
 
-        s = Strings.join(new ArrayList(), "");
+        s = Strings.join(List.of(), "");
         assertEquals("", s);
     }
+
     @Test
     public void testKnownCases() {
-        List<Object> l = new ArrayList<Object>();
-        l.add("foo");
-        l.add("bar");
-        l.add("baz");
+        List<Object> l = List.of("foo", "bar", "baz");
 
         String s = Strings.join(l, " ABE ");
         assertEquals("foo ABE bar ABE baz", s);
     }
+
     @Test
     public void testFlushSmall() throws Exception {
-        // We try tree times to check that we
+        // We try three times to check that we
         // properly reset the thread local cache
         Reader r = new StringReader("Foo");
         assertEquals("Foo", Strings.flush(r));
@@ -120,6 +114,7 @@ public class StringsTest {
         r = new StringReader("1");
         assertEquals("1", Strings.flush(r));
     }
+
     @Test
     public void testAsCharSequence() {
         char[] chars = new char[]{'f', 'o', 'o', 'b', 'a', 'r'};
@@ -128,6 +123,7 @@ public class StringsTest {
                      Strings.asCharSequence(chars).subSequence(0, 3).toString());
         assertEquals(6, Strings.asCharSequence(chars).length());
     }
+
     @Test
     public void testIndexOf() {
         // Zero based indexOf

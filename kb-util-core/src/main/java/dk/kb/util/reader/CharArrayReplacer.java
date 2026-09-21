@@ -31,19 +31,18 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
- * A highly speed-optimized single char to char array replacer.
+ * <p>A highly speed-optimized single char to char array replacer.
  * The implementation maintains an array of all possible char values (65536)
- * mapped to their replacements, thereby making lookup of a single char O(1).
+ * mapped to their replacements, thereby making lookup of a single char O(1).</p>
  *
- * This implementation is semi-thread safe. All methods except
- * {@link #setSource(java.io.Reader)} and {@link #setSource(CircularCharBuffer)}
- * can be called safely from different threads.
+ * <p>This implementation is semi-thread safe. All methods except
+ * {@link #setSource(Reader)} and {@link #setSource(CircularCharBuffer)}
+ * can be called safely from different threads.</p>
  *
  * @see CharReplacer
  */
 public class CharArrayReplacer extends ReplaceReader {
-    private char[][] rules;
-
+    private final char[][] rules;
 
     // ThreadLocal removed as they are prone to causing subtle memory overheads with
     // multi-threaded web applications
@@ -58,19 +57,19 @@ public class CharArrayReplacer extends ReplaceReader {
      * Used when the source is set to hold output chars that queues when the
      * destination of a replacement is more than 1 char.
      */
-    private CircularCharBuffer outBuffer =
+    private final CircularCharBuffer outBuffer =
             new CircularCharBuffer(10, Integer.MAX_VALUE);
 
     /**
-     * Create a new replacer based on a map with rules, consisting of target
-     * chars and replacement chars.
+     * <p>Create a new replacer based on a map with rules, consisting of target
+     * chars and replacement chars.</p>
      *
-     * If a rule contains a target or a replacement that isn't exactly 1
-     * char long, an exception is thrown.
+     * <p>If a rule contains a target or a replacement that isn't exactly 1
+     * char long, an exception is thrown.</p>
      *
      * @param in    the character stream in which to replace substrings
      * @param rules the rules used for replacing chars.
-     * @throws IllegalArgumentException if one or more of the reules are
+     * @throws IllegalArgumentException if one or more of the rules are
      *                                  illegal for this {@link TextTransformer}.
      */
     public CharArrayReplacer(Reader in, Map<String, String> rules) {
@@ -93,17 +92,17 @@ public class CharArrayReplacer extends ReplaceReader {
     }
 
     /**
-     * Create a new replacer with an empty input stream set based on a map
-     * of target chars and replacement chars.
+     * <p>Create a new replacer with an empty input stream set based on a map
+     * of target chars and replacement chars.</p>
      *
-     * You should set the input character stream of the new reader by
-     * calling {@link CharArrayReplacer#setSource(java.io.Reader)}.
+     * <p>You should set the input character stream of the new reader by
+     * calling {@link CharArrayReplacer#setSource(Reader)}.</p>
      *
-     * If a rule contains a target or a replacement that isn't exactly 1
-     * char long, an exception is thrown.
+     * <p>If a rule contains a target or a replacement that isn't exactly 1
+     * char long, an exception is thrown.</p>
      *
      * @param rules the rules used for replacing chars.
-     * @throws IllegalArgumentException if one or more of the reules are
+     * @throws IllegalArgumentException if one or more of the rules are
      *                                  illegal for this {@link TextTransformer}.
      */
     public CharArrayReplacer(Map<String, String> rules) {
@@ -122,7 +121,6 @@ public class CharArrayReplacer extends ReplaceReader {
      *
      * @return a clone of this ReplaceReader.
      */
-    @SuppressWarnings({"CloneDoesntCallSuperClone", "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
     public Object clone() {
         return new CharArrayReplacer(rules);
@@ -136,12 +134,12 @@ public class CharArrayReplacer extends ReplaceReader {
     }
 
     /**
-     * Replaces the characters in the given array.
+     * <p>Replaces the characters in the given array.</p>
      *
-     * This implementation uses {@link ThreadLocal} in order to allow for
+     * <p>This implementation uses {@link ThreadLocal} in order to allow for
      * concurrent usage. The downside is degraded performance if it is called
      * with a new thread every time. Fortunately this is not a very common
-     * scenario.
+     * scenario.</p>
      *
      * @param chars the characters to replace.
      * @return the result of the replacing.
@@ -195,7 +193,7 @@ public class CharArrayReplacer extends ReplaceReader {
      * {@link #read(char[], int, int)}.
      *
      * @return the next char or -1 if there are no more chars available.
-     * @throws java.io.IOException if an I/O error occured.
+     * @throws java.io.IOException if an I/O error occurred.
      */
     @Override
     public synchronized int read() throws IOException {
@@ -234,10 +232,10 @@ public class CharArrayReplacer extends ReplaceReader {
      * that threads competing for access share the output stream with
      * {@link #read()} and {@link #read(char[], int, int)}.
      *
-     * @param cbuf   the buffer to assign shars to.
+     * @param cbuf   the buffer to assign chars to.
      * @param length the maximum number of chars to put in the buffer.
      * @return the number of chars filled or -1 if there are no more chars.
-     * @throws java.io.IOException if an I/O error occured.
+     * @throws java.io.IOException if an I/O error occurred.
      */
     @Override
     public int read(CircularCharBuffer cbuf, int length) throws IOException {

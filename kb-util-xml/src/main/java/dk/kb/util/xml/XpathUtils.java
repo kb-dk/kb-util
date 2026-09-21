@@ -51,7 +51,7 @@ public class XpathUtils {
     private static final Logger log = LoggerFactory.getLogger(XpathUtils.class);
     
     /**
-     * Importatnt: All access to the xpathCompiler should be synchronized on it since it is not thread safe!
+     * Important: All access to the xpathCompiler should be synchronized on it since it is not thread safe!
      */
     private static final XPath xpathCompiler =
             XPathFactory.newInstance().newXPath();
@@ -305,7 +305,7 @@ public class XpathUtils {
          * The prefixes: {@code xml}, and {@code xmlns} are reserved and predefined in any context.
          *
          * @param namespaceURL the namespace uri
-         * @param prefix       the prifix to registere with the uri
+         * @param prefix       the prefix to register with the uri
          * @throws IllegalArgumentException thrown when trying to assign a namespace to a reserved prefix
          */
         public void setNameSpace(String namespaceURL, String prefix)
@@ -313,7 +313,7 @@ public class XpathUtils {
             Collection<String> s = namespace.get(namespaceURL);
             
             if (s == null) {
-                s = new HashSet<String>();
+                s = new HashSet<>();
             }
             
             s.add(prefix);
@@ -424,7 +424,7 @@ public class XpathUtils {
             /**
              * This method is not supported on this Iterator.
              * <p>
-             * Allways throws UnsupportedOperationException {@link NamespaceContext#getPrefixes(String)}
+             * Always throws UnsupportedOperationException {@link NamespaceContext#getPrefixes(String)}
              *
              * @throws UnsupportedOperationException if the <tt>remove</tt> operation is not supported by this
              *                                       Iterator.

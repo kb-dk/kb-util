@@ -1,6 +1,8 @@
 package dk.kb.util.reader;
 
 
+import org.junit.jupiter.api.Test;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class VerbatimMatcherTest {
 
+    @Test
     public void testSimple() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRule("World");
@@ -26,6 +29,7 @@ public class VerbatimMatcherTest {
                       "World");
     }
 
+    @Test
     public void testMulti() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("World", "Cruel");
@@ -33,6 +37,7 @@ public class VerbatimMatcherTest {
                       "Cruel", "World");
     }
 
+    @Test
     public void testOverlap() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London", "East London");
@@ -40,12 +45,14 @@ public class VerbatimMatcherTest {
                       "East London", "London");
     }
 
+    @Test
     public void testNone() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London", "East London");
         assertMatches(matcher, "This is somewhere else");
     }
 
+    @Test
     public void testPerfect() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
@@ -53,6 +60,7 @@ public class VerbatimMatcherTest {
                       "London");
     }
 
+    @Test
     public void testDelimiter1() {
         CollectingMatcher matcher = new CollectingMatcher();
         Pattern delimiter = Pattern.compile(" +");
@@ -61,6 +69,7 @@ public class VerbatimMatcherTest {
                       "East London", "London");
     }
 
+    @Test
     public void testDelimiter2() {
         CollectingMatcher matcher = new CollectingMatcher();
         Pattern delimiter = Pattern.compile(" +");
@@ -69,6 +78,7 @@ public class VerbatimMatcherTest {
                       "East-London");
     }
 
+    @Test
     public void testDelimiter3() {
         CollectingMatcher matcher = new CollectingMatcher();
         Pattern delimiter = Pattern.compile("-");
@@ -77,17 +87,20 @@ public class VerbatimMatcherTest {
                       "London");
     }
 
+    @Test
     public void testNoRules() {
         CollectingMatcher matcher = new CollectingMatcher();
         assertMatches(matcher, "London");
     }
 
+    @Test
     public void testNoSource() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
         assertMatches(matcher, "");
     }
 
+    @Test
     public void testGetExistingNode() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
@@ -95,6 +108,7 @@ public class VerbatimMatcherTest {
                       "There should be a Node for 'London'");
     }
 
+    @Test
     public void testGetNonExistingNode() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
@@ -102,6 +116,7 @@ public class VerbatimMatcherTest {
                    "There should not be a Node for 'France'");
     }
 
+    @Test
     public void testAutoCreateNode() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("London");
@@ -111,6 +126,7 @@ public class VerbatimMatcherTest {
                       "The newly created Node for 'France' should be available");
     }
 
+    @Test
     public void testPayload() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRule("London", "old");
@@ -119,6 +135,7 @@ public class VerbatimMatcherTest {
                              Arrays.asList("East London", "London"), Arrays.asList("medium", "old"));
     }
 
+    @Test
     public void testPartialPayloads() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRule("London", "old");
@@ -127,6 +144,7 @@ public class VerbatimMatcherTest {
                              Arrays.asList("East London", "London"), Arrays.asList(null, "old"));
     }
 
+    @Test
     public void testMatchShortest() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London");
@@ -134,9 +152,9 @@ public class VerbatimMatcherTest {
         matcher.setSkipMatching(true);
         assertMatches(matcher, "Come visit East London in the fall",
                       "East", "London");
-
     }
 
+    @Test
     public void testMatchLongest() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London");
@@ -147,6 +165,7 @@ public class VerbatimMatcherTest {
 
     }
 
+    @Test
     public void testMatchLongestNoSkip() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London");
@@ -157,6 +176,7 @@ public class VerbatimMatcherTest {
 
     }
 
+    @Test
     public void testMatchShortestNoSkip() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London");
@@ -166,6 +186,7 @@ public class VerbatimMatcherTest {
                       "East", "London");
     }
 
+    @Test
     public void testNoLeading() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London", "Come");
@@ -176,6 +197,7 @@ public class VerbatimMatcherTest {
                       "Come", "East", "London");
     }
 
+    @Test
     public void testLeading() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London", "Come");
@@ -186,6 +208,7 @@ public class VerbatimMatcherTest {
                       "Come", "East");
     }
 
+    @Test
     public void testNoFollowing() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London", "Come", "fall");
@@ -196,6 +219,7 @@ public class VerbatimMatcherTest {
                       "Come", "East", "London", "fall");
     }
 
+    @Test
     public void testFollowing() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London", "Come", "fall");
@@ -206,6 +230,7 @@ public class VerbatimMatcherTest {
                       "Come", "London", "fall");
     }
 
+    @Test
     public void testSpecificProblem() throws IOException {
         Path INPUT = Paths.get("/home/te/tmp/sumfresh/sites/aviser/names_and_coordinates.dat");
         if (!Files.exists(INPUT)) {
@@ -229,6 +254,7 @@ public class VerbatimMatcherTest {
         }
     }
 
+    @Test
     public void testLeadingAndFollowingWithSkip() {
         CollectingMatcher matcher = new CollectingMatcher();
         matcher.addRules("East", "London", "East London", "Come", "fall");
@@ -271,8 +297,8 @@ public class VerbatimMatcherTest {
     }
 
     private static class CollectingMatcher extends VerbatimMatcher<String> {
-        public final List<String> matches = new ArrayList<String>();
-        public final List<String> payloads = new ArrayList<String>();
+        public final List<String> matches = new ArrayList<>();
+        public final List<String> payloads = new ArrayList<>();
 
         @Override
         public void callback(String match, String payload) {

@@ -132,8 +132,8 @@ public class ContinuationUtil {
     }
 
     /**
-     * Use {@link Pair#getLeft()} as {@code continuationToken} for {@link #HEADER_PAGING_CONTINUATION_TOKEN}.
-     * Use {@link Pair#getRight()} as {@code hasMore} for {@link #HEADER_PAGING_HAS_MORE}.
+     * Use {@link Pair#left()} as {@code continuationToken} for {@link #HEADER_PAGING_CONTINUATION_TOKEN}.
+     * Use {@link Pair#right()} as {@code hasMore} for {@link #HEADER_PAGING_HAS_MORE}.
      * <p>
      * Note: This does not set {@link #setHeaderRecordCount}.
      * @param httpServletResponse headers are assigned with {@link HttpServletResponse#setHeader(String, String)}.
@@ -141,8 +141,8 @@ public class ContinuationUtil {
      * @param <C> the type of continuation token, typically {@code String} or {@code Long}.
      */
     public static <C> void setHeaders(HttpServletResponse httpServletResponse, Pair<C, Boolean> continuationAndHasMore) {
-        setHeaderContinuation(httpServletResponse, continuationAndHasMore.getLeft());
-        setHeaderHasMore(httpServletResponse, continuationAndHasMore.getRight());
+        setHeaderContinuation(httpServletResponse, continuationAndHasMore.left());
+        setHeaderHasMore(httpServletResponse, continuationAndHasMore.right());
     }
 
     /**

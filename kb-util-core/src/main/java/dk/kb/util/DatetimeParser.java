@@ -17,8 +17,6 @@ import java.util.regex.Pattern;
 public class DatetimeParser {
     private static final Logger log = LoggerFactory.getLogger(DatetimeParser.class);
 
-
-
     /**
      * This method parses a String, datetime, to a ZonedDateTime object with pattern of String, format.
      * Ex. parseStringToZonedDateTime("2024-02-23T08:55:00+0100", "yyyy-MM-dd'T'HH:mm:ssXXXX")
@@ -53,11 +51,13 @@ public class DatetimeParser {
             // Remove any brackets
             datetime = datetime.replace("[", "").replace("]", "");
             // Insert the missing "T" between date and time components
-            String formattedDateTimeString = datetime.replaceAll("(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2})", "$1T$2");
-            // Add seconds to timestamp if missing.
+            String formattedDateTimeString = datetime.replaceAll(
+                    "(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2})", "$1T$2");
+            // Add seconds to time if missing.
             String datetimeWithCorrectSeconds = getDateTimeWithCorrectSeconds(formattedDateTimeString);
             // Remove extra zeros from the time zone offset
-            String trimmedDateTimeString = datetimeWithCorrectSeconds.replaceAll("(\\+|-)(\\d{2})(\\d{2})(\\d{0,2})$", "$1$2$3");
+            String trimmedDateTimeString = datetimeWithCorrectSeconds.replaceAll(
+                    "([+-])(\\d{2})(\\d{2})(\\d{0,2})$", "$1$2$3");
 
             // Parse it.
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern(format, Locale.ROOT);
@@ -68,35 +68,37 @@ public class DatetimeParser {
     }
 
     /**
-     * Validate that the timestamp in a datetime string has the correct size and format.
+     * Validate that the time part of a datetime string has the correct size and format.
      * The string should be 8 characters long and contain exactly two ':' chars.
+     *
      * @param datetime to validate
-     * @return an updated datetime string. Where seconds have been added to the timestamp if they were missing.
-     * Otherwise, return the original datetime-string.
+     * @return an updated datetime string where seconds have been added to the time if they were missing.
+     * Otherwise, return the original datetime string.
      */
     private static String getDateTimeWithCorrectSeconds(String datetime) {
-        String timestamp = getTimestamp(datetime);
-        if (timestamp.length() == 8) {
+        String timeOfDay = getTimePart(datetime);
+        if (timeOfDay.length() == 8) {
             return datetime;
         } else {
-            if (!containsColonTwice(timestamp)) {
-                String timestampWithSeconds = timestamp + ":00";
-                return datetime.replace(timestamp, timestampWithSeconds);
+            if (!containsColonTwice(timeOfDay)) {
+                String timeOfDayWithSeconds = timeOfDay + ":00";
+                return datetime.replace(timeOfDay, timeOfDayWithSeconds);
             } else {
-                throw new RuntimeException("The timestamp contains two ':' but the length is: " + timestamp.length());
+                throw new RuntimeException("The time part contains two ':' but the length is: " + timeOfDay.length());
             }
         }
     }
 
     /**
-     * get the timestamp from a datetime by extracting everything between T and either Z or +.
-     * @param datetimeString to return timestamp from.
-     * @return the timestamp from the input datetime.
+     * Get the time of day from a datetime string by extracting everything between T and either Z, + or -.
+     *
+     * @param datetimeString to return time from.
+     * @return the time from the input datetime.
      */
-    private static String getTimestamp(String datetimeString) {
-        // matches on everything after T and before either + or Z
-        String timestampPattern = "T(.*?)([Z|\\+])";
-        Pattern pattern = Pattern.compile(timestampPattern);
+    static String getTimePart(String datetimeString) {
+        // matches on everything after T and before either +, - or Z
+        String timeOfDayPattern = "T(.*?)([Zz+-])";
+        Pattern pattern = Pattern.compile(timeOfDayPattern);
 
         // Match against input datetime string
         Matcher matcher1 = pattern.matcher(datetimeString);
@@ -111,8 +113,8 @@ public class DatetimeParser {
      * Tries to convert a date with wrong number of zeroes in the timezone
      *
      * @param datetime time to be converted
-     * @param format   The datetimeformatter pattern
-     * @return Returns the converted datetime. If it fails a DateTimeParseException is thrown
+     * @param format   The datetime formatter pattern
+     * @return Returns the converted datetime. If it fails, a DateTimeParseException is thrown
      * which then will be logged in the error file
      */
     private static ZonedDateTime tryRepairStrangeTZ(String datetime, String format) throws MalformedIOException {
@@ -148,7 +150,7 @@ public class DatetimeParser {
 
 
     /**
-     * Validate that a string, often a timestamp, contains two colons.
+     * Validate that a string, often a time, contains two colons.
      * @param input to validate.
      * @return true if the input string contains two colons. Otherwise, return false.
      */

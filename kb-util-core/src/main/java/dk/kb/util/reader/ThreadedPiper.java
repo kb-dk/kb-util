@@ -20,7 +20,6 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,16 +31,13 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ThreadedPiper {
 
     private static AtomicLong threads = new AtomicLong(0);
-    private static ThreadPoolExecutor executor = new ThreadPoolExecutor(
+    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(
             2, 50, 1000, TimeUnit.DAYS,
-            new ArrayBlockingQueue<Runnable>(100),
-            new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread t = new Thread(r, "ThreadedPiper_" + threads.getAndIncrement());
-                    t.setDaemon(true);
-                    return t;
-                }
+            new ArrayBlockingQueue<>(100),
+            r -> {
+                Thread t = new Thread(r, "ThreadedPiper_" + threads.getAndIncrement());
+                t.setDaemon(true);
+                return t;
             }
     );
 
@@ -54,16 +50,13 @@ public class ThreadedPiper {
         final PipedOutputStream source = new PipedOutputStream();
         final PipedInputStream sink = new PipedInputStream(source);
         final SignallingInputStream signal = new SignallingInputStream(sink);
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    producer.process(source);
-                    source.flush();
-                    source.close();
-                } catch (IOException e) {
-                    signal.raiseException(e);
-                }
+        executor.execute(() -> {
+            try {
+                producer.process(source);
+                source.flush();
+                source.close();
+            } catch (IOException e) {
+                signal.raiseException(e);
             }
         });
         return signal;
@@ -75,7 +68,7 @@ public class ThreadedPiper {
          * Note that there are no checked Exceptions as execution is Threaded. Any problems should be handled by
          * the implementation.
          * @param out the result of processing must be written to this stream.
-         * @throws IOException will be catched by the thread and passed on to the next read from the InputStream
+         * @throws IOException will be caught by the thread and passed on to the next read from the InputStream
          *                     connected to the OutputStream.
          */
         void process(OutputStream out) throws IOException;

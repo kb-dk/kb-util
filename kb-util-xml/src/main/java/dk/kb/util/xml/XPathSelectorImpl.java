@@ -16,15 +16,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-/**
- *
- */
 public class XPathSelectorImpl implements XPathSelector {
 
     private static final Logger log = LoggerFactory.getLogger(XPathSelectorImpl.class);
 
     /**
-     * Importatnt: All access to the xpathCompiler should be synchronized on it
+     * Important: All access to the xpathCompiler should be synchronized on it
      * since it is not thread safe!
      */
     private static final XPath xpathCompiler =

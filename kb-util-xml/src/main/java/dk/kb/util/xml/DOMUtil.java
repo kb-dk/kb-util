@@ -32,6 +32,7 @@ public class DOMUtil {
     /**
      * This is the simpler version of {@link #createDocument(String, boolean)}
      * where the values are set with default: xmlVersion="1.0" and standalone=true.
+     *
      * @return A new empty Document object.
      */
     public static Document createDocument() {
@@ -42,6 +43,7 @@ public class DOMUtil {
 
     /**
      * Takes a document and adds a root element to it with the specified tag name and attributes.
+     *
      * @param document The document to which the specified root element is added.
      * @param rootElementTagName The name of the new root element.
      * @param xmlns The default namespace the document in which the fragment is being created.
@@ -66,6 +68,7 @@ public class DOMUtil {
     /**
      * This is the simpler version of {@link #addRootElementToDocument(Document, String, String, Map)}
      * where the map of extra attributes is empty (meaning no extra attributes to set).
+     *
      * @param document The document to which the specified root element is added.
      * @param rootElementTagName The name of the new root element.
      * @param xmlns The default namespace the document in which the fragment is being created.
@@ -80,8 +83,7 @@ public class DOMUtil {
 
     /**
      * This is a method to add a child element with no content to an existing element.
-     * Similar to method {@link #addElementWithTextContent(Element, String, String)} which additionally also
-     * gives the new element some text content.
+     *
      * @param parentElement The parent element of the newly created element.
      * @param elementTagName The name of the newly created element: <elementTagName/>.
      * @return The element object of the newly created element which has been added (appended) to the given parentElement.
@@ -94,8 +96,7 @@ public class DOMUtil {
 
     /**
      * This is a method to add a child element with no content to an existing element.
-     * Similar to method {@link #addElementWithTextContent(Element, String, String)} which additionally also
-     * gives the new element some text content.
+     *
      * @param parentElement The parent element of the newly created element.
      * @param xmlns the namespace of the element
      * @param elementTagName The name of the newly created element: <elementTagName/>.
@@ -109,6 +110,7 @@ public class DOMUtil {
 
     /**
      * Removes the element specified by 'elementTag' from the root element of the given XML.
+     *
      * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
      * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
      * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
@@ -123,6 +125,7 @@ public class DOMUtil {
 
     /**
      * Takes an XML fragment represented as a String object and parses it to a Document object.
+     *
      * @param xml The XML fragment represented as a string.
      * @return A document object, parsed from the given XML string.
      */
@@ -132,6 +135,7 @@ public class DOMUtil {
 
     /**
      * Removes the element specified by 'elementTag' from the root element of the given XML.
+     *
      * @param xmlString the XML, represented as a string, for which the specified element is to be removed from.
      * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
      * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
@@ -147,9 +151,9 @@ public class DOMUtil {
         return DOM.serializer().domToString(document);
     }
 
-
     /**
      * Removes the element specified by 'elementTag' from the root element of the given XML.
+     *
      * @param node the XML, represented as a string, for which the specified element is to be removed from.
      * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
      * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.
@@ -166,6 +170,7 @@ public class DOMUtil {
 
     /**
      * Removes the element specified by 'elementTag' from the root element of the given XML.
+     *
      * @param node the XML, represented as a string, for which the specified element is to be removed from.
      * @param elementTag the tag name of the element to be removed. Must be a child of the root element.
      * @return If the specified element is found, the new XML (represented as a string) with the specified element removed.

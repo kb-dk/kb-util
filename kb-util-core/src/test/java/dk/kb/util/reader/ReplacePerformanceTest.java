@@ -5,6 +5,7 @@
 package dk.kb.util.reader;
 
 import dk.kb.util.Profiler;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,7 @@ import java.util.Random;
 public class ReplacePerformanceTest {
     public Logger log = LoggerFactory.getLogger(ReplacePerformanceTest.class);
 
+    @Test
     public void testSmall() throws IOException {
         int GETS = 10000; //100000;
         int RUNS = 5;
@@ -35,15 +37,16 @@ public class ReplacePerformanceTest {
         }
     }
 
+    @Test
     public void testRange() throws Exception {
         int GETS = 10000;
         int RUNS = 2;
         int REPLACEMENT_TO_MAXLENGTH = 5;
 
         int[] REPLACEMENT_COUNTS = {10, 100, 1000, /*10000, 1000,*/ 100, 10};
-        int[] REPLACEMENT_FROM_MAXLENGTHS = {1, 5, 10};
+        int[] REPLACEMENT_FROM_MAX_LENGTHS = {1, 5, 10};
         for (int rCount : REPLACEMENT_COUNTS) {
-            for (int rMaxLength : REPLACEMENT_FROM_MAXLENGTHS) {
+            for (int rMaxLength : REPLACEMENT_FROM_MAX_LENGTHS) {
                 log.info("Replacement count: " + rCount
                          + ", replacement-from max length: " + rMaxLength);
                 System.gc();
@@ -56,6 +59,7 @@ public class ReplacePerformanceTest {
         }
     }
 
+    @Test
     public void testCreation() throws Exception {
         int REPLACEMENTS = 100; // 10000;
         int RUNS = 1; //2;
@@ -92,13 +96,12 @@ public class ReplacePerformanceTest {
 
     public static Map<String, String> getRangeReplacements(
             int rCount, int rFromMixLength, int rFromMaxLength,
-            int rToMinLengthm, int rToMaxLength) {
+            int rToMinLength, int rToMaxLength) {
         Random random = new Random(88);
-        Map<String, String> replacements =
-                new LinkedHashMap<String, String>(rCount);
+        Map<String, String> replacements = new LinkedHashMap<>(rCount);
         for (int i = 0; i < rCount; i++) {
             replacements.put(randomWord(random, rFromMixLength, rFromMaxLength),
-                             randomWord(random, rToMinLengthm, rToMaxLength));
+                             randomWord(random, rToMinLength, rToMaxLength));
         }
         return replacements;
     }
@@ -120,7 +123,7 @@ public class ReplacePerformanceTest {
      *
      * @param reads        the number of gets to perform on each reader-
      * @param replacements the replacements for the readers.
-     * @throws IOException if an I/O error occured.
+     * @throws IOException if an I/O error occurred.
      */
     private void genericSpeedTest(int reads, Map<String, String> replacements)
             throws IOException {
@@ -153,7 +156,6 @@ public class ReplacePerformanceTest {
         char[] dummy = new char[1024];
         char[] v = new char[1024];
         int len;
-        //noinspection UnusedAssignment
         while ((len = reader.read(v)) != -1) {
             System.arraycopy(v, 0, dummy, 0, len);
         }
@@ -185,8 +187,7 @@ public class ReplacePerformanceTest {
     }*/
 
     private Map<String, String> getSmallReplacements() {
-        Map<String, String> replacements =
-                new LinkedHashMap<String, String>(10);
+        Map<String, String> replacements = new LinkedHashMap<>(10);
         replacements.put("foo", "bar");
         replacements.put("a", "kaslafniansk");
         replacements.put("pombo", "a");
@@ -227,23 +228,23 @@ public class ReplacePerformanceTest {
                                    int shortenedSources,
                                    double knownWordChance, int size,
                                    Random random) {
-        List<String> known = new ArrayList<String>(replacements.size());
-        List<String> largerThan1 = new ArrayList<String>(replacements.size());
+        List<String> known = new ArrayList<>(replacements.size());
+        List<String> largerThan1 = new ArrayList<>(replacements.size());
         for (Map.Entry<String, String> entry : replacements.entrySet()) {
             known.add(entry.getKey());
             if (entry.getKey().length() > 1) {
                 largerThan1.add(entry.getKey());
             }
         }
-        if (largerThan1.size() > 0) {
-            List<String> shortened = new ArrayList<String>(shortenedSources);
+        if (! largerThan1.isEmpty()) {
+            List<String> shortened = new ArrayList<>(shortenedSources);
             for (int i = 0; i < shortenedSources; i++) {
                 String s = largerThan1.get(random.nextInt(largerThan1.size()));
                 shortened.add(s.substring(0, s.length() - 1));
             }
             known.addAll(shortened);
         }
-        List<char[]> candidates = new ArrayList<char[]>(known.size());
+        List<char[]> candidates = new ArrayList<>(known.size());
         for (String s : known) {
             candidates.add(s.toCharArray());
         }
@@ -258,7 +259,7 @@ public class ReplacePerformanceTest {
         private Random random;
         private char[] validChars;
         private List<char[]> knownWords;
-        private double knownWordChance = 0.0;
+        private double knownWordChance;
         private int size;
         private int readCount = 0;
 
@@ -282,10 +283,8 @@ public class ReplacePerformanceTest {
             this.random = random;
             this.knownWords = knownWords;
             this.knownWordChance = knownWordChance;
-            int longest = 0;
-            for (char[] ca : knownWords) {
-                longest = Math.max(longest, ca.length);
-            }
+            long longestLong = knownWords.stream().mapToLong(ca -> ca.length).max().orElse(0);
+            int longest = Math.toIntExact(longestLong);
             out = new CircularCharBuffer(longest, Integer.MAX_VALUE);
             this.size = size;
         }
@@ -301,7 +300,7 @@ public class ReplacePerformanceTest {
         }
 
         @Override
-        public int read(char cbuf[], int off, int len) {
+        public int read(char[] cbuf, int off, int len) {
             if (readCount >= size) {
                 return -1;
             }
@@ -327,7 +326,7 @@ public class ReplacePerformanceTest {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             // Do nothing
         }
     }
@@ -338,7 +337,6 @@ public class ReplacePerformanceTest {
      * @param creations    the number of creations to perform.
      * @param reads        the size of the semi-random input.
      * @param replacements the replacements for the readers.
-     * @throws IOException if an I/O error occured.
      */
     private void createSpeedTest(int runs, int creations, int reads, Map<String, String> replacements) {
         System.gc();

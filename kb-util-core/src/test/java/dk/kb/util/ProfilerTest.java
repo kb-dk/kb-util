@@ -23,6 +23,8 @@
 package dk.kb.util;
 
 
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class ProfilerTest {
 
+    @Test
     public void testPausing() throws Exception {
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(10);
@@ -43,22 +46,38 @@ public class ProfilerTest {
         Thread.sleep(50);
         profiler.beat();
         profiler.pause();
-        long spend = profiler.getSpendMilliseconds();
-        assertTrue(spend >= 250 && spend < 400,
-                   "The spend time should be around 250ms"); // A bit of a hack
+        long spent = profiler.getSpendMilliseconds();
+        assertTrue(spent >= 250 && spent < 400,
+                   "The spent time should be around 250ms"); // A bit of a hack
         double bps = profiler.getBps();
         Thread.sleep(200);
-        assertEquals(spend, profiler.getSpendMilliseconds(),
-                     "After sleping, the spend time should be the same as before");
+        assertEquals(spent, profiler.getSpendMilliseconds(),
+                     "After sleeping, the spent time should be the same as before");
         assertEquals(bps, profiler.getBps(),
-                     "After sleping, the bps should be the same as before");
+                     "After sleeping, the bps should be the same as before");
         profiler.unpause();
-        double spendUnpaused = profiler.getSpendMilliseconds();
-        assertTrue(Math.abs(spend - spendUnpaused) < 50,
-                   "After unpausing, spend time should be nearly unchanged");
+        double spentUnpaused = profiler.getSpendMilliseconds();
+        assertTrue(Math.abs(spent - spentUnpaused) < 50,
+                   "After unpausing, spent time should be nearly unchanged");
         Thread.sleep(50);
-        assertTrue(Math.abs(spendUnpaused - profiler.getSpendMilliseconds()) >= 50,
-                   "After sleeping after unpaused, spend time should increase");
+        assertTrue(Math.abs(spentUnpaused - profiler.getSpendMilliseconds()) >= 50,
+                   "After sleeping after unpaused, spent time should increase");
+    }
+
+    @Test
+    void testMillisecondsToString() {
+        String string = Profiler.millisecondsToString(1);
+        assertEquals("1 ms", string);
+
+        string = Profiler.millisecondsToString(3_600_000);
+        assertEquals("1 hour, 0 minutes, 0 seconds, 0 ms", string);
+
+        // There is no precise conversion from millis to years, so just make an inaccurate test
+        string = Profiler.millisecondsToString(32_000_000_000L);
+        assertTrue(string.startsWith("1 year"), "Actual: " + string);
+
+        string = Profiler.millisecondsToString(0);
+        assertEquals("0 ms", string);
     }
 
 }

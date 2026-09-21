@@ -76,13 +76,13 @@ public interface XPathSelector {
     public Boolean selectBoolean(Node node, String xpath);
 
     /**
-     * Extract the given value from the node as a String or if the value cannot
-     * be extracted, {@code defaultValue} is returned.
+     * <p>Extract the given value from the node as a String or if the value cannot
+     * be extracted, {@code defaultValue} is returned.</p>
      *
-     * Example: To get the value of the attribute "foo" in the node, specify
-     * "@foo" as the path.
+     * <p>Example: To get the value of the attribute "foo" in the node, specify
+     * "@foo" as the path.</p>
      *
-     * Note: This method does not handle namespaces explicitely.
+     * <p>Note: This method does not handle namespaces explicitly.</p>
      *
      * @param node         the node with the wanted attribute
      * @param xpath        the XPath to extract.
@@ -93,13 +93,13 @@ public interface XPathSelector {
     public String selectString(Node node, String xpath, String defaultValue);
 
     /**
-     * Extract the given value from the node as a String or if the value cannot
-     * be extracted, the empty string is returned
+     * <p>Extract the given value from the node as a String or if the value cannot
+     * be extracted, the empty string is returned</p>
      *
-     * Example: To get the value of the attribute "foo" in the node, specify
-     * "@foo" as the path.
+     * <p>Example: To get the value of the attribute "foo" in the node, specify
+     * "@foo" as the path.</p>
      *
-     * Note: This method does not handle namespaces explicitely.
+     * <p>Note: This method does not handle namespaces explicitly.</p>
      *
      * @param node  the node with the wanted attribute
      * @param xpath the XPath to extract
@@ -109,10 +109,10 @@ public interface XPathSelector {
     public String selectString(Node node, String xpath);
 
     /**
-     * Select the Node list with the given XPath.
+     * <p>Select the Node list with the given XPath.</p>
      *
-     * Note: This is a convenience method that logs exceptions instead of
-     * throwing them.
+     * <p>Note: This is a convenience method that logs exceptions instead of
+     * throwing them.</p>
      *
      * @param node  the root document.
      * @param xpath the xpath for the Node list.
@@ -123,10 +123,10 @@ public interface XPathSelector {
     List<String> selectStringList(Node dom, String xpath);
 
     /**
-     * Select the Node with the given XPath.
+     * <p>Select the Node with the given XPath.</p>
      *
-     * Note: This is a convenience method that logs exceptions instead of
-     * throwing them.
+     * <p>Note: This is a convenience method that logs exceptions instead of
+     * throwing them.</p>
      *
      * @param dom   the root document.
      * @param xpath the xpath for the node.

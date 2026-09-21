@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CallbackReplacerTest {
 
@@ -75,13 +76,10 @@ class CallbackReplacerTest {
 
     @Test
     void captureGroupFail() {
-         try {
-             new CallbackReplacer(
-                     Pattern.compile("[a-z]=([0-9]+)(a-z)"), s -> Integer.toString((Integer.parseInt(s)/2)));
-             throw new IllegalStateException("More than 1 capturing group is not expected to be supported");
-         } catch (Exception e) {
-             // Expected
-         }
+        assertThrows(Exception.class,
+                () -> new CallbackReplacer(Pattern.compile("[a-z]=([0-9]+)(a-z)"),
+                        s -> Integer.toString((Integer.parseInt(s)/2))),
+                "More than 1 capturing group is not expected to be supported");
     }
 
     @Test

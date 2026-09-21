@@ -1,7 +1,6 @@
 package dk.kb.util.xml;
 
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -9,8 +8,10 @@ import org.w3c.dom.Element;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
 
 /**
@@ -104,12 +105,13 @@ public class DOMUtilTest {
     @Test
     void testCreateDocumentWithRootElementWith1ExtraAttribute() {
         Document document = DOMUtil.createDocument();
-        Map<String, String> attributeMap = Map.of("schemaUri", "testSchemaUri", "xmlns:xs", "extraNamespace");
+        Map<String, String> attributeMap =
+                Map.of("schemaUri", "testSchemaUri", "xmlns:xs", "extraNamespace");
         DOMUtil.addRootElementToDocument(
                 document, "testRootElement", "testxmlns", attributeMap);
         assertThat(DOM.domToString(document),
-                   isIdenticalTo(
-                           "<testRootElement xmlns=\"testxmlns\" xmlns:xs=\"extraNamespace\" schemaUri=\"testSchemaUri\"/>"));
+                isIdenticalTo(
+                        "<testRootElement xmlns=\"testxmlns\" xmlns:xs=\"extraNamespace\" schemaUri=\"testSchemaUri\"/>"));
     }
 
     @Test
@@ -139,9 +141,8 @@ public class DOMUtilTest {
     @Test
     void testParseMalformedXml() {
         String malformedXml = "<root><child></root>"; // Missing closing tag for <child>
-        assertThrows(XMLException.class, () -> {
-            DOMUtil.parseDocument(malformedXml);
-        }, "Parsing malformed XML should throw XMLException.");
+        assertThrows(XMLException.class, () -> DOMUtil.parseDocument(malformedXml),
+                "Parsing malformed XML should throw XMLException.");
     }
 
     @Test
@@ -149,7 +150,8 @@ public class DOMUtilTest {
         String xmlWithNamespace = "<root xmlns=\"http://example.com\"><child>value</child></root>";
         Document document = DOMUtil.parseDocument(xmlWithNamespace);
         assertNotNull(document, "Document should not be null for valid XML with namespaces.");
-        assertEquals("root", document.getDocumentElement().getNodeName(), "Root element name should be 'root'.");
+        assertEquals("root", document.getDocumentElement().getNodeName(),
+                "Root element name should be 'root'.");
         assertEquals("http://example.com",
                      document.getDocumentElement().getNamespaceURI(),
                      "Namespace URI should match.");
@@ -158,7 +160,8 @@ public class DOMUtilTest {
     @Test
     void testParseXmlWithInvalidCharacters() {
         String invalidXml = "<root><child>Invalid character: &#x1F;</child></root>"; // Invalid XML character
-        assertThrows(XMLException.class, () -> DOMUtil.parseDocument(invalidXml), "Parsing XML with invalid characters should throw XMLException.");
+        assertThrows(XMLException.class, () -> DOMUtil.parseDocument(invalidXml),
+                "Parsing XML with invalid characters should throw XMLException.");
     }
 
 }

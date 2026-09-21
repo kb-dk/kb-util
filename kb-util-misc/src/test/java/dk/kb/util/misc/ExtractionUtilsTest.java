@@ -32,15 +32,8 @@ class ExtractionUtilsTest {
     void testPartitionList() {
         Stream<List<Integer>> out = ExtractionUtils.splitToLists(Stream.of(1, 2, 3, 4, 5), 2);
 
-        List<List<Integer>> outLists = out.collect(Collectors.toList());
-
-        assertEquals(3, outLists.size(), "There should be 3 streams in the output");
-
-        assertEquals(2, outLists.get(0).size(), "The first stream should contain a list of the expected size");
-        assertEquals(2, outLists.get(1).size(), "The second stream should contain a list of the expected size");
-        assertEquals(1, outLists.get(2).size(), "The third stream should contain a list of the expected size");
-
-        assertEquals("[[1, 2], [3, 4], [5]]", outLists.toString(), "The total output should be as expected");
+        List<List<Integer>> outLists = out.toList();
+        assertEquals(List.of(List.of(1, 2), List.of(3, 4), List.of(5)), outLists);
     }
 
     @Test
@@ -49,24 +42,17 @@ class ExtractionUtilsTest {
 
         List<List<Integer>> outLists = out.
                 map(stream -> stream.collect(Collectors.toList())).
-                collect(Collectors.toList());
-
-        assertEquals(3, outLists.size(), "There should be 3 streams in the output");
-
-        assertEquals(2, outLists.get(0).size(), "The first stream should contain a stream of the expected size");
-        assertEquals(2, outLists.get(1).size(), "The second stream should contain a stream of the expected size");
-        assertEquals(1, outLists.get(2).size(), "The third stream should contain a stream of the expected size");
-
-        assertEquals("[[1, 2], [3, 4], [5]]", outLists.toString(), "The total output should be as expected");
+                toList();
+        assertEquals(List.of(List.of(1, 2), List.of(3, 4), List.of(5)), outLists);
     }
 
     @Test
-    void testPartitionStreamparallel() {
+    void testPartitionStreamParallel() {
         Stream<Stream<Integer>> out = ExtractionUtils.splitToStreams(Stream.of(1, 2, 3, 4, 5).parallel(), 2);
 
         List<List<Integer>> outLists = out.
                 map(stream -> stream.collect(Collectors.toList())).
-                collect(Collectors.toList());
+                toList();
 
         assertEquals(3, outLists.size(), "There should be 3 streams in the output");
 
@@ -74,8 +60,8 @@ class ExtractionUtilsTest {
         assertEquals(2, outLists.get(1).size(), "The second stream should contain a stream of the expected size");
         assertEquals(1, outLists.get(2).size(), "The third stream should contain a stream of the expected size");
         
-        List<Integer> sorted = outLists.stream().flatMap(Collection::stream).sorted().collect(Collectors.toList());
-        assertEquals("[1, 2, 3, 4, 5]", sorted.toString(), "All values should be present in the output");
+        List<Integer> sorted = outLists.stream().flatMap(Collection::stream).sorted().toList();
+        assertEquals(List.of(1, 2, 3, 4, 5), sorted);
     }
 
     @Test
@@ -83,7 +69,7 @@ class ExtractionUtilsTest {
         final Random r = new Random(87);
         Optional<Integer> sample = Stream.of(1, 2, 3, 4).collect(ExtractionUtils.sample(r));
         // We seed the Random with a fixed seed, so we know what the "random" value will be
-        assertEquals(3, sample.orElseThrow(), "The \"random\" sample should be as expected");
+        assertEquals(Optional.of(3), sample, "The \"random\" sample should be as expected");
     }
 
     @Test
@@ -106,7 +92,7 @@ class ExtractionUtilsTest {
     void testSampleOrder() {
         List<Integer> input = List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
         // Unit testing by probabilities. Improvement suggestions welcome
-        for (int RUNS = 0; RUNS < 100; RUNS++) {
+        for (int run = 0; run < 100; run++) {
             List<Integer> sample = ExtractionUtils.samples(input, 2);
             assertEquals(2, sample.size(), "Sample count should be as expected");
             assertTrue(sample.get(0) < sample.get(1), "Element order should be preserved");

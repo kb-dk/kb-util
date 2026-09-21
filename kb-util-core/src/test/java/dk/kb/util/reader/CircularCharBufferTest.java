@@ -1,37 +1,39 @@
 package dk.kb.util.reader;
 
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 import java.util.NoSuchElementException;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class CircularCharBufferTest {
+
+    @Test
     public void testMax() {
         CircularCharBuffer b = new CircularCharBuffer(2, 2);
         b.put('a');
         b.put('b');
-        try {
-            b.put('c');
-            fail("Adding three chars should overflow the buffer");
-        } catch (Exception e) {
-            // Expected
-        }
+        assertThrows(Exception.class, () -> b.put('c'), "Adding three chars should overflow the buffer");
     }
 
+    @Test
     public void testExtend() {
         CircularCharBuffer b = new CircularCharBuffer(2, 3);
         b.put('a');
         b.put('b');
         b.put('c');
-        try {
-            b.put('d');
-            fail("Adding four chars should overflow the buffer");
-        } catch (Exception e) {
-            // Expected
-        }
+        assertThrows(Exception.class, () -> b.put('d'), "Adding four chars should overflow the buffer");
     }
 
+    @Test
     public void testWrap() {
         CircularCharBuffer b = new CircularCharBuffer(2, 3);
         b.put('a');
@@ -43,14 +45,10 @@ public class CircularCharBufferTest {
         assertEquals('b', b.take(),
                      "Second take should work");
         b.put('e');
-        try {
-            b.put('f');
-            fail("Adding another char should overflow the buffer");
-        } catch (Exception e) {
-            // Expected
-        }
+        assertThrows(Exception.class, () -> b.put('f'), "Adding another char should overflow the buffer");
     }
 
+    @Test
     public void testAhead() {
         CircularCharBuffer b = new CircularCharBuffer(2, 3);
         b.put('a');
@@ -64,6 +62,7 @@ public class CircularCharBufferTest {
                      "Peek(2) should work");
     }
 
+    @Test
     public void testGetArray() {
         CircularCharBuffer b = new CircularCharBuffer(3, 3);
         b.put("abc");
@@ -76,16 +75,13 @@ public class CircularCharBufferTest {
                      "The extracted chars should be correct");
     }
 
+    @Test
     public void testEmpty() {
         CircularCharBuffer b = new CircularCharBuffer(3, 3);
-        try {
-            b.take();
-            fail("take() on empty buffer should fail");
-        } catch (NoSuchElementException e) {
-            // Expected
-        }
+        assertThrows(NoSuchElementException.class, b::take, "take() on empty buffer should fail");
     }
 
+    @Test
     public void testAsCharSequence() {
         CircularCharBuffer b = new CircularCharBuffer(5, 5);
 
@@ -93,7 +89,8 @@ public class CircularCharBufferTest {
         testAsCharSequence(b);
     }
 
-    public void testShiftetCharSequence() {
+    @Test
+    public void testShiftedCharSequence() {
         CircularCharBuffer b = new CircularCharBuffer(5, 5);
         b.put("zhell");
         assertEquals('z', b.take(),
@@ -124,15 +121,12 @@ public class CircularCharBufferTest {
         CircularCharBuffer child = b.subSequence(0, 5);
         assertEquals("hello", child.toString());
         assertEquals(5, child.size());
-        try {
-            // Test the capacity of child seqs are the same as their parent's
-            child.put('q');
-            fail("Child buffer exceeded parent capacity");
-        } catch (ArrayIndexOutOfBoundsException e) {
-            // Expected
-        }
+        // Test the capacity of child seqs are the same as their parent's
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> child.put('q'),
+                "Child buffer exceeded parent capacity");
     }
 
+    @Test
     public void testIndexOf() throws Exception {
         CircularCharBuffer b = new CircularCharBuffer(5, 5);
         b.put("zhell");
@@ -156,31 +150,26 @@ public class CircularCharBufferTest {
                      "indexOf helloz should be correct");
     }
 
+    @Test
     public void testLength() {
         CircularCharBuffer cb = new CircularCharBuffer(2, 2);
         cb.add("1");
-        assertEquals(cb.size(), 1,
+        assertEquals(1, cb.size(),
                      "add(1);");
         cb.add("2");
-        assertEquals(cb.size(), 2,
+        assertEquals(2, cb.size(),
                      "add(1); add(2);");
         cb.take();
-        assertEquals(cb.size(), 1,
+        assertEquals(1, cb.size(),
                      "add(1); add(2); take();");
         cb.take();
-        assertEquals(cb.size(), 0,
+        assertEquals(0, cb.size(),
                      "add(1); add(2); take(); take();");
     }
 
-    public void testCopyDirect() {
-         testCopy(10, "1234567", "1234567");
-    }
-
-    public void testCopyWrap() {
-        testCopy(5, "34567", "1234567");
-    }
-
-    private void testCopy(int cbSize, String expected, String input) {
+    @ParameterizedTest
+    @MethodSource("testCopyExamples")
+    void testCopy(int cbSize, String expected, String input) {
         CircularCharBuffer cb = new CircularCharBuffer(cbSize, cbSize);
         for (char c: input.toCharArray()) {
             if (cb.size() == cbSize) {
@@ -192,11 +181,18 @@ public class CircularCharBufferTest {
         final char[] OUTPUT = new char[cbSize];
         int retrieved = cb.copy(OUTPUT);
 
-        String o = "";
-        for (int i = 0; i < retrieved; i++) {
-            o += OUTPUT[i];
-        }
+        String o = new String(OUTPUT,0, retrieved);
         assertEquals(expected, o,
                      "Input '" + input + "' with CB-size " + cbSize);
     }
+
+    private static Stream<Arguments> testCopyExamples() {
+        return Stream.of(
+                // Direct
+                Arguments.of(10, "1234567", "1234567"),
+                // With wrapping
+                Arguments.of(5, "34567", "1234567")
+        );
+    }
+
 }

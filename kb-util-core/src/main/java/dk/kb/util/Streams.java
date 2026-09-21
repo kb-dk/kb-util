@@ -22,7 +22,6 @@
  */
 package dk.kb.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -48,41 +47,36 @@ public class Streams {
     }
 
     /**
-     * Copies the contents of an InputStream to an OutputStream, then closes
-     * both.
+     * Copies the contents of an InputStream to an OutputStream, then closes both.
      *
      * @param in      The source stream.
      * @param out     The destination stram.
      * @param bufSize Number of bytes to attempt to copy at a time.
-     * @throws java.io.IOException If any sort of read/write error occurs on
-     *                             either stream.
+     * @throws java.io.IOException If any sort of read/write error occurs on either stream.
      */
     public static void pipe(InputStream in, OutputStream out, int bufSize) throws IOException {
-        try {
+        try (in; out) {
             byte[] buf = new byte[bufSize];
             int len;
             while ((len = in.read(buf)) > 0) {
                 out.write(buf, 0, len);
             }
-        } finally {
-            in.close();
-            out.close();
         }
     }
 
     /**
-     * Shorthand for
-     * {@link #pipe(java.io.InputStream, java.io.OutputStream, int)}.
-     * A default buffer of 4KB is used.
+     * Copies the contents of an InputStream to an OutputStream, then closes both.
+     * A default buffer of 16KB is used.
+     * Both streams are closed after the operation.
      *
      * @param in  The source stream.
      * @param out The target stream.
-     * @throws java.io.IOException If any sort of read/write error occurs on
-     *                             either stream.
+     * @throws java.io.IOException If any sort of read/write error occurs on either stream.
      */
-    public static void pipe(InputStream in, OutputStream out)
-            throws IOException {
-        pipe(in, out, 4096);
+    public static void pipe(InputStream in, OutputStream out) throws IOException {
+        try (in; out) {
+            in.transferTo(out);
+        }
     }
 
     /**
@@ -99,19 +93,20 @@ public class Streams {
         if (url == null) {
             throw new FileNotFoundException("Could not locate '" + name + "' in the class path");
         }
-        InputStream in = url.openStream();
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(1000);
-        pipe(in, bytes);
-        return bytes.toString(StandardCharsets.UTF_8);
+        try (InputStream in = url.openStream()) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
 
     /**
+     * Reads 8 bytes from {@code in} into a {@code long}.
+     *
      * @param in the stream to read a long from.
      * @return the next long in the stream if present. If EOF was reached
      *         during read, an exception is thrown. The long must be stored
      *         in big-endian format.
-     * @throws IOException  if a fatal error occured during read.
+     * @throws IOException  if a fatal error occurred during read.
      * @throws EOFException if EOF was reached during read.
      */
     public static long readLong(InputStream in) throws IOException {
