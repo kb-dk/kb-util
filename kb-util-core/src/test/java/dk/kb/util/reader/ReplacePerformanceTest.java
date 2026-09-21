@@ -283,8 +283,7 @@ public class ReplacePerformanceTest {
             this.random = random;
             this.knownWords = knownWords;
             this.knownWordChance = knownWordChance;
-            long longestLong = knownWords.stream().mapToLong(ca -> ca.length).max().orElse(0);
-            int longest = Math.toIntExact(longestLong);
+            int longest = knownWords.stream().mapToInt(ca -> ca.length).max().orElse(0);
             out = new CircularCharBuffer(longest, Integer.MAX_VALUE);
             this.size = size;
         }

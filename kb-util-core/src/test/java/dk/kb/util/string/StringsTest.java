@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -69,18 +68,15 @@ public class StringsTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     public void testJoinNulls() {
-        List<Object> l = new ArrayList<>();
 
-        assertThrows(NullPointerException.class, () -> Strings.join(l, null),
+        assertThrows(NullPointerException.class, () -> Strings.join(List.of(), null),
                 "A null delimiter should cause a NPE");
 
         assertThrows(NullPointerException.class, () -> Strings.join((Collection) null, ""),
                 "A null collection should cause a NPE");
 
         // Check that we do not fail if the list contains a null
-        l.add("foo");
-        l.add(null);
-        l.add("bar");
+        List<Object> l = Arrays.asList("foo", null, "bar");
         System.out.println(Strings.join(l, ":"));
     }
 

@@ -169,7 +169,7 @@ public class XpathUtils {
             return nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET))
                       .stream()
                       .map(Node::getNodeValue)
-                      .collect(Collectors.toList());
+                      .toList();
         }
         
         

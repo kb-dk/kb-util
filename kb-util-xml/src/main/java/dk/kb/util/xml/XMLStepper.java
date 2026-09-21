@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -395,8 +396,8 @@ public class XMLStepper {
      */
     public static boolean pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean ignoreErrors, boolean onlyInner,
                                   Callback callback) throws XMLStreamException {
-        if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
-                in.getProperty(XMLInputFactory.IS_COALESCING) != Boolean.TRUE) {
+        Object coalescingProperty = in.getProperty(XMLInputFactory.IS_COALESCING);
+        if (coalescingProperty == null || ! coalescingProperty.equals(Boolean.TRUE)) {
             throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
         }
         if (!ignoreErrors) {

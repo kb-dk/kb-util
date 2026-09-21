@@ -102,7 +102,7 @@ public class XPathSelectorImpl implements XPathSelector {
         return XpathUtils.nodeList((NodeList) selectObject(dom, xpath, XPathConstants.NODESET))
                   .stream()
                   .map(Node::getNodeValue)
-                  .collect(Collectors.toList());
+                  .toList();
     }
 
 

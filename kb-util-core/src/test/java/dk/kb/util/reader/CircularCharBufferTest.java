@@ -181,7 +181,7 @@ public class CircularCharBufferTest {
         final char[] OUTPUT = new char[cbSize];
         int retrieved = cb.copy(OUTPUT);
 
-        String o = new String(OUTPUT,0, retrieved);
+        String o = new String(OUTPUT, 0, retrieved);
         assertEquals(expected, o,
                      "Input '" + input + "' with CB-size " + cbSize);
     }

@@ -101,7 +101,7 @@ public class StringListUtils {
                    .filter(Objects::nonNull)
                    .filter(element -> !element.trim().isEmpty())
                    .distinct()
-                   .collect(Collectors.toList());
+                   .toList();
     }
     
     /**
@@ -119,7 +119,7 @@ public class StringListUtils {
                      .filter(Objects::nonNull)
                      .filter(element -> ! element.trim().isEmpty())
                      .distinct()
-                     .collect(Collectors.toList());
+                     .toList();
     }
 
     /**
@@ -258,7 +258,7 @@ public class StringListUtils {
     }
     
     /**
-     * Substring that allows for negative indexes and indexes beyound string length
+     * Substring that allows for negative indexes and indexes beyond string length
      *
      * @param string     the string
      * @param startIndex the start index. If negative, count backwards from the end of the string.

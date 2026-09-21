@@ -355,7 +355,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
             return foundList.stream()
                     .map(value -> (T) Objects.requireNonNullElseGet(value, YAML::new))
-                    .collect(Collectors.toList());
+                    .toList();
 
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + found + "' to List<T>", path, e);
@@ -423,7 +423,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         //       This is needed for path substitution
         return hmList.stream()
                 .map(map -> new YAML(map, extrapolateSystemProperties, extrapolateSystemProperties, getSubstitutors()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -988,7 +988,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         matchingObjects = matchingObjects.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
 
         if (yPath.isLast()) {
             for (Object matchingEntry : matchingObjects) {
@@ -1101,7 +1101,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             return any; // Fallback to String
         }
         if (sub instanceof List<?> objects) {
-            return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
+            return objects.stream().map(this::extrapolateGuessType).toList();
         }
         return sub;
     }

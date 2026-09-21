@@ -52,7 +52,7 @@ public class ExtractionUtils {
      * <p>The implementation does not support parallelism: If source is parallel, it will be sequentialized.</p>
      *
      * <p>If the end result should be a list of lists,
-     * use {@code splitToList(myStream, 87).collect(Collectors.toList())}.</p>
+     * use {@code splitToList(myStream, 87).toList()}.</p>
      *
      * @param source any stream.
      * @param partitionSize the maximum size for the partitions.

@@ -307,7 +307,7 @@ public class Timing {
      * <pre>
      *     Function<Integer, String> myFunction = num -> Integer.toString(num);
      *     Function<Integer, String> wrappedFunction = myTimer.wrap(myFunction);
-     *     return Stream.of(1, 2, 3).map(wrappedFunction).collect(Collectors.toList());
+     *     return Stream.of(1, 2, 3).map(wrappedFunction).toList();
      * </pre>
      * will measure invocation time and count of {@code myFunction} during the streaming processing.
      *
@@ -324,7 +324,7 @@ public class Timing {
      * <pre>
      *     Function<Integer> isEven = num -> (num & 1) == 0;
      *     Function<Integer, String> wrappedPredicate = myTimer.wrap(mypredicate);
-     *     return Stream.of(1, 2, 3).filter(wrappedpredicate).collect(Collectors.toList());
+     *     return Stream.of(1, 2, 3).filter(wrappedpredicate).toList();
      * </pre>
      * will measure invocation time and count of {@code myPredicate} during the streaming processing.
      *

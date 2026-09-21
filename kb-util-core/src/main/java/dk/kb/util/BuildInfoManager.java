@@ -12,7 +12,7 @@ import java.util.Properties;
  * The information is typically logged upon application start to make it easier for Operations and other log users
  * to determine what is running.</p>
  *
- * <p></p>As of 2024-01-29 this requires that the project pom.xml contains the following sections
+ * <p>As of 2024-01-29 this requires that the project pom.xml contains the following sections
  * <pre>
  *   <properties>
  *     ...

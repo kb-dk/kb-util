@@ -142,16 +142,16 @@ class StringListUtilsTest {
     @Test
     void removeSubstrings() {
         List<String> actual = StringListUtils.removeSubstrings(List.of("aaabbb", "aaa", "b"))
-                                      .stream().sorted().collect(Collectors.toList());
-        List<String> expected = Stream.of("aaabbb").sorted().collect(Collectors.toList());
+                                      .stream().sorted().toList();
+        List<String> expected = Stream.of("aaabbb").sorted().toList();
         assertThat(actual, is(expected));
     }
 
     @Test
     void removeSubstringsReverseOrder() {
         List<String> actual = StringListUtils.removeSubstrings(List.of("b", "aaa", "aaabbb"))
-                                      .stream().sorted().collect(Collectors.toList());
-        List<String> expected = Stream.of("aaabbb").sorted().collect(Collectors.toList());
+                                      .stream().sorted().toList();
+        List<String> expected = Stream.of("aaabbb").sorted().toList();
         assertThat(actual, is(expected));
     }
     

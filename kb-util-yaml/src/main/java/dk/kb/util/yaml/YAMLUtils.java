@@ -59,7 +59,7 @@ public class YAMLUtils {
     public static List<Entry<String, Object>> flatten(YAML collection) {
         return toFlatStream(collection.entrySet().stream(), null)
                        .sorted(Entry.comparingByKey())
-                       .collect(Collectors.toList());
+                       .toList();
     }
     
     /**
@@ -74,7 +74,7 @@ public class YAMLUtils {
         return toFlatStream(collection.entrySet().stream(), null)
                        .sorted(Entry.comparingByKey())
                        .map(entry -> entry.getValue().toString())
-                       .collect(Collectors.toList());
+                       .toList();
     }
     
     @SuppressWarnings("unchecked")

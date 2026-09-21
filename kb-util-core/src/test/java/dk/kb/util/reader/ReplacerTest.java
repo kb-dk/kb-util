@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -68,7 +67,7 @@ public class ReplacerTest {
     @Test
     public void testSetSourceString() throws Exception {
         StringReplacer rep = new StringReplacer(
-                new StringReader("foo"), new HashMap<>());
+                new StringReader("foo"), Map.of());
         assertEquals("foo", Strings.flushLocal(rep));
 
         rep.setSource(new StringReader("bar"));
@@ -84,7 +83,7 @@ public class ReplacerTest {
     @Test
     public void testSetSourceChar() throws Exception {
         CharReplacer rep = new CharReplacer(
-                new StringReader("foo"), new HashMap<>());
+                new StringReader("foo"), Map.of());
         assertEquals("foo", Strings.flushLocal(rep));
 
         rep.setSource(new StringReader("bar"));
@@ -100,7 +99,7 @@ public class ReplacerTest {
     @Test
     public void testSetSourceCharArray() throws Exception {
         CharArrayReplacer rep = new CharArrayReplacer(
-                new StringReader("foo"), new HashMap<>());
+                new StringReader("foo"), Map.of());
         assertEquals("foo", Strings.flushLocal(rep));
 
         rep.setSource(new StringReader("bar"));
@@ -116,7 +115,7 @@ public class ReplacerTest {
     @Test
     public void testEmptyCharArrayReadSingle() throws Exception {
         ReplaceReader rep = new CharArrayReplacer(
-                new StringReader(""), new HashMap<>());
+                new StringReader(""), Map.of());
         assertEquals(-1, rep.read());
 
         rep.setSource(new CircularCharBuffer(1, 1));
@@ -126,7 +125,7 @@ public class ReplacerTest {
     @Test
     public void testEmptyCharReadSingle() throws Exception {
         ReplaceReader rep = new CharReplacer(
-                new StringReader(""), new HashMap<>());
+                new StringReader(""), Map.of());
         assertEquals(-1, rep.read());
 
         rep.setSource(new CircularCharBuffer(1, 1));
@@ -136,7 +135,7 @@ public class ReplacerTest {
     @Test
     public void testEmptyStringReadSingle() throws Exception {
         ReplaceReader rep = new StringReplacer(
-                new StringReader(""), new HashMap<>());
+                new StringReader(""), Map.of());
         assertEquals(-1, rep.read());
 
         rep.setSource(new CircularCharBuffer(1, 1));
