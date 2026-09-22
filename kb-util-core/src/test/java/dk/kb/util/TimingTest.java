@@ -48,7 +48,7 @@ public class TimingTest {
                    "Timing info should be >= sleep time (50ms) but was " + ms);
 
         long ns = timing.getNS();
-        assertTrue(ns >= 50 * 1000000,
+        assertTrue(ns >= 50 * 1_000_000,
                    "Timing info should be >= sleep time (50*1000000ns) but was " + ns);
     }
 
@@ -62,7 +62,7 @@ public class TimingTest {
         assertEquals(40, subA.addMS(10),
                      "Adding 10 ms extra should return 40 ms");
         timing.getChild("sub_b", "#87");
-        timing.getChild("sub_c").addNS(3 * 1000000);
+        timing.getChild("sub_c").addNS(3 * 1_000_000);
         timing.getChild("sub_d").getChild("sub_d_a");
         timing.getChild("sub_e").getChild("sub_e_a");
 

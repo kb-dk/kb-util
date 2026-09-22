@@ -814,4 +814,13 @@ public class XMLStepperTest {
         assertEquals(expected, result,
                                 "The piper should reproduce the desired sub section of the XML");
     }
+
+    @Test
+    void removesNothingIfTagIsNotInStack() {
+        List<String> originalStackContents = List.of("foo", "bar", "baz");
+        List<String> stack = new ArrayList<>(originalStackContents);
+        XMLStepper.reduceStack(stack, "not in stack");
+        assertEquals(originalStackContents, stack);
+    }
+
 }

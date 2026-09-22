@@ -1,6 +1,5 @@
 package dk.kb.util.reader;
 
-
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;

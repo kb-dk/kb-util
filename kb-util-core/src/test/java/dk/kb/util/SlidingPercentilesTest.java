@@ -59,10 +59,10 @@ public class SlidingPercentilesTest {
         final int COUNT = 100;
 
         Random random = new Random(87);
-        for (int r = 0 ; r < RUNS ; r++) {
+        for (int r = 0; r < RUNS; r++) {
             SlidingPercentiles slider = new SlidingPercentiles(COUNT);
             long sum = 0;
-            for (int i = 0 ; i < COUNT ; i++) {
+            for (int i = 0; i < COUNT; i++) {
                 int rNum = random.nextInt(10000);
                 sum += rNum;
                 slider.add(rNum);
@@ -79,12 +79,12 @@ public class SlidingPercentilesTest {
 
         final Random random = new Random(87);
 
-        for (int r = 0 ; r < RUNS ; r++) {
+        for (int r = 0; r < RUNS; r++) {
             int size = random.nextInt(MAX_SIZE);
 
             SlidingPercentiles slider = new SlidingPercentiles(size, true);
             SlidingPercentiles delayed = new SlidingPercentiles(size, false);
-            for (int i = 0 ; i < size ; i++) {
+            for (int i = 0; i < size; i++) {
                 int rNum = random.nextInt(10000);
                 slider.add(rNum);
                 delayed.add(rNum);
@@ -100,17 +100,17 @@ public class SlidingPercentilesTest {
         final Random delayedRandom = new Random(87);
         final int COUNT = 10000;
         final int RUNS = 10;
-        for (int i = 0 ; i < RUNS ; i++) {
+        for (int i = 0; i < RUNS; i++) {
             long contTime = -System.nanoTime();
             SlidingPercentiles sp = new SlidingPercentiles(COUNT, true);
-            for (int j = 0 ; j < COUNT ; j++) {
+            for (int j = 0; j < COUNT; j++) {
                 sp.add(contRandom.nextInt());
             }
             contTime += System.nanoTime();
 
             long delayedTime = -System.nanoTime();
             SlidingPercentiles delay = new SlidingPercentiles(COUNT, false);
-            for (int j = 0 ; j < COUNT ; j++) {
+            for (int j = 0; j < COUNT; j++) {
                 delay.add(delayedRandom.nextInt());
             }
             delayedTime += System.nanoTime();
@@ -118,7 +118,8 @@ public class SlidingPercentilesTest {
             System.out.printf(
                     Locale.ROOT, "Run %2d/%d with %d insertions took %3dms at %5dns/insertion for plain and" +
                             " %3dms at %5dns/insertion for delayed%n",
-                    i+1, RUNS, COUNT, contTime/1000000, contTime/COUNT, delayedTime/1000000, delayedTime/COUNT);
+                    i + 1, RUNS, COUNT, contTime / 1_000_000, contTime / COUNT, delayedTime / 1_000_000,
+                    delayedTime / COUNT);
         }
     }
 
@@ -138,7 +139,7 @@ public class SlidingPercentilesTest {
     }
 
     private void shuffle(int[] input) {
-        for (int i = 0 ; i < input.length ; i++) {
+        for (int i = 0; i < input.length; i++) {
             int p1 = random.nextInt(input.length);
             int p2 = random.nextInt(input.length);
             int tmp = input[p1];
@@ -156,7 +157,7 @@ public class SlidingPercentilesTest {
 
     private SlidingPercentiles toSlider(int[] input) {
         SlidingPercentiles slider = new SlidingPercentiles(input.length);
-        for (int i: input) {
+        for (int i : input) {
             slider.add(i);
         }
         return slider;

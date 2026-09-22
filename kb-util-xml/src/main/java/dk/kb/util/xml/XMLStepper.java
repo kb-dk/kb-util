@@ -42,7 +42,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -106,7 +105,7 @@ public class XMLStepper {
                         return;
                     case no_action:
                         xml.next();
-                        // Ignore no_action
+                        // Ignore, no_action
                 }
                 continue;
             }
@@ -151,17 +150,15 @@ public class XMLStepper {
      * @param tag   the tag to reduce to
      * @return true if it was possible to reduce the stack.
      */
-    private static boolean reduceStack(List<String> stack, String tag) {
-        for (int i = 0; i < stack.size(); i++) {
-            if (stack.get(i).equals(tag)) {
-                // Found a match, so we know we can reduce
-                while (!tag.equals(stack.get(stack.size() - 1))) {
-                    stack.remove(stack.size() - 1);
-                }
-                return true;
-            }
+    static boolean reduceStack(List<String> stack, String tag) {
+        int indexOfTag = stack.indexOf(tag);
+
+        if (indexOfTag == -1) {
+            return false;  // TODO: Implement this
         }
-        return false;  // TODO: Implement this
+
+        stack.subList(indexOfTag + 1, stack.size()).clear();
+        return true;
     }
 
     /**
@@ -398,7 +395,8 @@ public class XMLStepper {
                                   Callback callback) throws XMLStreamException {
         Object coalescingProperty = in.getProperty(XMLInputFactory.IS_COALESCING);
         if (coalescingProperty == null || ! coalescingProperty.equals(Boolean.TRUE)) {
-            throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
+            throw new IllegalArgumentException(
+                    "The XMLInputStream must be coalescing but was not; coalescingProperty was " + coalescingProperty);
         }
         if (!ignoreErrors) {
             return pipeXML(in, out, false, onlyInner, new ArrayList<>(), callback);
@@ -444,7 +442,7 @@ public class XMLStepper {
             switch (in.getEventType()) {
                 case XMLStreamReader.START_DOCUMENT: {
                     if ((in.getEncoding() != null && !in.getEncoding().isEmpty()) ||
-                            (in.getVersion() != null && !"1.0".equals(in.getVersion()))) {
+                            (in.getVersion() != null && ! in.getVersion().equals("1.0"))) {
                         // Only write a declaration if the source has one
                         out.writeStartDocument(in.getEncoding(), in.getVersion());
                     }
@@ -470,7 +468,7 @@ public class XMLStepper {
                                 return true;
                             }
                         }
-                        case called_next -> {
+                        case called_next -> { // callback handled the element so we do not pipe the END_ELEMENT
                             if (XMLStreamReader.END_ELEMENT != in.getEventType()) {
                                 throw new IllegalStateException(String.format(Locale.ROOT,
                                         "Callback for %s returned calles_next, but did not position the XML stream at "
@@ -663,11 +661,7 @@ public class XMLStepper {
     }
 
     private static List<FakeXPath> parsePaths(List<String> fakeXPaths) {
-        List<FakeXPath> fxs = new ArrayList<>(fakeXPaths.size());
-        for (String fakeXPathString : fakeXPaths) {
-            fxs.add(new FakeXPath(fakeXPathString));
-        }
-        return fxs;
+        return fakeXPaths.stream().map(FakeXPath::new).toList();
     }
 
     /**
@@ -1486,7 +1480,6 @@ public class XMLStepper {
 
     public abstract static class ContentReplaceCallback extends Callback {
         private XMLStreamWriter out = null;
-
 
         protected void setOut(XMLStreamWriter out) {
             this.out = out;
