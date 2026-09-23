@@ -76,7 +76,6 @@
                 <scope>import</scope>
             </dependency>
 
-
             <dependency>
                 <!-- https://mvnrepository.com/artifact/org.junit/junit-bom -->
                 <groupId>org.junit</groupId>
@@ -132,7 +131,6 @@
                 <artifactId>commons-collections4</artifactId>
                 <version>4.6.0</version>
             </dependency>
-
 
             <!--JAXB-->
             <dependency>
@@ -206,7 +204,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 
     <modules>
         <module>kb-util-core</module>

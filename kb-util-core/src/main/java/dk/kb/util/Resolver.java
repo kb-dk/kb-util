@@ -17,7 +17,6 @@ package dk.kb.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -50,9 +49,7 @@ import java.util.stream.Stream;
  */
 public class Resolver {
     private static final Logger log = LoggerFactory.getLogger(Resolver.class);
-    
-    
-    
+
     /**
      * Resolve the given resource to an URL. Order of priority:
      * 1. Verbatim as file
@@ -118,7 +115,7 @@ public class Resolver {
      */
     public static List<Path> resolveGlob(String glob) {
         if (glob == null || glob.isEmpty()) {
-            return new ArrayList<>();
+            return List.of();
         }
         Set<Path> paths = new HashSet<>();
 
@@ -155,7 +152,6 @@ public class Resolver {
             }
         }
 
-        
         List<Path> result = new ArrayList<>(paths);
         Collections.sort(result);
         log.debug("Resolved glob '" + glob + "' to " + result);
@@ -250,23 +246,22 @@ public class Resolver {
      * @throws IOException if reading failed
      */
     public static String resolveString(String resourceName, Charset charset) throws IOException {
-        try (InputStream in = resolveStream(resourceName);
-             ByteArrayOutputStream out = new ByteArrayOutputStream();) {
-            pipe(in, out);
-            return out.toString(charset);
+        try (InputStream in = resolveStream(resourceName)) {
+            return new String(in.readAllBytes(), charset);
         }
     }
     
     /**
-     * Shorthand for {@link #pipe(java.io.InputStream, java.io.OutputStream, int)}.
-     * A default buffer of 4KB is used.
+     * Copies the contents of an InputStream to an OutputStream, then closes both.
+     * A default buffer of 16KB is used.
+     * Both streams are closed after the operation.
      *
      * @param in  The source stream.
      * @param out The target stream.
      * @throws java.io.IOException If any sort of read/write error occurs on either stream.
      */
     public static void pipe(InputStream in, OutputStream out) throws IOException {
-        pipe(in, out, 4096);
+        Streams.pipe(in, out);
     }
     
     /**
@@ -278,13 +273,7 @@ public class Resolver {
      * @throws java.io.IOException If any sort of read/write error occurs on either stream.
      */
     public static void pipe(InputStream in, OutputStream out, int bufSize) throws IOException {
-        try (in; out) {
-            byte[] buf = new byte[bufSize];
-            int len;
-            while ((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-        }
+        Streams.pipe(in, out, bufSize);
     }
     
     /**
@@ -313,7 +302,7 @@ public class Resolver {
     public static String readFileFromClasspath(String name) throws IOException {
         try (InputStream resourceAsStream = Thread.currentThread()
                                                   .getContextClassLoader()
-                                                  .getResourceAsStream(name);) {
+                                                  .getResourceAsStream(name)) {
             if (resourceAsStream == null) {
                 log.warn("Failed to find file {}, returning null", name);
                 return null;
@@ -324,13 +313,13 @@ public class Resolver {
     }
     
     /**
-     * open an inputstream for a  on classpath
+     * open an inputstream for a file/resource on classpath
      * @param name the path to the file
      * @return the inputstream to the file
      */
     public static InputStream openFileFromClasspath(String name) {
         return Thread.currentThread()
-                                                  .getContextClassLoader()
-                                                  .getResourceAsStream(name);
+                     .getContextClassLoader()
+                     .getResourceAsStream(name);
     }
 }

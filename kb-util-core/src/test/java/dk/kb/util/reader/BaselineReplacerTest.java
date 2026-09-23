@@ -19,6 +19,8 @@
  */
 package dk.kb.util.reader;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -29,34 +31,31 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class BaselineReplacerTest {
+
+    @Test
     public void testSimpleReplacement() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
-        map.put("b", "bar");
+        Map<String, String> map = Map.of("a", "foo", "b", "bar");
         assertEquals("mfoonyfooffool bar", getReplacedBaseline(map, "manyafal b"),
-                     "Simple replacement should work");
+                "Simple replacement should work");
     }
 
+    @Test
     public void testTrivialReplacement() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
+        Map<String, String> map = Map.of("a", "foo");
         assertEquals("foo", getReplacedBaseline(map, "a"),
                      "Trivial replacement should work");
     }
 
+    @Test
     public void testSingleCharReplacement() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "b");
-        map.put("b", "c");
+        Map<String, String> map = Map.of("a", "b", "b", "c");
         assertEquals("bcde", getReplacedBaseline(map, "abde"),
                      "Single-char replacement should work");
     }
 
+    @Test
     public void testMisc() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
-        map.put("aa", "bar");
-        map.put("aaa", "zoo");
+        Map<String, String> map = new HashMap<>(Map.of("a", "foo", "aa", "bar", "aaa", "zoo"));
         //noinspection DuplicateStringLiteralInspection
         assertEquals("ffreege", getReplacedBaseline(map, "ffreege"),
                      "None-test should work");
@@ -68,9 +67,8 @@ public class BaselineReplacerTest {
         assertEquals("", getReplacedBaseline(map, ""),
                      "no-input-test should work");
 
-        map.clear();
         //noinspection DuplicateStringLiteralInspection
-        assertEquals("klamm", getReplacedBaseline(map, "klamm"),
+        assertEquals("klamm", getReplacedBaseline(Map.of(), "klamm"),
                      "No-rules-test should work");
     }
 

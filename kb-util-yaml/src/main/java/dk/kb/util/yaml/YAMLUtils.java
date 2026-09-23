@@ -59,13 +59,13 @@ public class YAMLUtils {
     public static List<Entry<String, Object>> flatten(YAML collection) {
         return toFlatStream(collection.entrySet().stream(), null)
                        .sorted(Entry.comparingByKey())
-                       .collect(Collectors.toList());
+                       .toList();
     }
     
     /**
-     * Converts the YAML object into list of leaf values.
+     * <p>Converts the YAML object into list of leaf values.</p>
      *
-     * The entries will be sorted by their key
+     * <p>The entries will be sorted by their key</p>
      *
      * @param collection the yaml
      * @return a list of all the values in the YAML
@@ -74,7 +74,7 @@ public class YAMLUtils {
         return toFlatStream(collection.entrySet().stream(), null)
                        .sorted(Entry.comparingByKey())
                        .map(entry -> entry.getValue().toString())
-                       .collect(Collectors.toList());
+                       .toList();
     }
     
     @SuppressWarnings("unchecked")
@@ -112,4 +112,3 @@ public class YAMLUtils {
     }
     
 }
-

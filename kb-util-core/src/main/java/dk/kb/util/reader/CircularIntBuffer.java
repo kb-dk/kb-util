@@ -29,24 +29,24 @@ import java.util.Locale;
 import java.util.NoSuchElementException;
 
 /**
- * A memory efficient Queue/Reader-like mechanism for buffering integers.
+ * <p>A memory efficient Queue/Reader-like mechanism for buffering integers.
  * This shares much of its functionality with {@link CircularCharBuffer}.
- * It avoids memory reallocations by traversing its internal character buffer
- * in a circular manner.
+ * It avoids memory reallocations by traversing its internal int buffer
+ * in a circular manner.</p>
  *
- * The buffer is not thread-safe.
+ * <p>The buffer is not thread-safe.</p>
  *
- * Note: the Queue-calls involved conversion between char and Character and
- * are thus not the fastest.
+ * <p>Note: the Queue-calls involved conversion between int and Integer and
+ * are thus not the fastest.</p>
  */
 public class CircularIntBuffer implements Iterable<Integer> {
     private static final int GROWTH_FACTOR = 2;
 
     /**
-     * The maximum capacity of the buffer + 1. If the maximum capacity is
-     * Integer.MAX_VALUE, max is also Integer.MAX_VALUE.
+     * <p>The maximum capacity of the buffer + 1. If the maximum capacity is
+     * Integer.MAX_VALUE, max is also Integer.MAX_VALUE.</p>
      *
-     * The +1 hack is due to performance optimization.
+     * <p>The +1 hack is due to performance optimization.</p>
      */
     private int max; // Maximum size
     private int first = 0;
@@ -54,12 +54,12 @@ public class CircularIntBuffer implements Iterable<Integer> {
     private int[] array;
 
     /**
-     * Create a new buffer with an initial capacity of {@code initialSize}
-     * elements and a maximum allowed size of {@code maxSize} elements.
+     * <p>Create a new buffer with an initial capacity of {@code initialSize}
+     * elements and a maximum allowed size of {@code maxSize} elements.</p>
      *
-     * The buffer will automatically grow beyond {@code initialSize} as data
+     * <p>The buffer will automatically grow beyond {@code initialSize} as data
      * is added, but will raise an error if the allocation would go above
-     * {@code maxSize}.
+     * {@code maxSize}.</p>
      *
      * @param initialSize number of elements for the initial allocation.
      * @param maxSize     maximum number of elements that can be stored in this buffer.
@@ -147,7 +147,7 @@ public class CircularIntBuffer implements Iterable<Integer> {
      * @param len  the maximum number of elements to move.
      * @return the number of moved elements or -1 if no elements were buffered.
      */
-    public int read(int buf[], int off, int len) {
+    public int read(int[] buf, int off, int len) {
         if (len == 0) {
             return 0;
         }
@@ -283,14 +283,14 @@ public class CircularIntBuffer implements Iterable<Integer> {
     }
 
     /**
-     * Get a circular buffer reflecting a subsequence of this one.
+     * <p>Get a circular buffer reflecting a subsequence of this one.
      * The returned buffer will start with the element at {@code start} and
-     * end with the element at {@code end - 1}.
+     * end with the element at {@code end - 1}.</p>
      *
-     * The new buffer will have its maximum size equalling the maximum size of
-     * the buffer from which it was created.
+     * <p>The new buffer will have its maximum size equalling the maximum size of
+     * the buffer from which it was created.</p>
      *
-     * Calling this method will not affect the state of the buffer.
+     * <p>Calling this method will not affect the state of the buffer.</p>
      *
      * @param start the start offset into this buffer, inclusive
      * @param end   the end index into this buffer, exclusive
@@ -365,13 +365,11 @@ public class CircularIntBuffer implements Iterable<Integer> {
     }
 
     public boolean contains(Object o) {
-        if (o == null || !(o instanceof Integer)) {
-            return false;
-        }
-        Integer value = (Integer) o;
-        for (int i = 0; i < size(); i++) {
-            if (value == peek(i)) {
-                return true;
+        if (o instanceof Integer value) {
+            for (int i = 0; i < size(); i++) {
+                if (value == peek(i)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -406,7 +404,7 @@ public class CircularIntBuffer implements Iterable<Integer> {
         }
     }
 
-    // TODO: Implement the rest of the Queue<Character> interface
+    // TODO: Implement the rest of the Queue<Integer> interface
 
     public Object[] toArray() {
         Integer[] result = new Integer[size()];
@@ -482,7 +480,7 @@ public class CircularIntBuffer implements Iterable<Integer> {
     /**
      * Reader-compatible method.
      *
-     * @return true, as a CircularCharBuffer never blocks.
+     * @return true, as a CircularIntBuffer never blocks.
      */
     public boolean ready() {
         return true;
@@ -510,7 +508,7 @@ public class CircularIntBuffer implements Iterable<Integer> {
         if (n > oldSize) {
             clear();
             throw new IOException(
-                    "skip(" + n + ") called with only " + oldSize + " available chars. Buffer is cleared");
+                    "skip(" + n + ") called with only " + oldSize + " available ints. Buffer is cleared");
         }
         for (int i = 0; i < n; i++) {
             take();

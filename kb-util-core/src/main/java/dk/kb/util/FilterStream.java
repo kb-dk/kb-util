@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 
 /**
  * {@code Stream} equivalent of {@link java.io.FilterInputStream} for easy extension of {@link Stream}s.
- * All methods delegates to the given inner {@code Stream}.
+ * All methods delegate to the given inner {@code Stream}.
  */
 public class FilterStream<T> implements Stream<T> {
     private final Stream<T> inner;

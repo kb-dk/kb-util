@@ -20,13 +20,13 @@
 package dk.kb.util.reader;
 
 import dk.kb.util.string.Strings;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -67,7 +67,7 @@ public class ReplacerTest {
     @Test
     public void testSetSourceString() throws Exception {
         StringReplacer rep = new StringReplacer(
-                new StringReader("foo"), new HashMap<String, String>());
+                new StringReader("foo"), Map.of());
         assertEquals("foo", Strings.flushLocal(rep));
 
         rep.setSource(new StringReader("bar"));
@@ -83,7 +83,7 @@ public class ReplacerTest {
     @Test
     public void testSetSourceChar() throws Exception {
         CharReplacer rep = new CharReplacer(
-                new StringReader("foo"), new HashMap<String, String>());
+                new StringReader("foo"), Map.of());
         assertEquals("foo", Strings.flushLocal(rep));
 
         rep.setSource(new StringReader("bar"));
@@ -99,7 +99,7 @@ public class ReplacerTest {
     @Test
     public void testSetSourceCharArray() throws Exception {
         CharArrayReplacer rep = new CharArrayReplacer(
-                new StringReader("foo"), new HashMap<String, String>());
+                new StringReader("foo"), Map.of());
         assertEquals("foo", Strings.flushLocal(rep));
 
         rep.setSource(new StringReader("bar"));
@@ -115,7 +115,7 @@ public class ReplacerTest {
     @Test
     public void testEmptyCharArrayReadSingle() throws Exception {
         ReplaceReader rep = new CharArrayReplacer(
-                new StringReader(""), new HashMap<String, String>());
+                new StringReader(""), Map.of());
         assertEquals(-1, rep.read());
 
         rep.setSource(new CircularCharBuffer(1, 1));
@@ -125,7 +125,7 @@ public class ReplacerTest {
     @Test
     public void testEmptyCharReadSingle() throws Exception {
         ReplaceReader rep = new CharReplacer(
-                new StringReader(""), new HashMap<String, String>());
+                new StringReader(""), Map.of());
         assertEquals(-1, rep.read());
 
         rep.setSource(new CircularCharBuffer(1, 1));
@@ -135,15 +135,16 @@ public class ReplacerTest {
     @Test
     public void testEmptyStringReadSingle() throws Exception {
         ReplaceReader rep = new StringReplacer(
-                new StringReader(""), new HashMap<String, String>());
+                new StringReader(""), Map.of());
         assertEquals(-1, rep.read());
 
         rep.setSource(new CircularCharBuffer(1, 1));
         assertEquals(-1, rep.read());
     }
 
-    // disabled @Test
-        public void testSpeedCharsVsString() throws Exception {
+    @Test
+    @Disabled
+    public void testSpeedCharsVsString() throws Exception {
         Random random = new Random(456);
         int RUNS = 10;
         int[] RULES = new int[]{0, 10, 100, 1000};
@@ -181,7 +182,8 @@ public class ReplacerTest {
         }
     }
 
-    // disabled@Test
+    @Test
+    @Disabled
     public void testSpeedCharVsChars() throws Exception {
         Random random = new Random(456);
         int RUNS = 10;

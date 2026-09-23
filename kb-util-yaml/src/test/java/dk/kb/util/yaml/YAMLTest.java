@@ -1,7 +1,6 @@
 package dk.kb.util.yaml;
 
 import dk.kb.util.Resolver;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -16,15 +15,18 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,12 +36,12 @@ class YAMLTest {
     @SuppressWarnings("ConstantConditions")
     @Test
     public void testToString() throws IOException {
-        String contents = Files.readAllLines(Resolver.getPathFromClasspath("test.yml"))
-                .stream()
-                .map(line -> line.replaceAll("#.*$", "").stripTrailing())
-                .filter(line -> !line.isBlank())
-                .collect(Collectors.joining("\n")) + "\n";
-        assertEquals(contents, YAML.resolveLayeredConfigs("test.yml").toString());
+        try (Stream<String> lines = Files.lines(Resolver.getPathFromClasspath("test.yml"))) {
+            String contents = lines.map(line -> line.replaceAll("#.*$", "").stripTrailing())
+                    .filter(line -> !line.isBlank())
+                    .collect(Collectors.joining("\n")) + "\n";
+            assertEquals(contents, YAML.resolveLayeredConfigs("test.yml").toString());
+        }
     }
 
     @Test
@@ -72,7 +74,7 @@ class YAMLTest {
     @Test
     public void testArray() throws IOException {
         YAML yaml = new YAML("test.yml").getSubMap("test");
-        assertEquals("[a, b, c]", yaml.getList("arrayofstrings").toString(),
+        assertEquals(List.of("a", "b", "c"), yaml.getList("arrayofstrings"),
                 "Arrays of strings should be supported");
     }
 
@@ -86,23 +88,15 @@ class YAMLTest {
     @Test
     public void testMissingSubMap() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
-        try {
-            yaml.getSubMap("nonexisting");
-        } catch (NotFoundException e) {
-            return;
-        }
-        fail("Requesting a non-existing sub map should result in a NotFoundException");
+        assertThrows(NotFoundException.class, () -> yaml.getSubMap("nonexisting"),
+                "Requesting a non-existing sub map should result in a NotFoundException");
     }
 
     @Test
     public void testMissingString() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
-        try {
-            yaml.getString("nonexisting");
-        } catch (NotFoundException e) {
-            return;
-        }
-        fail("Requesting a non-existing String should result in a NotFoundException");
+        assertThrows(NotFoundException.class, () -> yaml.getString("nonexisting"),
+                "Requesting a non-existing String should result in a NotFoundException");
     }
 
     @Test
@@ -115,28 +109,35 @@ class YAMLTest {
 
     @Test
     public void testNestedExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolate(true);
-        assertEquals(System.getProperties().getProperty("user.home") + " Hello World", yaml.getString("test.somestring"),
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml")
+                .extrapolate(true);
+        assertEquals(System.getProperties().getProperty("user.home") + " Hello World",
+                yaml.getString("test.somestring"),
                 "Nested request for string should be supported");
     }
 
     @Test
     public void testRootExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        assertEquals(System.getProperties().getProperty("user.home") + " Hello World", yaml.getString("somestring"),
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml")
+                .getSubMap("test").extrapolate(true);
+        assertEquals(System.getProperties().getProperty("user.home") + " Hello World",
+                yaml.getString("somestring"),
                 "Direct request for string from resolved root should be supported");
     }
 
     @Test
     public void testArrayExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        assertEquals("[a, " + System.getProperties().getProperty("user.name") + ", c]", yaml.getList("arrayofstrings").toString(),
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml")
+                .getSubMap("test").extrapolate(true);
+        assertEquals(List.of("a", System.getProperty("user.name"), "c"),
+                yaml.getList("arrayofstrings"),
                 "Arrays of strings should be supported");
     }
 
     @Test
     public void testKeptPathExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml")
+                .getSubMap("test").extrapolate(true);
 
         assertEquals("nested.sublevel2string: " + System.getProperties().getProperty("user.name") + "\n",
                 yaml.getSubMap("nested", true).toString(),
@@ -145,41 +146,34 @@ class YAMLTest {
 
     @Test
     public void testMissingSubMapExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        try {
-            yaml.getSubMap("nonexisting");
-        } catch (NotFoundException e) {
-            return;
-        }
-        fail("Requesting a non-existing sub map should result in a NotFoundException");
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml")
+                .getSubMap("test").extrapolate(true);
+        assertThrows(NotFoundException.class, () -> yaml.getSubMap("nonexisting"),
+                "Requesting a non-existing sub map should result in a NotFoundException");
     }
 
     @Test
     public void testMissingStringExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolate(true).getSubMap("test");
-        try {
-            yaml.getString("nonexisting");
-        } catch (NotFoundException e) {
-            return;
-        }
-        fail("Requesting a non-existing String should result in a NotFoundException");
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml")
+                .extrapolate(true).getSubMap("test");
+        assertThrows(NotFoundException.class, () -> yaml.getString("nonexisting"),
+                "Requesting a non-existing String should result in a NotFoundException");
     }
 
-    // Test not relevant after 20240312 as extrapolation is done up front instead of per request
-    @Disabled
+    @Test
+    @Disabled("Test not relevant after 20240312 as extrapolation is done up front instead of per request")
     public void testNonResolvableExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml").extrapolate(true);
-        try {
-            yaml.getString("test.somestring"); // Contains ${cannot.be.resolved}
-            fail("Requesting a non-resolvable system property should fail");
-        } catch (Exception e) {
-            // Expected
-        }
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolatedNonresolvable.yml")
+                .extrapolate(true);
+        // "test.somestring" Contains ${cannot.be.resolved}
+        assertThrows(Exception.class, () -> yaml.getString("test.somestring"),
+                "Requesting a non-resolvable system property should fail");
     }
 
     @Test
     public void testDefaultExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").extrapolate(true).getSubMap("test");
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml")
+                .extrapolate(true).getSubMap("test");
         assertEquals(87, yaml.getInteger("nonexisting", 87),
                 "Requesting a non-existing integer with a default value should work");
     }
@@ -187,66 +181,66 @@ class YAMLTest {
 
     @Test
     public void testIntExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         Integer i = yaml.getInteger("someint");
-        assertTrue(i instanceof Integer, "Extracted object should be an Integer");
-        assertTrue(i >= 11, "Extracted integer should be at least 11 (the lowest Java version " +
+        assertTrue(i >= 17, "Extracted integer should be at least 17 (the lowest Java version " +
                 "supported by kb-util), but was " + i);
     }
 
     @Test
     public void testIntArrayExtrapolatedType() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         List<Integer> ints = yaml.getList("arrayofints");
-        assertTrue(ints.get(0) instanceof Integer,
-                "First element in the extracted Integer list should be an Integer but was " + ints.get(0).getClass());
+        assertInstanceOf(Integer.class, ints.get(0),
+                "First element in the extracted Integer list should be an Integer but was " +
+                        ints.get(0).getClass());
     }
 
     @Test
     public void testIntArrayExtrapolatedContent() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
         List<Integer> ints = yaml.getList("arrayofints");
-        assertTrue(ints.get(0) >= 11,
-                "Arrays of integers should be supported. Expected first element to be >= 11, but got array " + ints);
+        assertTrue(ints.get(0) >= 17,
+                "Arrays of integers should be supported. Expected first element to be >= 17, but got array " + ints);
     }
 
     @Test
     public void testTypesExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        final double EXPECTED = 55.00;
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
+        final double EXPECTED = 61.0; // 61 = Java 17. Anything greater is also OK
         double actual = yaml.getDouble("somedouble");
 
-        assertTrue(actual >= EXPECTED * 0.99, // 55 = Java 11. Anything highter is also OK
-                "Double should be supported and as expected. Expected=" + EXPECTED + ", resolved=" + actual);
+        assertTrue(actual >= EXPECTED * 0.99,
+                "Double should be supported and as expected. Expected>=" + EXPECTED + ", resolved=" + actual);
         assertEquals(true, yaml.getBoolean("somebool"),
                 "Boolean should be supported and as expected");
     }
 
     @Test
     public void testExtrapolatedExceptionImplicit() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        try {
-            yaml.getString("exceptionimplicit");
-            fail("Requesting a property with expansion of implicit sys:, where the expansion could not be fulfilled, should throw an Exception");
-        } catch (Exception e) {
-            // Expected
-        }
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
+        assertThrows(Exception.class, () -> yaml.getString("exceptionimplicit"),
+                "Requesting a property with expansion of implicit sys: where the expansion " +
+                        "could not be fulfilled, should throw an Exception");
     }
 
     @Test
     public void testExtrapolatedExceptionExplicitEnv() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
-        try {
-            yaml.getString("exceptionenv");
-            fail("Requesting a property with expansion of explicit env:, where the expansion could not be fulfilled, should throw an Exception");
-        } catch (Exception e) {
-            // Expected
-        }
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
+        assertThrows(Exception.class, () -> yaml.getString("exceptionenv"),
+                "Requesting a property with expansion of explicit env: where the expansion could not be " +
+                        "fulfilled, should throw an Exception");
     }
 
     @Test
     public void testExtrapolatedFallback() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         String actual = yaml.getString("fallback");
         assertEquals("mydefault", actual,
                 "Looking up a non-existing property with fallback should return the fallback");
@@ -254,7 +248,8 @@ class YAMLTest {
 
     @Test
     public void testExtrapolatedEnvFallback() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         String actual = yaml.getString("envfallback");
         assertEquals("envdefault", actual,
                 "Looking up a non-existing environment variable with fallback should return the fallback");
@@ -263,7 +258,8 @@ class YAMLTest {
     @Test
     public void testExtrapolatedNestedFallbackHit() throws IOException {
         final String home = System.getProperties().getProperty("user.home");
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         String actual = yaml.getString("nestedfallback");
         assertEquals(home, actual,
                 "Looking up a non-existing environment variable with fallback to an existing environment variable should return the value of the secondary environment variable");
@@ -271,10 +267,12 @@ class YAMLTest {
 
     @Test
     public void testExtrapolatedNestedFallbackFail() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         String actual = yaml.getString("nestedfallbackfail");
         assertEquals("reach", actual,
-                "Looking up a non-existing environment variable with nonexisting fallback resolve  should return the fallback's fallback");
+                "Looking up a non-existing environment variable with nonexisting fallback resolve " +
+                        "should return the fallback's fallback");
     }
 
     @Test
@@ -297,7 +295,8 @@ class YAMLTest {
 
     @Test
     public void testListEntryExtrapolated() throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         assertEquals(System.getProperty("user.name"), yaml.getString("arrayofstrings[1]"),
                 "Index-specified entry in arrays should be gettable");
         assertEquals("c", yaml.getString("arrayofstrings[last]"),
@@ -353,14 +352,11 @@ class YAMLTest {
     }
 
     @Test
-    public void testLayeredConfigsFail() throws IOException {
-        try {
-            YAML.resolveLayeredConfigs(YAML.MERGE_ACTION.fail, YAML.MERGE_ACTION.fail,
-                    "yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
-            fail("Merging with duplicate keys and MERGE_ACTION.fail should throw an Exception");
-        } catch (IllegalArgumentException e) {
-            // Expected
-        }
+    public void testLayeredConfigsFail() {
+        assertThrows(IllegalArgumentException.class,
+                () -> YAML.resolveLayeredConfigs(YAML.MERGE_ACTION.fail, YAML.MERGE_ACTION.fail,
+                        "yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml"),
+                "Merging with duplicate keys and MERGE_ACTION.fail should throw an Exception");
     }
 
     @Test
@@ -369,7 +365,7 @@ class YAMLTest {
                 "yaml/overwrite-1.yaml", "yaml/overwrite-2.yaml");
 
         List<String> aList = multi.getList("upperA.subList");
-        List<String> eList = Arrays.asList("three", "four");
+        List<String> eList = List.of("three", "four");
         assertEquals(eList, aList,
                 "Merged YAML should a list of only the elements from file #2");
     }
@@ -405,7 +401,6 @@ class YAMLTest {
         assertThrows(AccessDeniedException.class, () -> Files.readString(nonRead),
                 "Reading test file '" + nonRead + "' should throw an Exception");
 
-
         // Test that YAML throws appropriate exceptions when the resource cannot be read
         assertThrows(AccessDeniedException.class, () -> YAML.parse(nonRead),
                 "Parsing  test file '" + nonRead + "' directly should throw an Exception");
@@ -440,8 +435,7 @@ class YAMLTest {
     public void testIntArray() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
         List<Integer> ints = yaml.getList("arrayofints");
-        assertEquals("[1, 2]", ints.toString(),
-                "Arrays of integers should be supported");
+        assertEquals(List. of(1, 2), ints, "Arrays of integers should be supported");
     }
 
     @Test
@@ -450,8 +444,7 @@ class YAMLTest {
         final double EXPECTED = 87.13;
         double actual = yaml.getDouble("somedouble");
 
-        assertTrue(actual >= EXPECTED * 0.99 && actual <= EXPECTED * 1.01,
-                "Double should be supported and as expected");
+        assertEquals(EXPECTED, actual, EXPECTED * 0.01, "Double should be supported and as expected");
         assertEquals(true, yaml.getBoolean("somebool"),
                 "Boolean should be supported and as expected");
     }
@@ -459,7 +452,6 @@ class YAMLTest {
     @Test
     public void testListEntry() throws IOException {
         YAML yamlTest = YAML.resolveLayeredConfigs("test.yml");
-        YAML yaml = YAML.resolveLayeredConfigs("test.yml").getSubMap("test");
 
         assertEquals("b", yamlTest.getString("test.arrayofstrings[1]"),
                 "Index-specified entry in arrays should be gettable");
@@ -517,12 +509,8 @@ class YAMLTest {
                 "Dotted sub-key test.\"foo.bar\"");
         assertEquals("World", yaml.getString("test.\"zoo.baz\".'inner.sub'"),
                 "Double-dotted sub-key test.\"zoo.baz\".'inner.sub'");
-        try {
-            yaml.getInteger("test.\"zoo.baz\".inner.sub");
-            fail("Missing quote sub-key test.\"zoo.baz\".inner.sub should fail but did not");
-        } catch (Exception e) {
-            // Expected
-        }
+        assertThrows(Exception.class, () -> yaml.getInteger("test.\"zoo.baz\".inner.sub"),
+                "Missing quote sub-key test.\"zoo.baz\".inner.sub should fail but did not");
         assertEquals(1, yaml.getInteger("test.'sub.list'.[0]"),
                 "Dotted list-key with index test.'sub.list'.[0]");
     }
@@ -531,7 +519,8 @@ class YAMLTest {
     /* Helpers below */
 
     private void assertExtrapolated(String path, String expected, String message) throws IOException {
-        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test").extrapolate(true);
+        YAML yaml = YAML.resolveLayeredConfigs("testExtrapolated.yml").getSubMap("test")
+                .extrapolate(true);
         String actual = yaml.getString(path);
         assertEquals(expected, actual, message);
     }
@@ -542,8 +531,10 @@ class YAMLTest {
         yaml.setExtrapolate(true);
 
         assertEquals("foo", yaml.get(".lower.bar"), "Basic path substitution should work");
-        assertEquals("boom", yaml.get(".fallback.bar"), "Path substitution with default value should work");
-        assertEquals("foo", yaml.get(".mixing.bar"), "Path substitution with default value should work");
+        assertEquals("boom", yaml.get(".fallback.bar"),
+                "Path substitution with default value should work");
+        assertEquals("foo", yaml.get(".mixing.bar"),
+                "Path substitution with default value should work");
     }
 
     @Test
@@ -567,7 +558,7 @@ class YAMLTest {
     @Test
     public void testReverseConditionalIndex() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("nested_maps.yml");
-        assertEquals("[bar, zoo, baz]", yaml.getMultiple("conditionalpropermap.[default!=true].foo").toString());
+        assertEquals(List.of("bar", "zoo", "baz"), yaml.getMultiple("conditionalpropermap.[default!=true].foo"));
     }
 
     @Test
@@ -599,7 +590,8 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/path_substitution.yaml");
         yaml.setExtrapolate(true);
 
-        assertEquals("kaboom", yaml.get(".sams.bar"), "Path substitution with conditional path should work");
+        assertEquals("kaboom", yaml.get(".sams.bar"),
+                "Path substitution with conditional path should work");
     }
 
     @Test
@@ -617,12 +609,14 @@ class YAMLTest {
 
         // It is important to test this WITHOUT performing the direct get request from testDirectPath first as
         // that creates the substitutors
-        assertEquals("boom", yaml.getSubMap("nested").get("inner.foosubst"), "Getting from submap should work");
+        assertEquals("boom", yaml.getSubMap("nested").get("inner.foosubst"),
+                "Getting from submap should work");
     }
 
     @Test
     public void testGetMultiple() throws IOException {
-        // This visits everything called name. Therefore, it currently returns 16 elements where 15 of these are scalars and a single one is a map itself.
+        // This visits everything called name.
+        // Therefore, it currently returns 16 elements where 15 of these are scalars and a single one is a map itself.
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john",
@@ -743,7 +737,7 @@ class YAMLTest {
     public void testNonexplicitListGet() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         Object listO = yaml.get("test.arrayofstrings");
-        assertTrue(listO instanceof List, "The extracted type should be a list");
+        assertInstanceOf(List.class, listO, "The extracted type should be a list");
     }
 
     @Test
@@ -756,7 +750,7 @@ class YAMLTest {
     @Test
     public void testDoubleWildcardLast() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        assertEquals("[1, 2, 3, john]", yaml.getMultiple("test.anotherlevel.name.**").toString(),
+        assertEquals(List.of(1, 2, 3, "john"), yaml.getMultiple("test.anotherlevel.name.**"),
                 "Double wildcard at the end of the path");
     }
 
@@ -764,7 +758,7 @@ class YAMLTest {
     public void testIllegalImplicitListSkipping() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         assertThrows(NotFoundException.class, () -> yaml.get("test.tuplesequence.item2.name"),
-                "Requesting a submap from a list withput explicit list handling should fail");
+                "Requesting a submap from a list without explicit list handling should fail");
     }
 
     @Test
@@ -772,7 +766,7 @@ class YAMLTest {
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         yaml.visit("lasting.**", yaml, visitor);
-        assertEquals("[foo, bar, boom]", visitor.extractedValues.toString(),
+        assertEquals(List.of("foo", "bar", "boom"), visitor.extractedValues,
                 "Using double wildcard with lists should return all elements");
     }
 
@@ -781,7 +775,7 @@ class YAMLTest {
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         yaml.visit("lasting.*.sub[last]", yaml, visitor);
-        assertEquals("[foo, boom]", visitor.extractedValues.toString(),
+        assertEquals(List.of("foo", "boom"), visitor.extractedValues,
                 "Using [last] with multiple should not mix indexes");
     }
 
@@ -799,7 +793,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
                 .extrapolate(true);
         Object actual = yaml.get("ypath.sublist.*");
-        assertEquals("foo", actual.toString(),
+        assertEquals("foo", actual,
                 "Path substitution should work for get with wildcard extraction of lists");
     }
 
@@ -809,7 +803,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
                 .extrapolate(true);
         yaml.visit("ypath.sublist.*", yaml, visitor);
-        assertEquals("[foo]", visitor.extractedValues.toString(),
+        assertEquals(List.of("foo"), visitor.extractedValues,
                 "Path substitution should work for visit with wildcard extraction of lists");
     }
 
@@ -819,8 +813,8 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml")
                 .extrapolate(true);
         yaml.visit("ypath.sublist2[last].submap.ref", yaml, visitor);
-        assertEquals("[foo]", visitor.extractedValues.toString(),
-                "Path substitution should work for visit trhough list down to map");
+        assertEquals(List.of("foo"), visitor.extractedValues,
+                "Path substitution should work for visit through list down to map");
     }
 
     @Test
@@ -829,23 +823,21 @@ class YAMLTest {
                 .extrapolate(true);
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
         yaml.visit("ypath.maps[order=first].value", yaml, visitor);
-        assertEquals("[foo]", visitor.extractedValues.toString(),
+        assertEquals(List.of("foo"), visitor.extractedValues,
                 "Path substitution should work for visit using conditionals");
     }
 
-    // Disabled 20240312 due to change of the behaviour of getMultiple
-    @Disabled
+    @Test
+    @Disabled("Disabled 20240312 due to change of the behaviour of getMultiple")
     public void testGetMultipleOld() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
-        List<String> testValues = Arrays.asList("fooz", "foo", "bar", "baz", "qux", "john", "doe",
-                "Thyra", "Gunhild", "Margrethe");
 
         List<Object> extractedNames = yaml.getMultiple("name");
         assertEquals(16, extractedNames.size());
     }
 
-    // Disabled 20240312 due to change of the behaviour of getMultiple
-    @Disabled
+    @Test
+    @Disabled("Disabled 20240312 due to change of the behaviour of getMultiple")
     public void testSubsetFromGetMultipleOld() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<YAML> subsetYaml = yaml.getYAMLList("test.tuplesequence");
@@ -920,8 +912,8 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
         yaml.setExtrapolate(true);
 
-        assertEquals(System.getProperties().getProperty("user.name"), yaml.get("test.indirectstart"),
-                "Multi-level extrapolating hould work for test.indirectstart");
+        assertEquals(System.getProperty("user.name"), yaml.get("test.indirectstart"),
+                "Multi-level extrapolating should work for test.indirectstart");
     }
 
     @Test
@@ -930,13 +922,17 @@ class YAMLTest {
         yaml.setExtrapolate(true);
 
         List<String> strList = yaml.getList("test.indirectstringlist");
-        assertEquals("[foo, oof]", strList.toString(), "Requesting test.indirectstringlist should yield a string list");
+        assertEquals(List.of("foo", "oof"), strList,
+                "Requesting test.indirectstringlist should yield a string list");
 
         List<Integer> intList = yaml.getList("test.indirectnumberlist");
-        assertEquals("[123, 234]", intList.toString(), "Requesting test.indirectnumberlist should yield an int list");
+        assertEquals(List.of(123, 234), intList, "Requesting test.indirectnumberlist should yield an int list");
 
-        List<Long> longList = yaml.getList("test.indirectnumberlist");
-        assertEquals("[123, 234]", longList.toString(), "Requesting test.indirectnumberlist should yield a long list");
+        // Calling <Long>getList() does not give Long objects in the list.
+        List<? extends Number> longList = yaml.<Long>getList("test.indirectnumberlist");
+        assertEquals(List.of(123, 234),
+                longList.stream().map(Number::intValue).toList(),
+                "Requesting test.indirectnumberlist should yield a list of numbers");
     }
 
     @Test
@@ -950,8 +946,8 @@ class YAMLTest {
         assertEquals(123, sub.get("sub.subfoo"), "Map entry for 'sub.foo' should be as expected");
     }
 
-    // Paths to structures are not implemented yet
-    @Disabled
+    @Test
+    @Disabled("Paths to structures are not implemented yet")
     public void testExtrapolatingEmptyList() throws IOException {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/extrapolation.yaml");
         yaml.setExtrapolate(true);
@@ -981,7 +977,7 @@ class YAMLTest {
         YAML yaml = YAML.resolveLayeredConfigs("yaml/visitor.yaml");
         List<YAML> explicit = yaml.getYAMLList("test.tuplesequence");
         List<YAML> implicit = yaml.getList("test.tuplesequence");
-        assertEquals(explicit.toString(), implicit.toString(),
+        assertEquals(explicit, implicit,
                 "Explicit and implicit List<YAML> retrieval should be the same");
     }
 
@@ -1020,8 +1016,7 @@ class YAMLTest {
 
         List<Object> nullValues = yaml.getMultiple("multipleNull.**");
 
-        assertEquals(3, nullValues.size());
-        nullValues.forEach(Assertions::assertNull);
+        assertEquals(Collections.nCopies(3, null), nullValues);
     }
 
     @Test
@@ -1065,12 +1060,22 @@ class YAMLTest {
         assertEquals(empty, yamlList.get(0));
         assertEquals(empty, yamlList.get(4));
         // YAML Structures
-        YAML entry = new YAML((Map<String, Object>) yamlList.get(1));
-        assertEquals("bar", entry.getString("foo"));
-        // Object
-        assertEquals("stringValue", yamlList.get(5));
-        // All empty values
-        emptyList.forEach(value -> assertEquals(empty, value));
+        Object entry1 = yamlList.get(1);
+        assertNotNull(entry1);
+        if (entry1 instanceof Map<?, ?> wildcardMap) {
+            Map<String, Object> typedMap = wildcardMap.entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            e -> (String) e.getKey(), Map.Entry::getValue));
+            YAML entry = new YAML(typedMap);
+            assertEquals("bar", entry.getString("foo"));
+            // Object
+            assertEquals("stringValue", yamlList.get(5));
+            // All empty values
+            emptyList.forEach(value -> assertEquals(empty, value));
+        } else {
+            fail("Expected Map<String, Object>, got " + entry1.getClass().getName());
+        }
     }
 
 }

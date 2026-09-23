@@ -19,14 +19,16 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  */
 public class XPathSelectorImplTest {
 
+    // Avoid line break before closing </body> tag since it would generate an empty string node.
     static final String SIMPLE_XML =
             DOM.XML_HEADER +
-            "<body xmlns=\"http://example.com/default\" xmlns:ex=\"http://example.com/ex\">" +
-            "  <ex:double>1.1234</ex:double>" +
-            "  <ex:boolean att1=\"true\" att=\"false\">true</ex:boolean>" +
-            "  <string>foobar</string>" +
-            "  <integer>27</integer>" +
-            "</body>";
+                    """
+                    <body xmlns="http://example.com/default" xmlns:ex="http://example.com/ex">
+                      <ex:double>1.1234</ex:double>
+                      <ex:boolean att1="true" att="false">true</ex:boolean>
+                      <string>foobar</string>
+                      <integer>27</integer>\
+                    </body>""";
 
     Document dom;
     XPathSelector selector;
@@ -45,10 +47,10 @@ public class XPathSelectorImplTest {
         assertNull(i);
 
         i = selector.selectInteger(dom, "asdfg", 1);
-        assertEquals(1, i.intValue());
+        assertEquals(1, i);
 
         i = selector.selectInteger(dom, "/foo:body/foo:integer");
-        assertEquals(27, i.intValue());
+        assertEquals(27, i);
     }
 
     @Test
@@ -132,7 +134,7 @@ public class XPathSelectorImplTest {
         // We use /body/node() because /body/* doesn't select the text nodes
         l = selector.selectNodeList(dom, "/foo:body/node()");
         NodeList expected = dom.getFirstChild().getChildNodes();
-        assertSame(expected.getLength(), l.size());
+        assertEquals(expected.getLength(), l.size());
         assertEquals(8, l.size());
     }
 

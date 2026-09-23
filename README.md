@@ -14,7 +14,7 @@ Available as a dependency
 ## Requirements
 
 * Maven 3                                  
-* Java 11 (tested with OpenJDK 11)
+* Java 17 (tested with OpenJDK 17)
 
 ## Build
 
@@ -33,7 +33,7 @@ The content of `kb-util` is expected to be used across multiple projects and it 
 expected to be a light weight dependency: Please don't add an utility for OCRing of
 subtitles from video streams, requiring gigabytes of third party libraries.
 
-**Important:** Refactoring or other changes that breaks backwards compatibility
+**Important:** Changes that break backwards compatibility
 should be explicitly discussed with the reviewer.
  
 ## Release procedure
@@ -52,7 +52,7 @@ the Maven release plugin handles that detail.
 Ensure that the about-to-be-released version is noted in the changelog entry
 1. Ensure all local changes are committed and pushed.
 1. Ensure that your local `.m2/settings.xml` has a current `sbforge-nexus`-setup
-(contact Kim Christensen kb@ or another Maven-wrangler for help)
+(contact a Maven-wrangler for help)
 1. Follow the instructions on
 [Guide to using the release plugin](https://maven.apache.org/guides/mini/guide-releasing.html)
 which boils down to

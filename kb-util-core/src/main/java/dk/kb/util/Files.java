@@ -34,16 +34,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 /**
  * General purpose methods to handle files
  * $Id: Files.java,v 1.11 2007/12/04 13:22:01 mke Exp $
  */
 public class Files {
-    private static Logger log = LoggerFactory.getLogger(Files.class);
+    private static final Logger log = LoggerFactory.getLogger(Files.class);
 
     // TODO: Add method for recursively copying directories (and just plain file copying)
 
@@ -102,7 +102,9 @@ public class Files {
             }
             return;
         }
-        for (String child : path.list()) {
+        String[] list = path.list();
+        assert list != null;
+        for (String child : list) {
             delete(new File(path, child));
         }
         if (!path.delete()) {
@@ -111,18 +113,18 @@ public class Files {
     }
 
     /**
-     * Copy a file or directory (recursively) to a destination path. Generally
-     * it behaves as a standard posix command line copy tool.
+     * <p>Copy a file or directory (recursively) to a destination path. Generally
+     * it behaves as a standard posix command line copy tool.</p>
      *
-     * If the input path is a directory and the destination path already
+     * <p>If the input path is a directory and the destination path already
      * exists, the input directory will be copied as a subdir to the destination
-     * directory.
+     * directory.</p>
      *
-     * If the destination directory does not exist it will be created and the
-     * contents of the input dire3ctory will be copied here.
+     * <p>If the destination directory does not exist it will be created and the
+     * contents of the input directory will be copied here.</p>
      *
-     * Note: The recursive copy is not transactional. If an error occurs halfway
-     * through the copy, the already copied files will not be removed.
+     * <p>Note: The recursive copy is not transactional. If an error occurs halfway
+     * through the copy, the already copied files will not be removed.</p>
      *
      * @param path      the file or directory to copy from.
      * @param toPath    the destination file or directory.
@@ -147,20 +149,20 @@ public class Files {
     }
 
     /**
-     * Move a file with the same semantics as the standard Unix {@code move}
-     * command.
+     * <p>Move a file with the same semantics as the standard Unix {@code move}
+     * command.</p>
      *
-     * In contrast to the standard Java {@link File#renameTo} this method
+     * <p>In contrast to the standard Java {@link File#renameTo} this method
      * does extensive sanity checking and throws appropriate exceptions
-     * if something is wrong.
+     * if something is wrong.</p>
      *
-     * This method will cause quite a bit of {@code stat} dancing on the
-     * file system, so don't use this method in performance critical regions.
+     * <p>This method will cause quite a bit of {@code stat} dancing on the
+     * file system, so don't use this method in performance critical regions.</p>
      *
-     * If {@code dest} is a directory {@code source} will be moved there keeping
+     * <p>If {@code dest} is a directory, {@code source} will be moved there keeping
      * its base name.
      * If {@code dest} does not exist {@code source} will be renamed to
-     * {@code dest}.
+     * {@code dest}.</p>
      *
      * @param source    a writable file or directory
      * @param dest      either an existing writable directory, or non-existing file
@@ -297,7 +299,11 @@ public class Files {
             throw new IOException("The destination folder '" + toPath.getAbsoluteFile() + "' is not writable");
         }
 
-        for (String filename : path.list()) {
+        String[] list = path.list();
+        if (list == null) {
+            throw new IOException("Cannot list content of " + path + " (not a directory?)");
+        }
+        for (String filename : list) {
             File in = new File(path, filename);
             File out = new File(toPath, filename);
             innerCopy(in, out, overwrite);
@@ -310,9 +316,8 @@ public class Files {
      * @param source      the file to copy.
      * @param destination where to copy the file to. If this is an existing
      *                    directory, {@code source} will be copied into it,
-     *                    otherwise {@code source} will copied to this file.
-     * @param overwrite   whether or not to overwrite if the destination
-     *                    already exists.
+     *                    otherwise {@code source} will be copied to this file.
+     * @param overwrite   whether to overwrite if the destination already exists.
      * @throws IOException                thrown if there was an error writing to the
      *                                    destination file, or if the input file doidn't exist
      *                                    or if the source was a directory.
@@ -345,20 +350,17 @@ public class Files {
         }
 
         // BufferedInputStream is not used, as it chokes > 2GB
-        InputStream in = new FileInputStream(source);
-        OutputStream out = new FileOutputStream(destination);
 
-        try {
+        try (InputStream in = new FileInputStream(source); OutputStream out = new FileOutputStream(destination)) {
             byte[] buf = new byte[2028];
-            int count = 0;
+            int count;
             while ((count = in.read(buf)) != -1) {
                 out.write(buf, 0, count);
             }
-        } finally {
-            in.close();
-            out.close();
         }
-        destination.setExecutable(source.canExecute());
+        if (! destination.setExecutable(source.canExecute())) {
+            log.error("Could not set executable " + source.canExecute() + " to " + destination);
+        }
     }
 
     /**
@@ -399,20 +401,6 @@ public class Files {
         delete(new File(path));
     }
 
-    /**
-     * Converts a byte array to String, assuming UTF-8.
-     *
-     * @param in an array of bytes representing an UTF-8 String.
-     * @return the String represented by the byte array.
-     */
-    private static String bytesToString(byte[] in) {
-        try {
-            return new String(in, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("utf-8 not supported", e);
-        }
-    }
-
     /*
      * Fetches whatever a given URL points at and returns it as an UTF-8 string
      *
@@ -442,7 +430,7 @@ public class Files {
         if (destination.isDirectory()) {
             throw new IOException("The destination '" + destination + "' is a folder, while it should be a file");
         }
-        InputStream in = new ByteArrayInputStream(content.getBytes("UTF-8"));
+        InputStream in = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
         FileOutputStream out = new FileOutputStream(destination);
         Streams.pipe(in, out);
     }
@@ -461,7 +449,7 @@ public class Files {
         InputStream in = new FileInputStream(source);
         ByteArrayOutputStream out = new ByteArrayOutputStream((int) source.length());
         Streams.pipe(in, out);
-        return out.toString("UTF-8");
+        return out.toString(StandardCharsets.UTF_8);
     }
 
     /**
@@ -489,19 +477,18 @@ public class Files {
     public static String baseName(String filename)
     {
         return new File(filename).getName();
-
     }
 
     /**
-     * Download the contents of an {@link URL} and store it on disk.
+     * <p>Download the contents of an {@link URL} and store it on disk.</p>
      *
-     * if {@code target} argument is a directory the file will be stored
+     * <p>if {@code target} argument is a directory the file will be stored
      * here with the basename as extracted from the url. If it points to
-     * a non-existing file it will be written to a file with that name.
+     * a non-existing file it will be written to a file with that name.</p>
      *
-     * If the {@code target} argument points to an already existing file
+     * <p>If the {@code target} argument points to an already existing file
      * and {@code overwrite == false} a {@link FileAlreadyExistsException}
-     * will be thrown. Otherwise the file will be overwritten.
+     * will be thrown. Otherwise the file will be overwritten.</p>
      *
      * @param url       where the data should be downloaded from.
      * @param target    the place to store the downloaded data. This can be either a file or a directory.

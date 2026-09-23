@@ -22,61 +22,68 @@ package dk.kb.util.xml;
 import dk.kb.util.Files;
 import dk.kb.util.reader.CircularCharBuffer;
 import dk.kb.util.string.Strings;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class NamespaceRemoverTest {
 
-    public void testRemoveNamespaceInformation() throws Exception {
-        String[][] TESTS = new String[][]{
-                {"<foo>", "<foo>"},
-                {"<foo >", "<foo xmlns=\"hello\">"},
-                {"<foo >", "<foo xmlns= \"hello\">"},
-                {"<foo >", "<foo xmlns:boom=\"hello\">"},
-                {"<foo  id=\"bar\">", "<foo xmlns=\"hello\" id=\"bar\">"},
-                {"<foo  id=\"bar\">", "<foo xmlns:boom=\"hello\" id=\"bar\">"},
-                {"<foo >", "<foo xmlns:boom  = \"hello\">"},
-                {"<foo>", "<bar:foo>"},
-                {"<foo gnuf=\"test\">", "<foo gnuf=\"test\">"},
-                {"<foo gnuf=\"some:colon\">", "<foo gnuf=\"some:colon\">"},
-                {"<foo gnuf=\"some:colon\">",
-                 "<foo kapow:gnuf=\"some:colon\">"},
-                {"</foo>", "</foo>"},
-                {"</foo>", "</bar:foo>"},
-                {"</foo >", "</bar:foo >"},
-                {"</ foo >", "</ bar:foo >"}
-        };
-
-        NamespaceRemover remover = new NamespaceRemover(new StringReader(""));
-        for (String[] test : TESTS) {
+    @ParameterizedTest
+    @MethodSource("removeNamespaceTestExamples")
+    public void testRemoveNamespaceInformation(String expected, String tag) throws Exception {
+        try (NamespaceRemover remover = new NamespaceRemover(new StringReader(""))){
             CircularCharBuffer out = new CircularCharBuffer(100, 100);
-            remover.removeNamespace(test[1], out);
-            assertEquals(test[0], out.toString(),
-                         "The input '" + test[1] + " should process correctly");
+            remover.removeNamespace(tag, out);
+            assertEquals(expected, out.toString(),
+                    "The input '" + tag + "' should process correctly");
         }
     }
 
+    public static Stream<Arguments> removeNamespaceTestExamples() {
+        return  Stream.of(
+                Arguments.of("<foo>", "<foo>"),
+                Arguments.of("<foo >", "<foo xmlns=\"hello\">"),
+                Arguments.of("<foo >", "<foo xmlns= \"hello\">"),
+                Arguments.of("<foo >", "<foo xmlns:boom=\"hello\">"),
+                Arguments.of("<foo  id=\"bar\">", "<foo xmlns=\"hello\" id=\"bar\">"),
+                Arguments.of("<foo  id=\"bar\">", "<foo xmlns:boom=\"hello\" id=\"bar\">"),
+                Arguments.of("<foo >", "<foo xmlns:boom  = \"hello\">"),
+                Arguments.of("<foo>", "<bar:foo>"),
+                Arguments.of("<foo gnuf=\"test\">", "<foo gnuf=\"test\">"),
+                Arguments.of("<foo gnuf=\"some:colon\">", "<foo gnuf=\"some:colon\">"),
+                Arguments.of("<foo gnuf=\"some:colon\">", "<foo kapow:gnuf=\"some:colon\">"),
+                Arguments.of("</foo>", "</foo>"),
+                Arguments.of("</foo>", "</bar:foo>"),
+                Arguments.of("</foo >", "</bar:foo >"),
+                Arguments.of("</ foo >", "</ bar:foo >"));
+    }
+
+    @Test
     public void testCleanFile() throws Exception {
         Reader in = new InputStreamReader(new FileInputStream(
                 XSLTTest.getURL("data/xml/namespace_input.xml").getFile()), StandardCharsets.UTF_8);
         String expected = Files.loadString(new File(
                 XSLTTest.getURL("data/xml/namespace_removed.xml").getFile()));
-        Reader sanitized = new NamespaceRemover(in);
-        String actual = Strings.flush(sanitized);
-        assertEquals(expected, actual,
-                                "Namespaces should be removed");
+        try (Reader sanitized = new NamespaceRemover(in)) {
+            String actual = Strings.flush(sanitized);
+            assertEquals(expected, actual, "Namespaces should be removed");
+        }
     }
 
+    @Test
     public void testSpecificProblem() throws Exception {
         Reader in = new InputStreamReader(new FileInputStream(
                 XSLTTest.getURL("data/xml/specific_problem.xml").getFile()), StandardCharsets.UTF_8);
@@ -85,18 +92,21 @@ public class NamespaceRemoverTest {
         System.out.println(actual);
     }
 
-    public void testReplaceReaderMethods() {
+    @Test
+    public void testReplaceReaderMethods() throws IOException {
         String orig = "foo:bar foo:attr=\"hooray\"";
-        NamespaceRemover ns = new NamespaceRemover(null);
-
-        assertEquals("bar attr=\"hooray\"", ns.transform(orig));
+        try (NamespaceRemover ns = new NamespaceRemover(null)) {
+            assertEquals("bar attr=\"hooray\"", ns.transform(orig));
+        }
     }
 
-    public void testSetSource() {
+    @Test
+    public void testSetSource() throws IOException {
         String orig1 = "<foo:bar/>";
         String orig2 = "<bazoo:baroo/>";
-        NamespaceRemover ns = new NamespaceRemover(new StringReader(orig1));
-        assertEquals("<bar/>", Strings.flushLocal(ns));
-        assertEquals("<baroo/>", Strings.flushLocal(ns.setSource(new StringReader(orig2))));
+        try (NamespaceRemover ns = new NamespaceRemover(new StringReader(orig1))) {
+            assertEquals("<bar/>", Strings.flushLocal(ns));
+            assertEquals("<baroo/>", Strings.flushLocal(ns.setSource(new StringReader(orig2))));
+        }
     }
 }

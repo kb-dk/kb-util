@@ -22,24 +22,25 @@
  */
 package dk.kb.util;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class FilesTest {
 
-    String inputDir; // build dir for the sbutil installation is used for test input
+    String inputDir; // build dir for the kb-util installation is used for test input
     String inputFile; // test input file
-    File tmpDir; // tmp dir for the sbutil installation
+    @TempDir
+    File tmpDir; // tmp dir for the kb-util installation
     String outputFile; // test output zip file
 
     File sub1;
@@ -47,21 +48,18 @@ public class FilesTest {
     File subFile1;
     File subFile2;
 
+    @BeforeEach
     public void setUp() throws Exception {
 
-        File resources = new File(Thread.currentThread().getContextClassLoader().getResource("placeholder").toURI()).getParentFile();
+        URL placeholder = Thread.currentThread().getContextClassLoader().getResource("textfile.txt");
+        assertNotNull(placeholder);
+        File resources = new File(placeholder.toURI()).getParentFile();
         File myFolder = resources.getParentFile().getParentFile();
         File rootProject = resources.getParentFile().getParentFile().getParentFile();
 
         inputDir = myFolder.getAbsolutePath() + File.separator + "target";
-        inputFile = rootProject.getAbsolutePath()+ File.separator + "README";
-        tmpDir = new File(System.getProperty("java.io.tmpdir"), "filestest");
+        inputFile = rootProject.getAbsolutePath()+ File.separator + "README.md";
         outputFile = tmpDir + File.separator + "test";
-
-        if (tmpDir.exists()) {
-            Files.delete(tmpDir);
-        }
-        tmpDir.mkdirs();
 
         sub1 = new File(tmpDir, "sub1");
         sub2 = new File(sub1, "sub2");
@@ -69,45 +67,34 @@ public class FilesTest {
         subFile2 = new File(sub2, "baz.bar");
 
         // Make test targets
-        sub1.mkdirs();
-        sub2.mkdirs();
+        assertTrue(sub1.mkdirs());
+        assertTrue(sub2.mkdirs());
         subFile1.createNewFile();
         subFile2.createNewFile();
     }
 
-    public void tearDown() throws Exception {
-        try {
-            Files.delete(tmpDir);
-        } catch (FileNotFoundException e) {
-            // No biggie, some tests delete this on purpose
-        }
-    }
-
+    @Test
     public void testDeleteFile() throws Exception {
         Files.copy(new File(inputDir), tmpDir, true);
         Files.delete(tmpDir);
     }
 
+    @Test
     public void testDeleteFileByName() throws Exception {
         Files.copy(new File(inputDir), tmpDir, true);
         Files.delete(tmpDir.getAbsolutePath());
     }
 
+    @Test
     public void testCopyDir() throws Exception {
         Files.copy(new File(inputDir), tmpDir, true);
     }
 
+    @Test
     public void testNoOverwrite() throws Exception {
         Files.copy(new File(inputDir), tmpDir, true);
-        try {
-            Files.copy(new File(inputDir), tmpDir, false);
-        } catch (FileAlreadyExistsException e) {
-            System.out.println("Got FileAlreadyExistsException as we should: " + e.getMessage());
-            return;
-        }
-
-        assertTrue(false,
-                   "Overwriting with overwrite=false should throw an exception");
+        assertThrows(FileAlreadyExistsException.class, () -> Files.copy(new File(inputDir), tmpDir, false),
+                "Overwriting with overwrite=false should throw an exception");
     }
 
 
@@ -128,6 +115,7 @@ public class FilesTest {
 
     } */
 
+    @Test
     public void testBytesToString() throws Exception {
         String aString = "This is a string ���";
         byte[] someBytes = aString.getBytes(StandardCharsets.UTF_8);
@@ -137,6 +125,7 @@ public class FilesTest {
 
     }
 
+    @Test
     public void testSaveString() throws Exception {
         File tempDir =
                 new File(System.getProperties().getProperty("java.io.tmpdir"));
@@ -153,32 +142,36 @@ public class FilesTest {
                      "The string should be the same before and after storage");
     }
 
-    public void testSaveStringMultiple() throws Exception {
-        File tempFile = File.createTempFile("foo", "bar");
+    @Test
+    public void testSaveStringMultiple(@TempDir Path tempDir) throws Exception {
+        File tempFile = tempDir.resolve("foo-bar").toFile();
         int ITERATIONS = 5000;
         for (int i = 0; i < ITERATIONS; i++) {
-            Files.saveString("Zoo" + i, tempFile);
-            assertEquals("Zoo" + i, Files.loadString(tempFile),
+            String content = "Zoo" + i;
+            Files.saveString(content, tempFile);
+            assertEquals(content, Files.loadString(tempFile),
                          "The string should be the same before and after storage #" + i);
         }
-        tempFile.delete();
     }
 
     @Deprecated
+    @Test
     public void testBaseNameOfDir() {
         File f = new File("uga" + File.separator + "buga");
         assertEquals("buga", Files.baseName(f));
     }
 
     @Deprecated
+    @Test
     public void testBaseNameNoSep() {
         File f = new File("uga");
         assertEquals("uga", Files.baseName(f));
     }
 
+    @Test
     public void testMoveToFolder() throws Exception {
         File destination = new File(tmpDir, "destination");
-        destination.mkdirs();
+        assertTrue(destination.mkdirs());
 
         Files.move(sub1, destination, true);
         assertFalse(sub1.exists(),
@@ -188,23 +181,21 @@ public class FilesTest {
                    "The folder '" + shouldExist.getAbsoluteFile() + "' should be created");
     }
 
+    @Test
     public void testMoveToFolderFail() throws Exception {
         File destination = new File(tmpDir, "destination");
-        destination.mkdirs();
-        new File(destination, "sub1/sub2").mkdirs();
-        new File(destination, "sub1/sub2/foo.bar").mkdirs();
+        assertTrue(destination.mkdirs());
+        assertTrue(new File(destination, "sub1/sub2").mkdirs());
+        assertTrue(new File(destination, "sub1/sub2/foo.bar").mkdirs());
 
-        try {
-            Files.move(sub1, destination, false);
-            fail("Moving '" + sub1 + "' should fail");
-        } catch (IOException e) {
-            // Expected
-        }
+        assertThrows(IOException.class, () -> Files.move(sub1, destination),
+                "Moving '" + sub1 + "' should fail");
 
         assertTrue(sub1.exists(),
                    "The file '" + subFile1 + "' should still exist");
     }
 
+    @Test
     public void testMoveToNonExistingFolder() throws Exception {
         File destination = new File(tmpDir, "destination");
 
@@ -216,6 +207,7 @@ public class FilesTest {
                    "The folder '" + shouldExist.getAbsoluteFile() + "' should be created");
     }
 
+    @Test
     public void testMoveFileToFile() throws Exception {
         File destination = new File(tmpDir, "destination");
         Files.move(subFile1, destination, true);
@@ -225,6 +217,7 @@ public class FilesTest {
                    "The file '" + destination + "' should exist");
     }
 
+    @Test
     public void testMoveFileToExistingFileOverwrite() throws Exception {
         File destination = new File(tmpDir, "destination");
         destination.createNewFile();
@@ -235,6 +228,7 @@ public class FilesTest {
                    "The file '" + destination + "' should exist");
     }
 
+    @Test
     public void testMoveFileToExistingFileNotOverwrite() throws Exception {
         File destination = new File(tmpDir, "destination");
         destination.createNewFile();
@@ -248,6 +242,7 @@ public class FilesTest {
                    "The source '" + subFile1 + "' should still exist");
     }
 
+    @Test
     public void testCopyFileOverwrite() throws Exception {
         try {
             Files.copy(subFile1, subFile2, false);
@@ -257,6 +252,7 @@ public class FilesTest {
         }
     }
 
+    @Test
     public void testDownloadSuccess() throws Exception {
         File result =
                 Files.download(new File(inputFile).toURI().toURL(), tmpDir);
@@ -266,11 +262,12 @@ public class FilesTest {
         assertEquals(result.toString(), expectedFilename,
                      "Returned file should be in provided dir");
 
-        assertTrue(Arrays.equals(Checksums.md5(result),
-                                 Checksums.md5(new File(expectedFilename))),
-                   "Checksums of source and downloaded file should match");
+        assertArrayEquals(Checksums.md5(result),
+                Checksums.md5(new File(expectedFilename)),
+                "Checksums of source and downloaded file should match");
     }
 
+    @Test
     public void testDownloadNoOverwrite() throws Exception {
         URL source = new File(inputFile).toURI().toURL();
         Files.download(source, tmpDir);

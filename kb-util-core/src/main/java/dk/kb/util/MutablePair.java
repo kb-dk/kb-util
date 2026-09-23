@@ -1,5 +1,7 @@
 package dk.kb.util;
 
+import java.util.Objects;
+
 public class MutablePair<L,R> {
 
     L left;
@@ -49,17 +51,15 @@ public class MutablePair<L,R> {
 
         MutablePair<?, ?> pair = (MutablePair<?, ?>) o;
 
-        if (left != null ? !left.equals(pair.left) : pair.left != null) {
+        if (! Objects.equals(left, pair.left)) {
             return false;
         }
-        return !(right != null ? !right.equals(pair.right) : pair.right != null);
+        return Objects.equals(right, pair.right);
 
     }
 
     @Override
     public int hashCode() {
-        int result = left != null ? left.hashCode() : 0;
-        result = 31 * result + (right != null ? right.hashCode() : 0);
-        return result;
+        return Objects.hash(left, right);
     }
 }

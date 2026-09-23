@@ -22,15 +22,15 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Checks input for XML-escapes, e.g. {@code &#xABCD;} or {@code &#12345;}.
- * If an escape refers to an illegal XML character (https://en.wikipedia.org/wiki/Valid_characters_in_XML), it is
- * replaced with '?' or a custom String specified in the constructor. If it is not illegal, the escape is left as-is.
+ * <p>Checks input for XML-escapes, e.g. {@code &#xABCD;} or {@code &#12345;}.
+ * If an escape refers to an <a href="https://en.wikipedia.org/wiki/Valid_characters_in_XML>illegal XML character</a>,
+ * it is replaced with '?' or a custom String specified in the constructor. If it is legal, the escape is left as-is.</p>
  *
- * This sanitizer is conservative and allows only the Non-restricted characters stated on the wikipedia page linked
- * above. This should ensure maximum interoperability.
+ * <p>This sanitizer is conservative and allows only the Non-restricted characters stated on the wikipedia page linked
+ * above. This should ensure maximum interoperability.</p>
  *
- * The sanitizer is lenient with regard to syntactical errors in the input. It does not try to fix non-valid constructs
- * such as {@code &#0A;} (hex in a decimal escape) but instead returns the original input.
+ * <p>The sanitizer is lenient with regard to syntactical errors in the input. It does not try to fix non-valid constructs
+ * such as {@code &#0A;} (hex in a decimal escape) but instead returns the original input.</p>
  */
 public class XMLEscapeSanitiser extends CallbackReplacer {
     private static final Logger log = LoggerFactory.getLogger(XMLEscapeSanitiser.class);
@@ -52,9 +52,10 @@ public class XMLEscapeSanitiser extends CallbackReplacer {
     }
 
     /**
-     * Isolates the unicode part of an XML escape (either hex or decimal) and parses that to a long, then checks if the
+     * Isolates the Unicode part of an XML escape (either hex or decimal) and parses that to a long, then checks if the
      * Unicode codepoint is a valid XML character. If it is valid, the full original escape is returned, else the
      * replacement character (default {@code ?} is returned.
+     *
      * @param replacement the replacement character for illegal XML characters.
      * @return the original input if the Unicode escape is a valid XML character, else the replacement string.
      */

@@ -8,11 +8,11 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Parses the property file 'build.properties' which has been populated with application name, version and build time.
- * The information is typically logged upon application start to make it easier for Operations an other log users
- * to determine what is running.
+ * <p>Parses the property file 'build.properties' which has been populated with application name, version and build time.
+ * The information is typically logged upon application start to make it easier for Operations and other log users
+ * to determine what is running.</p>
  *
- * As of 2024-01-29 this requires that the project pom.xml contains the following sections
+ * <p>As of 2024-01-29 this requires that the project pom.xml contains the following sections
  * <pre>
  *   <properties>
  *     ...
@@ -83,6 +83,7 @@ import java.util.Properties;
  *   GIT.CLOSEST.TAG=${git.closest.tag.name}
  *   GIT.COMMIT.TIME=${git.commit.author.time}
  * </pre>
+ * </p>
  */
 public class BuildInfoManager {
     static String BUILD_PROPERTY_FILE = "build.properties";

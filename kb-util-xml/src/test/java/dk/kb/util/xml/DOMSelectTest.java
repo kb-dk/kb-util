@@ -1,7 +1,6 @@
 package dk.kb.util.xml;
 
 import dk.kb.util.string.Strings;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
@@ -12,6 +11,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 import static dk.kb.util.xml.DOM.XML_HEADER;
 import static dk.kb.util.xml.DOM.clearXPathCache;
@@ -61,7 +61,7 @@ public class DOMSelectTest {
     @Test
     public void testSelectInteger() {
         Integer i = selectInteger(dom, "asdfg");
-        assertEquals(null, i);
+        assertNull(i);
 
         i = selectInteger(dom, "asdfg", 1);
         assertEquals(1, i.intValue());
@@ -73,7 +73,7 @@ public class DOMSelectTest {
     @Test
     public void testSelectDouble() {
         Double d = selectDouble(dom, "asdfg");
-        assertEquals(null, d);
+        assertNull(d);
 
         d = selectDouble(dom, "asdfg", 1.1);
         assertEquals(1.1, d);
@@ -91,7 +91,7 @@ public class DOMSelectTest {
         assertEquals(Boolean.FALSE, b);
 
         b = selectBoolean(dom, "asdfg", null);
-        assertEquals(null, b);
+        assertNull(b);
 
         b = selectBoolean(dom, "/body/boolean");
         assertEquals(Boolean.TRUE, b);
@@ -106,7 +106,7 @@ public class DOMSelectTest {
         assertEquals("sbutil", s);
 
         s = selectString(dom, "asdfg", null);
-        assertEquals(null, s);
+        assertNull(s);
 
         s = selectString(dom, "/body/string");
         assertEquals("foobar", s);
@@ -118,7 +118,7 @@ public class DOMSelectTest {
     @Test
     public void testSelectNode() {
         Node n = selectNode(dom, "asdfg");
-        assertEquals(null, n);
+        assertNull(n);
 
         n = selectNode(dom, "/body");
         assertSame(dom.getFirstChild(), n);
@@ -127,62 +127,46 @@ public class DOMSelectTest {
     @Test
     public void testSelectNodeList() {
         List<Node> l = selectNodeList(dom, "asdfg");
-        assertEquals(0, l.size());
+        assertTrue(l.isEmpty());
 
         // We use /body/node() because /body/* doesn't select the text nodes
         l = selectNodeList(dom, "/body/node()");
         NodeList expected = dom.getFirstChild().getChildNodes();
-        assertSame(expected.getLength(), l.size());
+        assertEquals(expected.getLength(), l.size());
         assertEquals(10, l.size());
-        boolean subExist = false;
-        for (int i = 0; i < expected.getLength(); i++) {
-            if (expected.item(i).getNodeName().equals("sub")) {
-                subExist = true;
-                break;
-            }
-        }
-        if (!subExist) {
-            fail("'sub' isn't found");
-        }
+        boolean subExist = IntStream.range(0, expected.getLength())
+                .anyMatch(i -> expected.item(i).getNodeName().equals("sub"));
+        assertTrue(subExist, "‘sub’ isn’t found");
     }
 
     public void threadTest(final boolean blowCache) throws Exception {
         Thread[] threads = new Thread[20];
         final List<Throwable> errors =
-                Collections.synchronizedList(new LinkedList<Throwable>());
+                Collections.synchronizedList(new LinkedList<>());
         final Random random = new Random();
 
         for (int i = 0; i < threads.length; i++) {
-            threads[i] = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for (int j = 0; j < 50; j++) {
-                        testSelectBoolean();
-                        testSelectDouble();
-                        testSelectInteger();
-                        testSelectNode();
-                        testSelectNodeList();
-                        testSelectString();
+            threads[i] = new Thread(() -> {
+                for (int j = 0; j < 50; j++) {
+                    testSelectBoolean();
+                    testSelectDouble();
+                    testSelectInteger();
+                    testSelectNode();
+                    testSelectNodeList();
+                    testSelectString();
 
-                        if (blowCache) {
-                            for (int k = 0; k < 50; k++) {
-                                String bleh = selectString(
-                                        dom, "/body/a" + random.nextInt(),
-                                        "bleh, no such node");
-                                assertEquals("bleh, no such node", bleh);
-                            }
+                    if (blowCache) {
+                        for (int k = 0; k < 50; k++) {
+                            String bleh = selectString(
+                                    dom, "/body/a" + random.nextInt(),
+                                    "bleh, no such node");
+                            assertEquals("bleh, no such node", bleh);
                         }
                     }
                 }
             });
             threads[i].setUncaughtExceptionHandler(
-                    new Thread.UncaughtExceptionHandler() {
-                        @Override
-                        public void uncaughtException(Thread thread,
-                                                      Throwable throwable) {
-                            errors.add(throwable);
-                        }
-                    });
+                    (thread, throwable) -> errors.add(throwable));
         }
 
         for (Thread t : threads) {
@@ -192,12 +176,7 @@ public class DOMSelectTest {
             t.join();
         }
 
-        if (errors.size() > 0) {
-            for (Throwable t : errors) {
-         //       t.printStackTrace();
-            }
-            fail("Uncaught exceptions in threads");
-        }
+        assertTrue(errors.isEmpty(), "Uncaught exceptions in threads: " + errors);
     }
 
     // TODO not stable, reason should be found.

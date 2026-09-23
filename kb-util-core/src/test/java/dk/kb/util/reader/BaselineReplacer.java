@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class BaselineReplacer extends ReplaceReader {
         super(in);
 
         this.rules = new ArrayList<>(rules.entrySet());
-        this.rules.sort((o1, o2) -> -1 * (Integer.compare(o1.getKey().length(), o2.getKey().length())));
+        this.rules.sort(Comparator.comparingInt((Map.Entry<String, String> e) -> e.getKey().length()).reversed());
 
         // Recalc the internal buffer
         setSource(in);
@@ -90,7 +91,7 @@ public class BaselineReplacer extends ReplaceReader {
     }
 
     @Override
-    public int read(char cbuf[], int off, int len) throws IOException {
+    public int read(char[] cbuf, int off, int len) throws IOException {
         return in.read(cbuf, off, len);
     }
 

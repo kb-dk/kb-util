@@ -22,16 +22,20 @@
  */
 package dk.kb.util;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,11 +49,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class ChecksumsTest {
 
-    static String inputDir; // build dir for the sbutil installation is used for test input
+    static String inputDir; // build dir for the kb-util installation is used for test input
     static String inputFile1; // test input file
     static String inputFile2; // test input file
-    static String tmpDir; // tmp dir for the sbutil installation
-    static String testFile1; // test output file
+    @TempDir
+    static Path tempDir;
+    static Path testFile1; // test output file
 
     static String testString1;
     static String testString2;
@@ -59,8 +64,7 @@ public class ChecksumsTest {
         inputDir = System.getProperty("user.dir") + File.separator + "classes";
         inputFile1 = System.getProperty("user.dir") + File.separator + "README";
         inputFile2 = System.getProperty("user.dir") + File.separator + "MAINTAINERS";
-        tmpDir = System.getProperty("user.dir") + File.separator + "tmp";
-        testFile1 = tmpDir + File.separator + "test.file";
+        testFile1 = tempDir.resolve("test.file");
 
         testString1 = "Hola Mondo";
         testString2 = "Hej Verden";
@@ -68,32 +72,21 @@ public class ChecksumsTest {
         createTestFile();
     }
 
-    @AfterAll
-    static void tearDown() {
-        new File(testFile1).delete();
-    }
-
-
-    private void validateChecksum(byte[] b) {
+    private static void validateChecksum(byte[] b) {
         assertNotNull(b);
         assertTrue(b.length >= 1);
     }
 
     static void createTestFile() throws Exception {
-        File f = new File(testFile1);
-        f.getParentFile().mkdirs();
-        PrintWriter p = new PrintWriter(new FileOutputStream(f), true, StandardCharsets.UTF_8);
-        p.print(testString1);
-        p.flush();
-        p.close();
+        try (PrintWriter p = new PrintWriter(Files.newOutputStream(testFile1), true, StandardCharsets.UTF_8)) {
+            p.print(testString1);
+        }
     }
 
     /**
      * Check that returned SHA-1 digests are non-empty and non-null.
      * Furthermore check that two different strings doesn't give the same
      * digest.
-     *
-     * @throws Exception
      */
     @Test
     public void testSha1String() {
@@ -128,22 +121,20 @@ public class ChecksumsTest {
         assertFalse(Arrays.equals(b, bb));
     }
 
-    /**
-     * Check that writing a string to a file should give same checksums on string an file
-     *
-     * @throws Exception
-     */
+    /** Check that writing a string to a file should give same checksums on string as on a file */
     @Test
-    public void testSha1StringFileSanity() throws Exception {
+    public void testSha1StringFileSanity() throws IOException {
         byte[] b = Checksums.sha1(testString1);
-        byte[] bb = Checksums.sha1(new File(testFile1));
-        assertTrue(Arrays.equals(b, bb));
+        byte[] bb = Checksums.sha1(testFile1.toFile());
+        assertArrayEquals(b, bb);
     }
 
     @Test
-    public void testMd5StringFileSanity() throws Exception {
+    public void testMd5StringFileSanity() throws IOException {
         byte[] b = Checksums.sha1(testString1);
-        byte[] bb = Checksums.sha1(new File(testFile1));
-        assertTrue(Arrays.equals(b, bb));
+        try (InputStream is = Files.newInputStream(testFile1)) {
+            byte[] bb = Checksums.sha1(is);
+            assertArrayEquals(b, bb);
+        }
     }
 }

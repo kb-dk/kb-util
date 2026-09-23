@@ -40,7 +40,6 @@ public class OpenApiResourceTest {
         OpenApiResource apiResource = new OpenApiResource();
         OpenApiResource.setConfig(config);
 
-
         assertThrows(NotFoundServiceException.class, () ->
                 apiResource.getYamlSpec("secret/very").getEntity().toString());
     }
@@ -63,7 +62,6 @@ public class OpenApiResourceTest {
                 .getEntity().toString();
 
         assertFalse(jsonSpec.contains("${config:"));
-
     }
 
     @SuppressWarnings("resource")

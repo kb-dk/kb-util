@@ -32,8 +32,8 @@ class AutochainingIteratorTest {
                     return AutochainingIterator.IteratorOffset.of(offset + 1, strings.iterator());
                 }
         );
-        String result = StringListUtils.asStream(it).collect(Collectors.joining(" "));
-        assertThat(result,is("a b c d e f"));
+        List<String> result = StringListUtils.asStream(it).toList();
+        assertThat(result, is(List.of("a", "b", "c", "d", "e", "f")));
     }
 
 }

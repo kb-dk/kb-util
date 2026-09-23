@@ -70,13 +70,11 @@ public class JSON implements ContextResolver<ObjectMapper> {
         JSON json = new JSON();
         ObjectMapper mapper = json.getContext(object.getClass());
 
-
         if (indent) {
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
         } else {
             mapper.disable(SerializationFeature.INDENT_OUTPUT);
         }
-
 
         try {
             return mapper.writeValueAsString(object);

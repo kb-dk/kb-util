@@ -3,7 +3,6 @@ package dk.kb.util;
 import org.apache.commons.collections4.list.SetUniqueList;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.hamcrest.CoreMatchers;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -26,9 +26,9 @@ class StringListUtilsTest {
     
     @Test
     void truncateMiddle() {
-        
         String string
-                = "SU1:SU1_DESK:HOLD,MOVE:HFBOT,HFGEO,HFPAN,HFZM,HFFAR,HFJTS,HFJSP,HFKVT,HAUDL,HATSS,HFFJ,HFTSS,LFZM,LFPAN,LFBOT,LFGEO,LFJTS,LFKVT,LFZM,LFFJ,HASEM,BAGEO,BAIVT,BALSA,BAPEN,BAHBS,BAINF,BAINH,BASEM";
+                = "SU1:SU1_DESK:HOLD,MOVE:HFBOT,HFGEO,HFPAN,HFZM,HFFAR,HFJTS,HFJSP,HFKVT,HAUDL,HATSS,HFFJ,HFTSS,LFZM," +
+                        "LFPAN,LFBOT,LFGEO,LFJTS,LFKVT,LFZM,LFFJ,HASEM,BAGEO,BAIVT,BALSA,BAPEN,BAHBS,BAINF,BAINH,BASEM";
         
         String result = StringListUtils.truncateMiddle(string, 100);
         assertThat(result.length(), is(100));
@@ -48,9 +48,9 @@ class StringListUtilsTest {
 
     @Test
     void truncateEnd() {
-        
         String string
-                = "SU1:SU1_DESK:HOLD,MOVE:HFBOT,HFGEO,HFPAN,HFZM,HFFAR,HFJTS,HFJSP,HFKVT,HAUDL,HATSS,HFFJ,HFTSS,LFZM,LFPAN,LFBOT,LFGEO,LFJTS,LFKVT,LFZM,LFFJ,HASEM,BAGEO,BAIVT,BALSA,BAPEN,BAHBS,BAINF,BAINH,BASEM";
+                = "SU1:SU1_DESK:HOLD,MOVE:HFBOT,HFGEO,HFPAN,HFZM,HFFAR,HFJTS,HFJSP,HFKVT,HAUDL,HATSS,HFFJ,HFTSS,LFZM," +
+                        "LFPAN,LFBOT,LFGEO,LFJTS,LFKVT,LFZM,LFFJ,HASEM,BAGEO,BAIVT,BALSA,BAPEN,BAHBS,BAINF,BAINH,BASEM";
         
         String result = StringListUtils.truncateEnd(string, 100);
         assertThat(result.length(), is(100));
@@ -100,11 +100,11 @@ class StringListUtilsTest {
         assertThat(StringListUtils.removeEmpties(Arrays.asList("a", "2", "", null)), is(Arrays.asList("a", "2")));
         assertThat(StringListUtils.removeEmpties(Arrays.asList("a", null, "2")), is(Arrays.asList("a", "2")));
         assertThat(StringListUtils.removeEmpties(Arrays.asList(null, "a", null, "2")), is(Arrays.asList("a", "2")));
-        assertThat(StringListUtils.removeEmpties(Arrays.asList("", null)), is(Arrays.asList()));
+        assertThat(StringListUtils.removeEmpties(Arrays.asList("", null)), is(List.of()));
         
         assertThat(StringListUtils.removeEmpties("a", "2", "", null), is(Arrays.asList("a", "2")));
         assertThat(StringListUtils.removeEmpties(null, "a", "2", ""), is(Arrays.asList("a", "2")));
-        assertThat(StringListUtils.removeEmpties("", null), is(Arrays.asList()));
+        assertThat(StringListUtils.removeEmpties("", null), is(List.of()));
         
     }
     
@@ -142,18 +142,16 @@ class StringListUtilsTest {
     @Test
     void removeSubstrings() {
         List<String> actual = StringListUtils.removeSubstrings(List.of("aaabbb", "aaa", "b"))
-                                      .stream().sorted().collect(Collectors.toList());
-        List<String> expected = List.of("aaabbb")
-                                    .stream().sorted().collect(Collectors.toList());
+                                      .stream().sorted().toList();
+        List<String> expected = Stream.of("aaabbb").sorted().toList();
         assertThat(actual, is(expected));
     }
 
     @Test
     void removeSubstringsReverseOrder() {
         List<String> actual = StringListUtils.removeSubstrings(List.of("b", "aaa", "aaabbb"))
-                                      .stream().sorted().collect(Collectors.toList());
-        List<String> expected = List.of("aaabbb")
-                                    .stream().sorted().collect(Collectors.toList());
+                                      .stream().sorted().toList();
+        List<String> expected = Stream.of("aaabbb").sorted().toList();
         assertThat(actual, is(expected));
     }
     
@@ -161,58 +159,46 @@ class StringListUtilsTest {
     @Test
     public void testCollectionsEmptyListImmutable() {
         List<String> immutable = Collections.emptyList();
-        try {
-            immutable.add("test");
-            fail("empty list is not immutable, what magic is this?");
-        } catch (UnsupportedOperationException e){
-            //expected
-        }
+        // This tests the standard Java library, so is rather pointless.
+        assertThrows(UnsupportedOperationException.class, () -> immutable.add(""),
+                "empty list is not immutable, what magic is this?");
         List<String> list = StringListUtils.toModifiableList(immutable);
         assertEquals(0,list.size());
         list.add("Test");
-        assertEquals(list.get(0),("Test"));
+        assertEquals("Test", list.get(0));
     }
     
     @Test
     public void testListsOfImmutable() {
         List<String> immutable = List.of();
-        try {
-            immutable.add("test");
-            fail("empty list is not immutable, what magic is this?");
-        } catch (UnsupportedOperationException e){
-            //expected
-        }
+        // This tests the standard Java library, so is rather pointless.
+        assertThrows(UnsupportedOperationException.class, () -> immutable.add(""),
+                "empty list is not immutable, what magic is this?");
         List<String> list = StringListUtils.toModifiableList(immutable);
         assertEquals(0,list.size());
         list.add("Test");
-        assertEquals(list.get(0),("Test"));
+        assertEquals(("Test"), list.get(0));
     }
     
     @Test
     public void testArraysAsListImmutable() {
         List<String> immutable = Arrays.asList();
-        try {
-            immutable.add("test");
-            fail("empty list is not immutable, what magic is this?");
-        } catch (UnsupportedOperationException e){
-            //expected
-        }
+        // This tests the standard Java library, so is rather pointless.
+        assertThrows(UnsupportedOperationException.class, () -> immutable.add(""),
+                "empty list is not appendable, what magic is this?");
         List<String> list = StringListUtils.toModifiableList(immutable);
         assertEquals(0,list.size());
         list.add("Test");
-        assertEquals(list.get(0),("Test"));
+        assertEquals(("Test"), list.get(0));
     }
     
     
     @Test
     public void testApacheCollections() {
         List<String> immutable = new UnmodifiableList<>(new ArrayList<>());
-        try {
-            immutable.add("test");
-            fail("empty list is not immutable, what magic is this?");
-        } catch (UnsupportedOperationException e){
-            //expected
-        }
+        // This tests Apache UnmodifiableList, so is rather pointless.
+        assertThrows(UnsupportedOperationException.class, () -> immutable.add(""),
+                "empty list is mutable, what magic is this?");
         testToModifiableList(immutable);
     }
     
@@ -228,7 +214,7 @@ class StringListUtilsTest {
         List<String> list = StringListUtils.toModifiableList(immutableList);
         assertEquals(startSize, list.size());
         list.add("Test");
-        assertEquals(list.get(startSize),("Test"));
+        assertEquals("Test", list.get(startSize));
     }
 /*
     // Checking for immutability on an ArrayList (an extremely common scenario) causes an expansion of the ArrayList
@@ -264,54 +250,48 @@ class StringListUtilsTest {
         List<String> modifiableTestList = StringListUtils.toModifiableList(testList);
         //Same object, not same contents in new wrapping
         assertEquals(testList, modifiableTestList);
-        assertEquals(0,testList.size());
+        assertEquals(0, testList.size());
     }
     
     
     @Test
     public void testAppendOnlyList() {
-        List<String> evergrowing = new ArrayList<String>(List.of("Test")) {
+        List<String> evergrowing = new ArrayList<>(List.of("Test")) {
             @Override
             public String remove(int index) {
                 throw new UnsupportedOperationException("Remove is not allowed");
             }
-    
+
             @Override
             public boolean remove(Object o) {
                 throw new UnsupportedOperationException("Remove is not allowed");
             }
-    
+
             @Override
             protected void removeRange(int fromIndex, int toIndex) {
                 throw new UnsupportedOperationException("Remove is not allowed");
             }
-    
+
             @Override
             public boolean removeAll(Collection<?> c) {
                 throw new UnsupportedOperationException("Remove is not allowed");
             }
-    
+
             @Override
             public boolean retainAll(Collection<?> c) {
                 throw new UnsupportedOperationException("Remove is not allowed");
             }
-    
+
             @Override
             public boolean removeIf(Predicate<? super String> filter) {
                 throw new UnsupportedOperationException("Remove is not allowed");
             }
         };
-        try {
-            evergrowing.remove("test");
-            fail("appendOnlyList allows removes..., what magic is this?");
-        } catch (UnsupportedOperationException e){
-            //expected
-        }
+        assertThrows(UnsupportedOperationException.class, () -> evergrowing.remove("test"),
+                "appendOnlyList allows removes..., what magic is this?");
         List<String> list = StringListUtils.toModifiableList(evergrowing);
-        assertEquals(1,list.size());
+        assertEquals(1, list.size());
         list.add("Test2");
-        assertEquals(list.get(0),("Test"));
-        assertEquals(list.get(1),("Test2"));
-    
+        assertEquals(List.of("Test", "Test2"), list);
     }
 }

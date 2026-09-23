@@ -1,7 +1,7 @@
 package dk.kb.util.yaml;
 
 /**
- * Thrown when attempting to lookup a path that does not exist in the YAML
+ * Thrown when attempting to look up a path that does not exist in the YAML
  */
 public class NotFoundException extends YAMLException {
     

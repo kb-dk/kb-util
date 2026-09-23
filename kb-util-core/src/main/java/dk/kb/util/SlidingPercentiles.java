@@ -5,13 +5,13 @@ import dk.kb.util.reader.CircularIntBuffer;
 import java.util.Arrays;
 
 /**
- * Sliding window percentile calculator (this includes arithmetic mean) with min and max.
+ * <p>Sliding window percentile calculator (this includes arithmetic mean) with min and max.</p>
  *
- * A window size is defined and the calculator is fed a stream of values. It will automatically remove older entries.
+ * <p>A window size is defined and the calculator is fed a stream of values. It will automatically remove older entries.
  * Care has been taken to optimize performance by using int[], binary search and array copy to maintain the internal
- * structure. The intended use case is for windows that are well within level 2/3-cache.
+ * structure. The intended use case is for windows that are well within level 2/3-cache.</p>
  *
- * This implementation is not thread safe.
+ * <p>This implementation is not thread safe.</p>
  */
 // TODO: Running calculation of average and deviation
 public class SlidingPercentiles {
@@ -48,6 +48,7 @@ public class SlidingPercentiles {
     /**
      * Shorthand for {@code SlidingPercentiles(windowSize, true)}. The slider is thus optimized for frequent
      * polling for percentiles.
+     *
      * @param windowSize the maximum amount of values that are remembered.
      */
     public SlidingPercentiles(int windowSize) {
@@ -67,11 +68,12 @@ public class SlidingPercentiles {
     }
 
     /**
-     * Add the given value to the window, maintaining internal invariants. If the maximum size for the window has been
-     * reached, this involves an eviction of the oldest value.
+     * <p>Add the given value to the window, maintaining internal invariants. If the maximum size for the window has been
+     * reached, this involves an eviction of the oldest value.</p>
      *
-     * If {@link #continuousSort} is true, insertion time is O(n); if false, insertion time is O(1).
-     * {@code System#arraycopy} is used for shifting values when continuousSort is true.
+     * <p>If {@link #continuousSort} is true, insertion time is O(n); if false, insertion time is O(1).
+     * {@code System#arraycopy} is used for shifting values when continuousSort is true.</p>
+     *
      * @param value will be added to the sliding window.
      */
     public void add(int value) {
@@ -81,8 +83,8 @@ public class SlidingPercentiles {
         }
         if (continuousSort) {
             int insertionPoint = Arrays.binarySearch(sortedValues, 0, windowSize, value);
-            insertionPoint = insertionPoint >= 0 ? insertionPoint : -1 * (insertionPoint +1);
-            System.arraycopy(sortedValues, insertionPoint, sortedValues, insertionPoint+1, windowSize-insertionPoint);
+            insertionPoint = insertionPoint >= 0 ? insertionPoint : -1 * (insertionPoint + 1);
+            System.arraycopy(sortedValues, insertionPoint, sortedValues, insertionPoint + 1, windowSize - insertionPoint);
             sortedValues[insertionPoint] = value;
         } else {
             sortedDirty = true;
@@ -92,10 +94,11 @@ public class SlidingPercentiles {
     }
 
     /**
-     * Removed the oldest received value from the window.
+     * <p>Removed the oldest received value from the window.</p>
      *
-     * If {@link #continuousSort} is true, removal time is O(n); if false, removal time is O(1).
-     * {@code System#arraycopy} is used for shifting values when continuousSort is true.
+     * <p>If {@link #continuousSort} is true, removal time is O(n); if false, removal time is O(1).
+     * {@code System#arraycopy} is used for shifting values when continuousSort is true.</p>
+     *
      * @return the oldest value in the window.
      */
     private int pop() {
@@ -105,9 +108,9 @@ public class SlidingPercentiles {
             if (removalPoint < 0) {
                 throw new IllegalStateException("The value " + value + " did not exist in the window");
             }
-            if (removalPoint != size()-1) {
-                System.arraycopy(
-                        sortedValues, removalPoint+1, sortedValues, removalPoint, sortedValues.length-removalPoint);
+            if (removalPoint != size() - 1) {
+                System.arraycopy(sortedValues, removalPoint + 1,
+                        sortedValues, removalPoint, sortedValues.length - removalPoint);
             }
         } else {
             sortedDirty = true;
@@ -143,18 +146,21 @@ public class SlidingPercentiles {
 
     /**
      * Shorthand for {@code getPercentile(SlidingPercentiles.MEDIAN)};
+     *
      * @return the median for the collected values.
      */
     public double getMedian() {
         return getPercentile(MEDIAN);
     }
+
     /**
      * Returns the given percentile, interpolated between two values if the percentile is not a perfect split.
+     *
      * @param percent the wanted percentile as a number from 0 to 1, both inclusive.
      * @return the calculated percentile in O(1) time if {@link #continuousSort} is true, else O(n*log(n)).
      */
     public double getPercentile(double percent) {
-        if (values.length() == 0) {
+        if (values.isEmpty()) {
             return 0;
         }
         if (!continuousSort && sortedDirty) {
@@ -164,12 +170,12 @@ public class SlidingPercentiles {
         if (pos < 0) {
             return sortedValues[0];
         }
-        if (pos >= values.length()-1) {
-            return sortedValues[values.length()-1];
+        if (pos >= values.length() - 1) {
+            return sortedValues[values.length() - 1];
         }
-        int valLeft = sortedValues[(int)pos];
-        int valRight = sortedValues[((int)pos)+1];
-        double fraction = pos - ((int)pos);
+        int valLeft = sortedValues[(int) pos];
+        int valRight = sortedValues[((int) pos) + 1];
+        double fraction = pos - ((int) pos);
         return valLeft + (valRight - valLeft) * fraction;
     }
 
@@ -183,7 +189,7 @@ public class SlidingPercentiles {
      * @return {code sum/count} aka the unweighted mean or 0 if there are no values. Response time is O(1).
      */
     public double getAverage() {
-        return values.length() == 0 ? 0 : ((double)sum)/values.length();
+        return values.isEmpty() ? 0 : ((double) sum) / values.length();
     }
 
     /**

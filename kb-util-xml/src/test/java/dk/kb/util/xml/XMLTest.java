@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class XMLTest {
@@ -17,10 +18,11 @@ class XMLTest {
     @Test
     void domToString() throws IOException {
         String xmlFileContents = Resolver.readFileFromClasspath("xml/test.xml");
+        assertThat(xmlFileContents, notNullValue());
         Document document = XML.fromXML(xmlFileContents, true);
-        String xmloutput = XML.domToString(document);
+        String xmlOutput = XML.domToString(document);
         String[] splitExpected = xmlFileContents.split("\n");
-        String[] splitActual = xmloutput.split("\n");
+        String[] splitActual = xmlOutput.split("\n");
         assertThat(splitExpected.length, is(splitActual.length));
         for (int i = 0; i < splitExpected.length; i++) { //Fix to compare line for line, clearing indention
             assertThat(splitActual[i].trim(), is(splitExpected[i].trim()));
@@ -46,7 +48,15 @@ class XMLTest {
         MarshallTestObject object = new MarshallTestObject("foo", new Weird("bar"));
         String result = XML.marshall(object);
         assertThat(result,
-                                 is("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<marshallTestObject>\n    <key>foo</key>\n    <value>\n        <string>bar</string>\n    </value>\n</marshallTestObject>\n"));
+                   is("""
+                           <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                           <marshallTestObject>
+                               <key>foo</key>
+                               <value>
+                                   <string>bar</string>
+                               </value>
+                           </marshallTestObject>
+                           """));
     }
     
     @Test
@@ -64,10 +74,10 @@ class XMLTest {
         
         //Create the xml for the non-root element
         //Very complex way of creating the xml blob "<value><string>bar</string></value>"
-        String intermediate = XML.domToString(XpathUtils
-                                                      .createXPathSelector()
-                                                      .selectNode(XML.fromXML(XML.marshall(marshallTestObject), true),
-                                                                  "/marshallTestObject/value"));
+        String intermediate = XML.domToString(
+                XpathUtils.createXPathSelector()
+                        .selectNode(XML.fromXML(XML.marshall(marshallTestObject), true),
+                                "/marshallTestObject/value"));
         
         assertThat(intermediate.replaceAll("\\s", ""), is("<value><string>bar</string></value>"));
         
@@ -76,10 +86,9 @@ class XMLTest {
     }
 
     @XmlRootElement
-    public static class MarshallTestObject {
+    private static class MarshallTestObject {
         private String key;
         private Weird value;
-
 
         public MarshallTestObject() {
         }
@@ -163,10 +172,11 @@ class XMLTest {
     void testFromXMLStream() throws IOException {
         try (InputStream inputStream = Resolver.openFileFromClasspath("xml/test.xml")) {
             Document doc = XML.fromXML(inputStream, true);
-            String xmloutput = XML.domToString(doc);
+            String xmlOutput = XML.domToString(doc);
             String xmlFileContents = Resolver.readFileFromClasspath("xml/test.xml");
+            assertThat(xmlFileContents, notNullValue());
             String[] splitExpected = xmlFileContents.split("\n");
-            String[] splitActual = xmloutput.split("\n");
+            String[] splitActual = xmlOutput.split("\n");
             assertThat(splitExpected.length, is(splitActual.length));
             for (int i = 0; i < splitExpected.length; i++) { //Fix to compare line for line, clearing indention
                 assertThat(splitActual[i].trim(), is(splitExpected[i].trim()));

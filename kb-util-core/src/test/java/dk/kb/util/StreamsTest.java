@@ -28,12 +28,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-/**
- *
- */
 public class StreamsTest {
 
     private byte[] getByteArray(int length) {
@@ -45,25 +42,19 @@ public class StreamsTest {
 
     @Test
     public void testPipe() throws Exception {
-        int INSIZE = 200;
-        byte[] inbytes = getByteArray(INSIZE);
-        ByteArrayInputStream in = new ByteArrayInputStream(inbytes);
+        int IN_SIZE = 200;
+        byte[] inBytes = getByteArray(IN_SIZE);
+        ByteArrayInputStream in = new ByteArrayInputStream(inBytes);
         ByteArrayOutputStream out = new ByteArrayOutputStream(500);
         Streams.pipe(in, out);
-        byte[] outbytes = out.toByteArray();
-        assertEquals(inbytes.length, outbytes.length,
-                     "Input and output streams should be the same size");
-        for (int i = 0; i < INSIZE; i++) {
-            assertEquals(inbytes[i], outbytes[i],
-                         "The content at position " + i + " should be equal. " +
-                         "In was " + inbytes[i] + " out was " + outbytes[i]);
-        }
+        byte[] outBytes = out.toByteArray();
+        assertArrayEquals(inBytes, outBytes);
     }
 
 
     @Test
     public void testGetResource() throws Exception {
         String myCode = Streams.getUTF8Resource("textfile.txt");
-        assertTrue(myCode.length() > 0, "Something should be loaded");
+        assertFalse(myCode.isEmpty(), "Something should be loaded");
     }
 }

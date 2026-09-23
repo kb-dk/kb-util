@@ -64,7 +64,8 @@ class AutoYAMLTest {
         // Update config file with same content: Should not trigger anything
         Files.writeString(conf.toPath(), CONF0, StandardCharsets.UTF_8);
         Thread.sleep(200);
-        assertEquals(baseReloads+1, reloads.get(), "After second sleep, reloads should still be correct (new config is identical to old)");
+        assertEquals(baseReloads+1, reloads.get(),
+                "After second sleep, reloads should still be correct (new config is identical to old)");
 
         // Update config with new content
         Files.writeString(conf.toPath(), CONF1, StandardCharsets.UTF_8);
@@ -73,7 +74,8 @@ class AutoYAMLTest {
         assertEquals(1, auto.getYAML().getInteger(VALUE_KEY), "First change value should match");
 
         Thread.sleep(200);
-        assertEquals(baseReloads+2, reloads.get(), "After fourth sleep, reloads should still be 1 (no change at all)");
+        assertEquals(baseReloads+2, reloads.get(),
+                "After fourth sleep, reloads should still be 1 (no change at all)");
 
         // Second update and disabling of auto-update
         Files.writeString(conf.toPath(), CONF2, StandardCharsets.UTF_8);
@@ -94,7 +96,8 @@ class AutoYAMLTest {
         }
         {
             Integer fallback = auto.getYAML().getInteger("config.fallback");
-            assertEquals(87, fallback, "Expanding a non-existing property with fallback should yield the fallback");
+            assertEquals(87, fallback,
+                    "Expanding a non-existing property with fallback should yield the fallback");
         }
 
     }

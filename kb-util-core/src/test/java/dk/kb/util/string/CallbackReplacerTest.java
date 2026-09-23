@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CallbackReplacerTest {
 
@@ -42,46 +43,43 @@ class CallbackReplacerTest {
 
     @Test
     void callbackLogic() {
-         CallbackReplacer halver = new CallbackReplacer(
-                 "[0-9]+", s -> Integer.toString((Integer.parseInt(s)/2)));
-         assertEquals("Here are 2 apples and 1024 oranges",
-                      halver.apply("Here are 4 apples and 2048 oranges"));
+        CallbackReplacer halver = new CallbackReplacer(
+                "[0-9]+", s -> Integer.toString((Integer.parseInt(s) / 2)));
+        assertEquals("Here are 2 apples and 1024 oranges",
+                     halver.apply("Here are 4 apples and 2048 oranges"));
     }
 
     @Test
     void captureGroup() {
-         CallbackReplacer halver = new CallbackReplacer(
-                 Pattern.compile("[a-z]=([0-9]+)"), s -> Integer.toString((Integer.parseInt(s)/2)));
-         assertEquals("Person 1 says a=5 and person 2 says a=10",
-                      halver.apply("Person 1 says a=10 and person 2 says a=20"));
+        CallbackReplacer halver = new CallbackReplacer(
+                Pattern.compile("[a-z]=([0-9]+)"), s -> Integer.toString((Integer.parseInt(s) / 2)));
+        assertEquals("Person 1 says a=5 and person 2 says a=10",
+                     halver.apply("Person 1 says a=10 and person 2 says a=20"));
     }
 
     @SuppressWarnings("RegExpUnnecessaryNonCapturingGroup")
     @Test
     void nonCaptureGroup() {
-         CallbackReplacer halver = new CallbackReplacer(
-                 Pattern.compile("(?:[a-z])=([0-9]+)"), s -> Integer.toString((Integer.parseInt(s)/2)));
-         assertEquals("Person 1 says a=5 and person 2 says a=10",
-                      halver.apply("Person 1 says a=10 and person 2 says a=20"));
+        CallbackReplacer halver = new CallbackReplacer(
+                Pattern.compile("(?:[a-z])=([0-9]+)"), s -> Integer.toString((Integer.parseInt(s) / 2)));
+        assertEquals("Person 1 says a=5 and person 2 says a=10",
+                     halver.apply("Person 1 says a=10 and person 2 says a=20"));
     }
 
     @Test
     void captureGroupNoMatch() {
-         CallbackReplacer halver = new CallbackReplacer(
-                 Pattern.compile("[a-z]=([0-9]+)"), s -> Integer.toString((Integer.parseInt(s)/2)));
-         assertEquals("Person 1 says a=A1 and person 2 says a=A2",
-                      halver.apply("Person 1 says a=A1 and person 2 says a=A2"));
+        CallbackReplacer halver = new CallbackReplacer(
+                Pattern.compile("[a-z]=([0-9]+)"), s -> Integer.toString((Integer.parseInt(s) / 2)));
+        assertEquals("Person 1 says a=A1 and person 2 says a=A2",
+                     halver.apply("Person 1 says a=A1 and person 2 says a=A2"));
     }
 
     @Test
     void captureGroupFail() {
-         try {
-             new CallbackReplacer(
-                     Pattern.compile("[a-z]=([0-9]+)(a-z)"), s -> Integer.toString((Integer.parseInt(s)/2)));
-             throw new IllegalStateException("More than 1 capturing group is not expected to be supported");
-         } catch (Exception e) {
-             // Expected
-         }
+        assertThrows(Exception.class,
+                () -> new CallbackReplacer(Pattern.compile("[a-z]=([0-9]+)(a-z)"),
+                        s -> Integer.toString((Integer.parseInt(s) / 2))),
+                "More than 1 capturing group is not expected to be supported");
     }
 
     @Test
@@ -108,7 +106,7 @@ class CallbackReplacerTest {
     void streamingOutput() throws IOException {
         StringWriter out = new StringWriter();
         CallbackReplacer halver = new CallbackReplacer(
-                "[0-9]+", s -> Integer.toString((Integer.parseInt(s)/2)));
+                "[0-9]+", s -> Integer.toString((Integer.parseInt(s) / 2)));
         halver.apply("foo=12", out);
         String result = out.toString();
         assertEquals("foo=6", result);

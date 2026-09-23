@@ -98,7 +98,7 @@ public class CallbackReplacer implements Function<String, String> {
     /**
      * Replaces {@link #pattern} matches in s with the result of calling {@link #callback} with the match.
      * @param s an input string for replacements.
-     * @return thre result of replacing all matches in s.
+     * @return the result of replacing all matches in s.
      */
     @Override
     public String apply(String s) {

@@ -1,6 +1,7 @@
 package dk.kb.util.reader;
 
 import dk.kb.util.string.Strings;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -17,18 +18,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class StringReplacerTest {
 
+    @Test
     public void testSimpleReplacement() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
-        map.put("b", "bar");
+        Map<String, String> map = Map.of("a", "foo", "b", "bar");
         assertEquals("mfoonyfooffool bar", getReplaced(map, "manyafal b"),
                      "Simple replacement should work");
     }
 
+    @Test
     public void testTrivialReplacement() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
-        map.put("b", "bar");
+        Map<String, String> map = Map.of("a", "foo", "b", "bar");
         assertEquals("foo", getReplaced(map, "a"),
                      "Trivial replacement should work");
     }
@@ -41,18 +40,19 @@ public class StringReplacerTest {
             + "e,\"_blank\",\"resizable=yes,location=1,status=1,scrollbars="
             + "1\");} </script>";
 
+    @Test
     public void testComplex() throws Exception {
-        Map<String, String> rules = new HashMap<String, String>(10);
-        rules.put(JAVASCRIPT, "");
+        Map<String, String> rules = Map.of(JAVASCRIPT, "");
         assertEquals("foo", getReplaced(rules, JAVASCRIPT + "foo"),
                      "Complex replacement should work");
     }
 
+    @Test
     public void testLongTargetOnStream() throws Exception {
-        Map<String, String> rules = new HashMap<String, String>(10);
-        rules.put(JAVASCRIPT, "");
+        Map<String, String> rules = Map.of(JAVASCRIPT, "");
         Reader replacedReader = new StringReplacer(new StringReader(
                 JAVASCRIPT + "foo"), rules);
+        // In Java 25 use Reader#readAllAsString
         StringWriter out = new StringWriter(100);
         int c;
         while ((c = replacedReader.read()) != -1) {
@@ -63,28 +63,23 @@ public class StringReplacerTest {
 
     }
 
+    @Test
     public void testPriority() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
-        map.put("aa", "bar");
+        Map<String, String> map = Map.of("a", "foo", "aa", "bar");
         assertEquals("barfoo", getReplaced(map, "aaa"),
                      "Priority should work for foo and bar");
     }
 
+    @Test
     public void testPriority2() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
-        map.put("aa", "bar");
-        map.put("aaa", "zoo");
+        Map<String, String> map = Map.of("a", "foo", "aa", "bar", "aaa", "zoo");
         assertEquals("zoo", getReplaced(map, "aaa"),
                      "Zoo-priority should work");
     }
 
+    @Test
     public void testMisc() throws IOException {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
-        map.put("aa", "bar");
-        map.put("aaa", "zoo");
+        Map<String, String> map = new HashMap<>(Map.of("a", "foo", "aa", "bar", "aaa", "zoo"));
         //noinspection DuplicateStringLiteralInspection
         assertEquals("ffreege", getReplaced(map, "ffreege"),
                      "None-test should work");
@@ -96,16 +91,15 @@ public class StringReplacerTest {
         assertEquals("", getReplaced(map, ""),
                      "no-input-test should work");
 
-        map.clear();
         //noinspection DuplicateStringLiteralInspection
-        assertEquals("klamm", getReplaced(map, "klamm"),
+        assertEquals("klamm", getReplaced(Map.of(), "klamm"),
                      "No-rules-test should work");
 
     }
 
+    @Test
     public void testIncreasing() throws Exception {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
+        Map<String, String> map = Map.of("a", "foo");
         for (int i = 0; i < 100; i++) {
             StringWriter sw = new StringWriter(i);
             for (int j = 0; j < i; j++) {
@@ -116,9 +110,9 @@ public class StringReplacerTest {
         }
     }
 
+    @Test
     public void testBufferSizePlusOne() throws Exception {
-        Map<String, String> map = new HashMap<String, String>(10);
-        map.put("a", "foo");
+        Map<String, String> map = Map.of("a", "foo");
         assertEquals("12345678901", getReplaced(map, "12345678901"),
                      "Input of length 11 should work");
     }
@@ -136,9 +130,10 @@ public class StringReplacerTest {
         return sw.toString();
     }
 
+    @Test
     public void testSetSource() throws Exception {
         StringReplacer rep = new StringReplacer(
-                new StringReader("foo"), new HashMap<String, String>());
+                new StringReader("foo"), Map.of());
         assertEquals("foo", Strings.flushLocal(rep));
 
         rep.setSource(new StringReader("bar"));

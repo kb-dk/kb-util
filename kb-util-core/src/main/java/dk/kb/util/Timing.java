@@ -40,6 +40,7 @@ public class Timing {
         name, subject, ms, ns, updates, ms_updates, ns_updates, updates_s, min_ms, min_ns, max_ms, max_ns,
         last_ms, last_ns, utilization,
     }
+
     public static final STATS[] MS_STATS = new STATS[]{
             STATS.name, STATS.subject, STATS.ms, STATS.updates, STATS.ms_updates, STATS.updates_s,
             STATS.min_ms, STATS.max_ms, STATS.utilization
@@ -63,12 +64,13 @@ public class Timing {
     private final AtomicLong lastNS = new AtomicLong(0);
     private final AtomicLong minNS = new AtomicLong(Long.MAX_VALUE);
     private final AtomicLong maxNS = new AtomicLong(Long.MIN_VALUE);
-    private final AtomicLong spendNS = new AtomicLong(0);
+    private final AtomicLong spentNS = new AtomicLong(0);
     private AtomicLong updateCount = new AtomicLong(0);
     private Map<String, Timing> children = null;
 
     /**
      * Create a root timer with the given name.
+     *
      * @param name timer designation. Typically a method name or a similar code-path description.
      */
     public Timing(String name) {
@@ -77,7 +79,8 @@ public class Timing {
 
     /**
      * Create a root timer with the given name and subject.
-     * @param name timer designation. Typically a method name or a similar code-path description.
+     *
+     * @param name    timer designation. Typically a method name or a similar code-path description.
      * @param subject specific subject. Typically a document ID or similar workload-specific identifier.
      */
     public Timing(String name, String subject) {
@@ -94,9 +97,9 @@ public class Timing {
     }
 
     /**
-     * @param name    timer designation. Typically a method name or a similar code-path description.
-     * @param subject specific subject. Typically a document ID or similar workload-specific identifier.
-     * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
+     * @param name      timer designation. Typically a method name or a similar code-path description.
+     * @param subject   specific subject. Typically a document ID or similar workload-specific identifier.
+     * @param unit      the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
      * @param showStats the stats to show on calls to {@link #toString}.
      */
     public Timing(String name, String subject, String unit, STATS[] showStats) {
@@ -106,19 +109,19 @@ public class Timing {
         this.showStats = showStats == null ? MS_STATS : showStats;
     }
 
-    public Timing(String name, long spendNS) {
+    public Timing(String name, long spentNS) {
         this(name);
-        this.spendNS.set(spendNS);
+        this.spentNS.set(spentNS);
     }
 
-    public Timing(String name, String subject, long spendNS) {
+    public Timing(String name, String subject, long spentNS) {
         this(name, subject);
-        this.spendNS.set(spendNS);
+        this.spentNS.set(spentNS);
     }
 
-    public Timing(String name, String subject, String unit, long spendNS) {
+    public Timing(String name, String subject, String unit, long spentNS) {
         this(name, subject, unit);
-        this.spendNS.set(spendNS);
+        this.spentNS.set(spentNS);
     }
 
     public STATS[] getShowStats() {
@@ -127,6 +130,7 @@ public class Timing {
 
     /**
      * Specify the stats to show on {@code toString}.
+     *
      * @param showStats the stats to show.
      * @return this Timing for further chaining.
      */
@@ -140,9 +144,10 @@ public class Timing {
      * If a child does not exist, it will be created.
      * <p>
      * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
-     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * <p>
      * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
+     *
      * @param name child Timing designation. Typically a method name or a similar code-path description.
      * @return the re-used or newly created child.
      */
@@ -155,9 +160,10 @@ public class Timing {
      * If a child does not exist, it will be created.
      * <p>
      * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
-     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * <p>
      * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
+     *
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @return the re-used or newly created child.
@@ -171,9 +177,10 @@ public class Timing {
      * If a child does not exist, it will be created. It will use the default {@link #MS_STATS}.
      * <p>
      * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
-     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     * Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
      * <p>
      * Note 2: If a child is created it will inherit {@link #showStats} from the parent.
+     *
      * @param name    child Timing designation. Typically a method name or a similar code-path description.
      * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
      * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
@@ -188,10 +195,11 @@ public class Timing {
      * If a child does not exist, it will be created.
      * <p>
      * Note: If the child already exists, {@link #start()} WILL NOT be called automatically.
-     *       Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
-     * @param name    child Timing designation. Typically a method name or a similar code-path description.
-     * @param subject specific child subject. Typically a document ID or similar workload-specific identifier.
-     * @param unit    the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
+     * Consider chaining with {@code Timing myTiming = parent.getChild(...).start();}
+     *
+     * @param name      child Timing designation. Typically a method name or a similar code-path description.
+     * @param subject   specific child subject. Typically a document ID or similar workload-specific identifier.
+     * @param unit      the unit to use for average speed in toString. If null, the unit will be set to {@code upd}.
      * @param showStats the stats to show on calls to {@link #toString}.
      * @return the re-used or newly created child.
      */
@@ -200,12 +208,8 @@ public class Timing {
         if (children == null) {
             children = new LinkedHashMap<>();
         }
-        Timing child = children.get(name);
-        if (child == null) {
-            child = new Timing(name, subject, unit, showStats == null ? this.showStats : showStats);
-            children.put(name, child);
-        }
-        return child;
+        return children.computeIfAbsent(name,
+                k -> new Timing(name, subject, unit, showStats == null ? this.showStats : showStats));
     }
 
     /**
@@ -227,6 +231,7 @@ public class Timing {
      * <p>
      * If the {@code runnable} throws an Exception, the time used up to that Exception is still added, as well as
      * an increment of {@link #updateCount}.
+     *
      * @param runnable any runnable action.
      * @return this Timing for further chaining.
      */
@@ -235,7 +240,7 @@ public class Timing {
         try {
             runnable.run();
         } finally {
-            addNS(System.nanoTime()-startNS);
+            addNS(System.nanoTime() - startNS);
         }
         return this;
     }
@@ -260,6 +265,7 @@ public class Timing {
      * <p>
      * If the {@code supplier} throws an Exception, the time used up to that Exception is still added, as well as
      * an increment of {@link #updateCount}.
+     *
      * @param supplier delivers the result.
      * @return the result from activating the supplier.
      * @see #wrap(Supplier)
@@ -269,12 +275,13 @@ public class Timing {
         try {
             return supplier.get();
         } finally {
-            addNS(System.nanoTime()-startNS);
+            addNS(System.nanoTime() - startNS);
         }
     }
 
     /**
      * Wrap the provided {@link Runnable} lambda in the measure function.
+     *
      * @param runnable any runnable to be measured.
      * @return the runnable with the side effect of collecting statistics.
      * @see #measure(Runnable)
@@ -285,9 +292,10 @@ public class Timing {
 
     /**
      * Wrap the provided {@link Supplier} lambda in the measure function.
+     *
      * @param supplier any supplier to be measured.
      * @return the supplier with the side effect of collecting statistics.
-     * @see #measure(Supplier) 
+     * @see #measure(Supplier)
      */
     public <T> Supplier<T> wrap(Supplier<T> supplier) {
         return () -> measure(supplier);
@@ -299,9 +307,10 @@ public class Timing {
      * <pre>
      *     Function<Integer, String> myFunction = num -> Integer.toString(num);
      *     Function<Integer, String> wrappedFunction = myTimer.wrap(myFunction);
-     *     return Stream.of(1, 2, 3).map(wrappedFunction).collect(Collectors.toList());
+     *     return Stream.of(1, 2, 3).map(wrappedFunction).toList();
      * </pre>
      * will measure invocation time and count of {@code myFunction} during the streaming processing.
+     *
      * @param function any function to be measured.
      * @return the function with the side effect of collecting statistics.
      */
@@ -315,9 +324,10 @@ public class Timing {
      * <pre>
      *     Function<Integer> isEven = num -> (num & 1) == 0;
      *     Function<Integer, String> wrappedPredicate = myTimer.wrap(mypredicate);
-     *     return Stream.of(1, 2, 3).filter(wrappedpredicate).collect(Collectors.toList());
+     *     return Stream.of(1, 2, 3).filter(wrappedpredicate).toList();
      * </pre>
      * will measure invocation time and count of {@code myPredicate} during the streaming processing.
+     *
      * @param predicate any predicate to be measured.
      * @return the predicate with the side effect of collecting statistics.
      */
@@ -336,6 +346,7 @@ public class Timing {
      *     assertEquals(3, myNumbers.size());
      * </pre>
      * will measure invocation time and count of {@code myConsumer} during the streaming processing.
+     *
      * @param Consumer any Consumer to be measured.
      * @return the Consumer with the side effect of collecting statistics.
      */
@@ -348,6 +359,7 @@ public class Timing {
     /**
      * Not a high-performance method as the list is created on each call from a HashMap.
      * Note that children may have sub-children.
+     *
      * @return A list of all children. If there are no children, the empty list will be returned.
      */
     public synchronized List<Timing> getAllChildren() {
@@ -369,6 +381,7 @@ public class Timing {
      * Note: Start is automatically called during construction of this Timing instance.
      * <p>
      * Note 2: The use of start() and {@link #stop()} is not thread-safe by nature.
+     *
      * @return this Timing for further chaining.
      */
     public Timing start() {
@@ -377,47 +390,49 @@ public class Timing {
     }
 
     /**
-     * Adds now-lastStart to spendNS, increments updateCount with 1 and sets lastStart to now.
+     * Adds now-lastStart to spentNS, increments updateCount with 1 and sets lastStart to now.
      * <p>
      * Note: The use of @{link #start()} and stop() is not thread-safe by nature.
+     *
      * @return now-lastStart.
      */
     public long stop() {
-        return stop(updateCount.get()+1);
+        return stop(updateCount.get() + 1);
     }
 
     /**
-     * Adds now-lastStart to spendNS, sets updateCount to the given updates and sets lastStart to now.
-     * This is used when a process has handled an amount of entities and the average time spend on each
+     * Adds now-lastStart to spentNS, sets updateCount to the given updates and sets lastStart to now.
+     * This is used when a process has handled an amount of entities and the average time spent on each
      * entity should be part of the report.
      * <p>
      * Note: The use of @{link #start()} and stop() is not thread-safe by nature.
+     *
      * @param updates the number of updates that happened since start.
      * @return now-lastStart.
      */
     public long stop(long updates) {
         long now = System.nanoTime();
-        long spend = now-lastStart;
-        updateMinMax(spend);
-        lastNS.set(spend);
-        spendNS.addAndGet(spend);
+        long spent = now - lastStart;
+        updateMinMax(spent);
+        lastNS.set(spent);
+        spentNS.addAndGet(spent);
         updateCount.set(updates);
         lastStart = now;
-        return spend;
+        return spent;
     }
 
-    private void updateMinMax(long spend) {
+    private void updateMinMax(long spent) {
         long min = minNS.get();
-        while (min > spend) {
-            if (minNS.compareAndSet(min, spend)) {
+        while (min > spent) {
+            if (minNS.compareAndSet(min, spent)) {
                 break;
             }
             min = minNS.get();
         }
 
         long max = maxNS.get();
-        while (max < spend) {
-            if (maxNS.compareAndSet(max, spend)) {
+        while (max < spent) {
+            if (maxNS.compareAndSet(max, spent)) {
                 break;
             }
             max = maxNS.get();
@@ -425,60 +440,65 @@ public class Timing {
     }
 
     /**
-     * Add ns to spendNS and increments updateCount.
+     * Add ns to spentNS and increments updateCount.
+     *
      * @param ns nano seconds to add.
-     * @return spendNS.
+     * @return spentNS.
      */
     public long addNS(long ns) {
         updateMinMax(ns);
         lastNS.set(ns);
-        spendNS.addAndGet(ns);
+        spentNS.addAndGet(ns);
         updateCount.incrementAndGet();
         return getNS();
     }
 
     /**
-     * Add ns to spendNS and increments updateCount.
+     * Add ns to spentNS and increments updateCount.
      * Min and max will be updated with ns/updates for approximation.
-     * @param ns nano seconds to add.
+     *
+     * @param ns      nano seconds to add.
      * @param updates the number of updates that the ns represents.
-     * @return total spend NS.
+     * @return total spent NS.
      */
     public long addNS(long ns, long updates) {
         if (updates == 1) {
             updateMinMax(ns);
         } else if (updates > 1) {
-            updateMinMax(ns/updates);
+            updateMinMax(ns / updates);
         }
         lastNS.set(ns);
-        spendNS.addAndGet(ns);
+        spentNS.addAndGet(ns);
         updateCount.addAndGet(updates);
         return getNS();
     }
 
     /**
-     * Add time to spendNS and increments updateCount.
+     * Add time to spentNS and increments updateCount.
+     *
      * @param ms milli seconds to add.
-     * @return total spend MS.
+     * @return total spent MS.
      */
     public long addMS(long ms) {
-        addNS(ms*1000000);
+        addNS(ms * 1_000_000);
         return getMS();
     }
 
     /**
-     * Add time to spendNS and increments updateCount.
-     * @param ms milli seconds to add.
+     * Add time to spentNS and increments updateCount.
+     *
+     * @param ms      milli seconds to add.
      * @param updates the number of updates that the ns represents.
-     * @return total spend MS.
+     * @return total spent MS.
      */
     public long addMS(long ms, long updates) {
-        addNS(ms*1000000, updates);
+        addNS(ms * 1_000_000, updates);
         return getMS();
     }
 
     /**
      * Increment the update count with 1.
+     *
      * @return update count after incrementing.
      */
     public long update() {
@@ -487,6 +507,7 @@ public class Timing {
 
     /**
      * Adds the given number to the update counter.
+     *
      * @param count the amount to add.
      * @return the new total number of updates.
      */
@@ -497,6 +518,7 @@ public class Timing {
     /**
      * Set the update count to the specific number.
      * Note that calling {@link #stop()} auto-increments the updateCount with 1.
+     *
      * @param updateCount the number of updated for the timing.
      * @return this Timing for further chaining.
      */
@@ -506,17 +528,17 @@ public class Timing {
     }
 
     /**
-     * @return spendNS if updateCount &gt; 0 else now-lastStart.
+     * @return spentNS if updateCount &gt; 0 else now-lastStart.
      */
     public long getNS() {
-        return updateCount.get() > 0 ? spendNS.get() : System.nanoTime()-lastStart;
+        return updateCount.get() > 0 ? spentNS.get() : System.nanoTime() - lastStart;
     }
 
     /**
-     * @return spendNS if updateCount &gt; 0 else now-lastStart, divided by 1000000.
+     * @return spentNS if updateCount &gt; 0 else now-lastStart, divided by 1000000.
      */
     public long getMS() {
-        return (updateCount.get() > 0 ? spendNS.get() : System.nanoTime()-lastStart)/1000000;
+        return (updateCount.get() > 0 ? spentNS.get() : System.nanoTime() - lastStart) / 1_000_000;
     }
 
     public long getUpdates() {
@@ -528,7 +550,7 @@ public class Timing {
      */
     public long getAverageNS() {
         final long count = updateCount.get();
-        return count == 0 ? 0 : getNS()/count;
+        return count == 0 ? 0 : getNS() / count;
     }
 
     /**
@@ -536,13 +558,13 @@ public class Timing {
      */
     public long getAverageMS() {
         final long count = updateCount.get();
-        return count == 0 ? 0 : getNS()/count/1000000;
+        return count == 0 ? 0 : getNS() / count / 1_000_000;
     }
 
     public Timing clear() {
         updateCount.set(0);
         lastNS.set(0);
-        spendNS.set(0);
+        spentNS.set(0);
         start();
         return this;
     }
@@ -551,7 +573,7 @@ public class Timing {
      * @return recursive timing information using the existing {@link #showStats} setup.
      */
     public String toString() {
-        return toString((STATS[])null, false);
+        return toString((STATS[]) null, false);
     }
 
     /**
@@ -566,8 +588,9 @@ public class Timing {
 
     /**
      * String serialization using fixed stat elements.
-     * @param ns if true, stats with nano-seconds are returned using {@link #NS_STATS},
-     *          else milli-seconds are returned using {@link #MS_STATS}.
+     *
+     * @param ns     if true, stats with nano-seconds are returned using {@link #NS_STATS},
+     *               else milli-seconds are returned using {@link #MS_STATS}.
      * @param indent if true, the result is rendered multi-line and indented.
      * @return recursive timing information in nano- or milli-seconds.
      */
@@ -577,9 +600,10 @@ public class Timing {
 
     /**
      * String serialization using fixed stat elements.
+     *
      * @param sb will receive the serialized stats.
      * @param ns if true, stats with nano-seconds are returned using {@link #NS_STATS},
-     *          else milli-seconds are returned using {@link #MS_STATS}.
+     *           else milli-seconds are returned using {@link #MS_STATS}.
      */
     public void toString(StringBuilder sb, boolean ns) {
         toString(sb, ns, false);
@@ -587,9 +611,10 @@ public class Timing {
 
     /**
      * String serialization using fixed stat elements.
-     * @param sb will receive the serialized stats.
-     * @param ns if true, stats with nano-seconds are returned using {@link #NS_STATS},
-     *          else milli-seconds are returned using {@link #MS_STATS}.
+     *
+     * @param sb     will receive the serialized stats.
+     * @param ns     if true, stats with nano-seconds are returned using {@link #NS_STATS},
+     *               else milli-seconds are returned using {@link #MS_STATS}.
      * @param indent if true, the result is rendered multi-line and indented.
      */
     synchronized void toString(StringBuilder sb, boolean ns, boolean indent) {
@@ -600,6 +625,7 @@ public class Timing {
      * String serialization using explictly stated {@link STATS}. Note that {@code showStats} will be used transitively
      * for all {@code Timing} elements in the tree. State {@code null} to serialize using the {@link STATS} already
      * defined for each element.
+     *
      * @param showStats the stats to output. Pre-defined collections are {@link #MS_STATS} and {@link #NS_STATS}.
      * @return recursive timing information.
      */
@@ -611,8 +637,9 @@ public class Timing {
      * String serialization using explictly stated {@link STATS}. Note that {@code showStats} will be used transitively
      * for all {@code Timing} elements in the tree. State {@code null} to serialize using the {@link STATS} already
      * defined for each element.
+     *
      * @param showStats the stats to output. Pre-defined collections are {@link #MS_STATS} and {@link #NS_STATS}.
-     * @param indent if true, the result is rendered multi-line and indented.
+     * @param indent    if true, the result is rendered multi-line and indented.
      * @return recursive timing information.
      */
     public String toString(STATS[] showStats, boolean indent) {
@@ -624,7 +651,7 @@ public class Timing {
     private synchronized void toString(StringBuilder sb, STATS[] showStats, boolean indent, String spaces) {
         sb.append(spaces);
         final STATS[] localStats = showStats == null ? this.showStats : showStats;
-        for (STATS stat: localStats) {
+        for (STATS stat : localStats) {
             if (stat == STATS.name) {
                 sb.append(name);
                 break;
@@ -632,7 +659,7 @@ public class Timing {
         }
         sb.append("(");
         boolean empty = true;
-        for (STATS stat: localStats) {
+        for (STATS stat : localStats) {
             if (stat == STATS.name || (stat == STATS.subject && subject == null)) {
                 continue;
             }
@@ -676,15 +703,16 @@ public class Timing {
                     sb.append("max=").append(getMaxNS()).append("ns");
                     break;
                 case last_ms:
-                    sb.append("last").append(lastNS.get()/1000000).append("ms");
+                    sb.append("last").append(lastNS.get() / 1_000_000).append("ms");
                     break;
                 case last_ns:
                     sb.append("last").append(lastNS.get()).append("ns");
                     break;
                 case utilization:
-                    sb.append(String.format(Locale.ROOT, "util=%.1f%%", 100.0*getNS()/(System.nanoTime()-objectCreation)));
+                    sb.append(String.format(Locale.ROOT, "util=%.1f%%", 100.0 * getNS() / (System.nanoTime() - objectCreation)));
                     break;
-                default: throw new UnsupportedOperationException("The stat '" + stat + "' is not supported yet");
+                default:
+                    throw new UnsupportedOperationException("The stat '" + stat + "' is not supported yet");
             }
         }
         if (children != null && !children.isEmpty()) {
@@ -715,17 +743,17 @@ public class Timing {
 
     public long getMinMS() {
         final long min = minNS.get();
-        return min == Long.MAX_VALUE ? 0 : min/1000000;
+        return min == Long.MAX_VALUE ? 0 : min / 1_000_000;
     }
 
     public long getMaxMS() {
         final long max = maxNS.get();
-        return max == Long.MIN_VALUE ? 0 : max/1000000;
+        return max == Long.MIN_VALUE ? 0 : max / 1_000_000;
     }
 
     public long getAverageUpdatesPerSecond() {
         final long count = updateCount.get();
-        return count == 0 ? 0 : count*1000000*1000/spendNS.get();
+        return count == 0 ? 0 : count * 1_000_000 * 1000 / spentNS.get();
     }
 
 }

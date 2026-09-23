@@ -25,6 +25,10 @@ package dk.kb.util;
 
 
 import java.io.StringWriter;
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -93,7 +97,7 @@ public class Profiler {
         setBpsSpan(bpsSpan);
     }
 
-    /** Mutators */
+    // Mutators
 
     /**
      * Get the number of beats.
@@ -171,7 +175,7 @@ public class Profiler {
     }
 
 
-    /** Updators */
+    // Updaters
 
     /**
      * Update ProgressFeedback with a single beat.
@@ -222,7 +226,7 @@ public class Profiler {
         return bpsSpan + queueEnd - queueStart + 1;
     }
 
-    /** Queries */
+    // Queries
 
     /**
      * Convenience method for getBps(false).
@@ -285,41 +289,54 @@ public class Profiler {
     }
 
     /**
-     * Helper method for providing human-readable time.
+     * Helper method for providing human-readable time
+     * using estimated times for converting to days, months and/or years.
      *
-     * @param ms milliseconds
-     * @return human-readable time
+     * @param ms total milliseconds, >= 0
+     * @return human-readable time,
+     * for example "23 ms", "1 second 0 ms" or "11 months 0 days 0 hours 0 minutes 0 seconds 0 ms".
      */
     public static String millisecondsToString(long ms) {
-        int years = (int) Math.floor((double) ms / (365.0 * 24 * 60 * 60 * 1000));
-        ms = (long) (ms % (365.0 * 24 * 60 * 60 * 1000.0));
-        int days = (int) Math.floor((double) ms / (24 * 60 * 60 * 1000));
-        ms = (long) (ms % (24 * 60 * 60 * 1000.0));
-        int hours = (int) Math.floor((double) ms / (60 * 60 * 1000));
-        ms = (long) (ms % (60 * 60 * 1000.0));
-        int minutes = (int) Math.floor((double) ms / (60 * 1000));
-        ms = (long) (ms % (60 * 1000.0));
-        int seconds = (int) Math.floor((double) ms / 1000);
-        int milliseconds = (int) (ms % 1000.0);
+        if (ms < 0) {
+            throw new IllegalArgumentException("ms must be >= 0, was " + ms);
+        }
+
+        Duration duration = Duration.ofMillis(ms);
+
+        long years = duration.dividedBy(ChronoUnit.YEARS.getDuration());
+        duration = duration.minus(ChronoUnit.YEARS.getDuration().multipliedBy(years));
+
+        long months =  duration.dividedBy(ChronoUnit.MONTHS.getDuration());
+        duration = duration.minus(ChronoUnit.MONTHS.getDuration().multipliedBy(months));
+
+        long days = duration.toDays();
+        int hours = duration.toHoursPart();
+        int minutes = duration.toMinutesPart();
+        int seconds = duration.toSecondsPart();
+        int milliseconds = duration.toMillisPart();
 
         StringWriter sw = new StringWriter();
         if (years > 0) {
-            sw.write(Integer.toString(years));
+            sw.write(Long.toString(years));
             sw.write(years == 1 ? " year, " : " years, ");
         }
-        if (years > 0 || days > 0) {
-            sw.write(Integer.toString(days));
+        if (years > 0 || months > 0) {
+            sw.write(Long.toString(months));
+            sw.write(days == 1 ? " month, " : " months, ");
+        }
+        if (years > 0 || months > 0 || days > 0) {
+            sw.write(Long.toString(days));
             sw.write(days == 1 ? " day, " : " days, ");
         }
-        if (years > 0 || days > 0 || hours > 0) {
+        if (years > 0 || months > 0 || days > 0 || hours > 0) {
             sw.write(Integer.toString(hours));
             sw.write(hours == 1 ? " hour, " : " hours, ");
         }
-        if (years > 0 || days > 0 || hours > 0 || minutes > 0) {
+        if (years > 0 || months > 0 || days > 0 || hours > 0 || minutes > 0) {
             sw.write(Integer.toString(minutes));
             sw.write(minutes == 1 ? " minute, " : " minutes, ");
         }
-        if (years > 0 || days > 0 || hours > 0 || minutes > 0 || seconds > 0) {
+        if (years > 0 || months > 0 || days > 0 || hours > 0 || minutes > 0 || seconds > 0) {
             sw.write(Integer.toString(seconds));
             sw.write(seconds == 1 ? " second, " : " seconds, ");
         }
@@ -372,8 +389,11 @@ public class Profiler {
      * Calculate the estimated time of arrival.
      *
      * @param useCurrentSpeed use the bpsSpan for the estimate, thus basing it on current speed
-     * @return the extimated time of arrival, null if it is incalculable
+     * @return the estimated time of arrival, null if it is incalculable
+     *
+     * @deprecated Use {@link #getEstimatedTimeOfArrival}
      */
+    @Deprecated(forRemoval = true)
     public Calendar getETA(boolean useCurrentSpeed) {
         long timeLeft = getTimeLeft(useCurrentSpeed);
         Calendar calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault());
@@ -389,13 +409,29 @@ public class Profiler {
     }
 
     /**
+     * Calculate the estimated time of arrival.
+     *
+     * @param useCurrentSpeed use the bpsSpan for the estimate, thus basing it on current speed
+     * @return the estimated time of arrival, null if it cannot be calculated.
+     */
+    public ZonedDateTime getEstimatedTimeOfArrival(boolean useCurrentSpeed) {
+        long timeLeft = getTimeLeft(useCurrentSpeed);
+        if (timeLeft == -1) {
+            return null;
+        }
+
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
+        return now.plus(timeLeft, ChronoUnit.MILLIS);
+    }
+
+    /**
      * Request the ETA using getETA and format the result as YYYY-MM-DD HH:mm:SS.
      *
      * @param useCurrentSpeed use the bpsSpan for the estimate, thus basing it on current speed
-     * @return the extimated time of arrival, "N/A" if it is incalculable
+     * @return the estimated time of arrival, "N/A" if it is incalculable
      */
     public String getETAAsString(boolean useCurrentSpeed) {
-        Calendar eta = getETA(useCurrentSpeed);
+        ZonedDateTime eta = getEstimatedTimeOfArrival(useCurrentSpeed);
         if (eta == null) {
             return "N/A";
         }
@@ -403,10 +439,10 @@ public class Profiler {
     }
 
     /**
-     * Pause the Profiler. Call {@link #unpause} in order to continue.
-     * Calling {@link #beat} will automatically unpause.
+     * <p>Pause the Profiler. Call {@link #unpause} in order to continue.
+     * Calling {@link #beat} will automatically unpause.</p>
      *
-     * Note: The larger the {@link #bpsSpan}, the longer it takes to unpause.
+     * <p>Note: The larger the {@link #bpsSpan}, the longer it takes to unpause.</p>
      */
     public synchronized void pause() {
         if (paused) {

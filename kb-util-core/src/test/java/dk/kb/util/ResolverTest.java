@@ -15,15 +15,15 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class ResolverTest {
-    
+
     @Test
     void getPathFromClasspath() {
         Path path = Resolver.getPathFromClasspath("resolver/testfile.txt");
-        assertThat(Files.exists(path),is(true));
+        assertThat(path, is(notNullValue()));
+        assertThat(Files.exists(path), is(true));
         assertThat(path.toString(), startsWith(System.getProperty("user.dir")));
-    
     }
-    
+
     @Test
     void getNonExistingPathFromClasspath() {
         Path path = Resolver.getPathFromClasspath("nonexistingfolder/nofilehere.txt");
@@ -32,7 +32,7 @@ class ResolverTest {
 
     @Test
     void readFileFromClasspath() throws IOException {
-        assertThat(Resolver.readFileFromClasspath("resolver/testfile.txt"),is("contents\n"));
+        assertThat(Resolver.readFileFromClasspath("resolver/testfile.txt"), is("contents\n"));
     }
 
     @Test
@@ -79,15 +79,19 @@ class ResolverTest {
         // the resolver instead of the usual 1. The asserts below accepts both 1+ matches
 
         assertThat("The file '" + known + "' should be resolved with ../ at the start of the path for glob '" +
-                   glob + "' derived from absolute path '" + known + "' but returned matches " +
-                   Resolver.resolveGlob(glob),
+                        glob + "' derived from absolute path '" + known + "' but returned matches " +
+                        Resolver.resolveGlob(glob),
                 is(Resolver.resolveGlob(glob).isEmpty()).matches(false));
 
         assertThat("The file '" + known + "' should be resolved with /../../ in the path",
-                   is(Resolver.resolveGlob("resolver/subfolder/../../resolver/subfolder/somefile.txt").isEmpty()).matches(false));
+                   is(Resolver.resolveGlob("resolver/subfolder/../../resolver/subfolder/somefile.txt")
+                           .isEmpty())
+                           .matches(false));
 
         assertThat("The file '" + known + "' should be resolved with both /./ and /../ in the path",
-                   is(Resolver.resolveGlob("resolver/subfolder/./../subfolder/somefile.txt").isEmpty()).matches(false));
+                   is(Resolver.resolveGlob("resolver/subfolder/./../subfolder/somefile.txt")
+                           .isEmpty())
+                           .matches(false));
     }
 
     @Test

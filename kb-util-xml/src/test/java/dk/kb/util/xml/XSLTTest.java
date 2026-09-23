@@ -21,7 +21,7 @@ package dk.kb.util.xml;
 
 import dk.kb.util.Profiler;
 import dk.kb.util.Resolver;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,10 +46,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class XSLTTest {
-    private static Logger log = LoggerFactory.getLogger(XSLTTest.class);
+    private static final Logger log = LoggerFactory.getLogger(XSLTTest.class);
 
     @Test
-    public void testSimpletransformation() throws TransformerException, IOException {
+    public void testSimpleTransformation() throws TransformerException, IOException {
         URL xslt1 = getURL("data/xml/trivial_transform1.xslt");
         
         String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
@@ -123,8 +123,8 @@ public class XSLTTest {
         fullStop = false;
 
         String input = Resolver.resolveUTF8String("data/xml/trivial_input.xml");
-        List<URL> xslts = new ArrayList<URL>(TESTS);
-        List<String> expected = new ArrayList<String>(TESTS);
+        List<URL> xslts = new ArrayList<>(TESTS);
+        List<String> expected = new ArrayList<>(TESTS);
         for (int i = 1; i <= TESTS; i++) {
             xslts.add(getURL("data/xml/trivial_transform" + i + ".xslt"));
             expected.add(Resolver.resolveUTF8String("data/xml/expected" + i + ".xml"));
@@ -132,7 +132,7 @@ public class XSLTTest {
         // Make and start threads
         //noinspection MismatchedQueryAndUpdateOfCollection
         List<ThreadTransformer> threads =
-                new ArrayList<ThreadTransformer>(threadCount);
+                new ArrayList<>(threadCount);
         for (int i = 0; i < threadCount; i++) {
             int pos = random.nextInt(TESTS);
             ThreadTransformer thread = new ThreadTransformer(
@@ -156,12 +156,12 @@ public class XSLTTest {
     private static boolean fullStop = false;
 
     private class ThreadTransformer extends Thread {
-        private URL xslt;
-        private String xmlInput;
-        private String expected;
-        private int runs;
-        private int maxPause;
-        private Random random = new Random();
+        private final URL xslt;
+        private final String xmlInput;
+        private final String expected;
+        private final int runs;
+        private final int maxPause;
+        private final Random random = new Random();
 
         private ThreadTransformer(URL xslt, String xmlInput, String expected, int runs, int maxPause) {
             this.xslt = xslt;
@@ -228,6 +228,7 @@ public class XSLTTest {
         return Thread.currentThread().getContextClassLoader().getResource(
                 resource);
     }
+
     @Test
     public void testFaultyRemoveNamespace() throws Exception {
         URL xslt = XSLTTest.getURL("data/xml/namespace_transform.xslt");
@@ -237,6 +238,7 @@ public class XSLTTest {
         assertEquals(trim(expected), trim(XSLT.transform(xslt, input)),
                                 "Fault namespaces should give faulty output");
     }
+
     @Test
     public void testCorrectRemoveNamespace() throws Exception {
         URL xslt = XSLTTest.getURL("data/xml/namespace_transform.xslt");
@@ -247,7 +249,8 @@ public class XSLTTest {
                                 "Fault namespaces should give faulty output");
     }
 
-    // disabled@Test
+    @Test
+    @Disabled
     public void testNoNamespaceSpeed() throws Exception {
         int OUTER = 10;
         int RUNS = 5000;
@@ -256,7 +259,6 @@ public class XSLTTest {
 
         Profiler profiler = new Profiler(RUNS);
         for (int outer = 0; outer < OUTER; outer++) {
-
 
             System.gc();
             profiler.reset();
@@ -297,8 +299,10 @@ public class XSLTTest {
                                + " namespace-keeping transformation/second\n");
         }
     }
-    //Disabled @Test
-    public void tsestBurnNoNamespace() throws Exception {
+
+    @Test
+    @Disabled
+    public void testBurnNoNamespace() throws Exception {
         int RUNS = 50000;
         URL xslt = XSLTTest.getURL("data/xml/namespace_transform.xslt");
         String input = Resolver.resolveUTF8String("data/xml/namespace_input.xml");

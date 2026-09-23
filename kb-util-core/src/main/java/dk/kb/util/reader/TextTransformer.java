@@ -23,11 +23,11 @@ import java.io.IOException;
 import java.io.Reader;
 
 /**
- * Defines a text-oriented transformer (chars and Strings) with the main focus
- * on performance of multiple transformations with the same rules.
+ * <p>Defines a text-oriented transformer (chars and Strings) with the main focus
+ * on performance of multiple transformations with the same rules.</p>
  *
- * While a lot of the methods seem to do the exactly same thing, having them
- * explicitely defined allows for an implementation to do optimizations.
+ * <p>While a lot of the methods seem to do the exactly same thing, having them
+ * explicitly defined allows for an implementation to do optimizations.</p>
  */
 public interface TextTransformer {
     public static final String NO_SOURCE =
@@ -58,11 +58,11 @@ public interface TextTransformer {
     public char[] transformToChars(char[] chars);
 
     /**
-     * Transforms an array of chars to an array of chars.
+     * <p>Transforms an array of chars to an array of chars.</p>
      *
-     * If the transformation results in exactly the same number of chars as
+     * <p>If the transformation results in exactly the same number of chars as
      * the input, it is allowed for the implementation to re-use the input
-     * array.
+     * array.</p>
      *
      * @param chars the chars to transform.
      * @return the output chars, possibly of length 0.
@@ -91,7 +91,7 @@ public interface TextTransformer {
 
     /**
      * @return the next char or -1 if there are no more chars available.
-     * @throws java.io.IOException if an I/O error occured.
+     * @throws java.io.IOException if an I/O error occurred.
      */
     public int read() throws IOException;
 
@@ -102,7 +102,7 @@ public interface TextTransformer {
      * @param off    where to start putting chars in the buffer.
      * @param length the maximum number of chars to put in the buffer.
      * @return the number of chars filled or -1 if there are no more chars.
-     * @throws java.io.IOException if an I/O error occured.
+     * @throws java.io.IOException if an I/O error occurred.
      */
     public int read(char[] cbuf, int off, int length) throws IOException;
 
@@ -112,7 +112,7 @@ public interface TextTransformer {
      * @param cbuf   the buffer to assign shars to.
      * @param length the maximum number of chars to put in the buffer.
      * @return the number of chars filled or -1 if there are no more chars.
-     * @throws java.io.IOException if an I/O error occured.
+     * @throws java.io.IOException if an I/O error occurred.
      */
     public int read(CircularCharBuffer cbuf, int length) throws IOException;
 }

@@ -175,7 +175,7 @@ public class CircularCharBuffer implements CharSequence, Iterable<Character> {
      * @param len  the maximum number of chars to move.
      * @return the number of moved chars or -1 if no chars were buffered.
      */
-    public int read(char cbuf[], int off, int len) {
+    public int read(char[] cbuf, int off, int len) {
         if (len == 0) {
             return 0;
         }

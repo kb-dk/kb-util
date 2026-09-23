@@ -17,7 +17,7 @@ package dk.kb.util.xml;
 import dk.kb.util.Profiler;
 import dk.kb.util.Resolver;
 import dk.kb.util.string.Strings;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,13 +68,13 @@ public class XMLStepperTest {
     private static final String OUTER_SNIPPET = "<bar>bar1</bar><bar>bar2</bar>";
     private static final String OUTER_FULL = "<major><foo>" + OUTER_SNIPPET + "</foo>\n<foo>next</foo></major>";
 
-    private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+    private final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
         // No resolving of external DTDs
         xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
     }
-    private XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
+    private final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
 
     @Test
     public void testGetSubXMLFromPath() throws XMLStreamException {
@@ -116,16 +116,11 @@ public class XMLStepperTest {
     }
 
     @Test
-    public void testGetSubXMLLocationIndependentFail() throws XMLStreamException {
-        final String EXPECTED = "<subsub>content2</subsub>";
+    public void testGetSubXMLLocationIndependentFail() {
         final String XPATH = "//bar[@this='isit']/subsub";
-        try {
-            XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH);
-            fail("Using path '" + XPATH + "' should fail early as predicates for XPaths starting with '//' are " +
-                    "only supported for the last element");
-        } catch (Exception e) {
-            // Expected
-        }
+        assertThrows(Exception.class, () -> XMLStepper.jumpToNextFakeXPath(SAMPLE_ATTRIBUTE, XPATH),
+                "Using path '" + XPATH + "' should fail early as predicates for XPaths starting with '//' are " +
+                        "only supported for the last element");
     }
 
     @Test
@@ -141,7 +136,7 @@ public class XMLStepperTest {
     }
 
     @Test
-    public void testFakeXPathParse() throws XMLStreamException {
+    public void testFakeXPathParse() {
         final String XPATH = "foo/bar[@this='isit']/subsub";
         XMLStepper.FakeXPath xPath = new XMLStepper.FakeXPath(XPATH);
         assertEquals(XPATH, xPath.toString(), "Parsed fakeXPath should match input");
@@ -152,7 +147,7 @@ public class XMLStepperTest {
     public void testFakeXPath() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
-        final String[][] tests = new String[][]{
+        final String[][] tests = {
                 {"/project/property/@name", "project.name", "project.version.variant"}
         };
         assertXPaths(BIG_XML, tests, 2);
@@ -162,7 +157,7 @@ public class XMLStepperTest {
     public void testFakeXPathStar() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
-        final String[][] tests = new String[][]{
+        final String[][] tests = {
                 {"/project/property/@name", "project.name"},
                 {"/project/*/@name", "project.name"},
                 {"/*/property/@name", "project.name"},
@@ -175,7 +170,7 @@ public class XMLStepperTest {
     public void testFakeXPathPredicated() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
-        final String[][] tests = new String[][]{
+        final String[][] tests = {
                 {"/project/monkey[@bar='fun']", "ape"},
                 {"/project/property[@name='lib.dir']/@value", "${basedir}/lib"},
                 {"/project/property[@name]/@value", "sbutil"},
@@ -188,7 +183,7 @@ public class XMLStepperTest {
     public void testFakeXPathAnywhere() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
-        final String[][] tests = new String[][]{
+        final String[][] tests = {
                 {"//bar", "zoo2"},
                 {"//bar/text()", "zoo2"},
                 {"/bar]", null},
@@ -202,13 +197,14 @@ public class XMLStepperTest {
     public void testFakeXPathShorthand() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
-        final String[][] tests = new String[][]{
+        final String[][] tests = {
                 {"/project/property/@name", "project.name"},
                 {"/project/tstamp/format/@pattern", "MM/dd/yyyy HH:mm"}
         };
         assertXPathShorthand(BIG_XML, tests);
         assertXPathShorthands(BIG_XML, tests);
     }
+
     private void assertXPathShorthand(String xml, String[][] tests) throws XMLStreamException {
         for (String[] test : tests) {
             String result = XMLStepper.evaluateFakeXPath(xml, test[0]);
@@ -216,8 +212,9 @@ public class XMLStepperTest {
                          "The single-xpath result for '" + test[0] + " should be as expected");
         }
     }
+
     private void assertXPathShorthands(String xml, String[][] tests) throws XMLStreamException {
-        List<String> xPaths = new ArrayList<String>(tests.length);
+        List<String> xPaths = new ArrayList<>(tests.length);
         for (String[] test: tests) {
             xPaths.add(test[0]);
         }
@@ -235,7 +232,7 @@ public class XMLStepperTest {
     public void testFakeXPathEarlyTermination() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
-        final String[][] tests = new String[][]{
+        final String[][] tests = {
                 {"/project/tstamp/format/@pattern", "MM/dd/yyyy HH:mm"}
         };
         assertXPaths(BIG_XML, tests, 1);
@@ -245,7 +242,7 @@ public class XMLStepperTest {
     public void testFakeXPathMulti() throws XMLStreamException {
         final String BIG_XML = Strings.flushLocal(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("data/big.xml"));
-        final String[][] tests = new String[][]{
+        final String[][] tests = {
                 {"/project/property/@name", "project.name", "project.version.variant"},
                 {"/project/tstamp/format/@pattern", "MM/dd/yyyy HH:mm"},
                 {"/project/moo", "zoo1"},
@@ -261,7 +258,7 @@ public class XMLStepperTest {
     }
 
     private void assertXPaths(String xml, String[][] tests, int maxMatchesPerXP) throws XMLStreamException {
-        List<String> xPaths = new ArrayList<String>(tests.length);
+        List<String> xPaths = new ArrayList<>(tests.length);
         for (String[] test: tests) {
             xPaths.add(test[0]);
         }
@@ -302,7 +299,7 @@ public class XMLStepperTest {
     }
 
     @Test
-    public void testSpaceRemovalStreaming() throws IOException, XMLStreamException {
+    public void testSpaceRemovalStreaming() throws IOException {
         InputStream INPUT = Thread.currentThread().getContextClassLoader().getResourceAsStream("replacement_input.xml");
         String EXPECTED = Strings.flush(Thread.currentThread().getContextClassLoader().getResourceAsStream(
                 "replacement_expected.xml"));
@@ -432,7 +429,7 @@ public class XMLStepperTest {
 
     @Test
     public void testLenient() throws XMLStreamException {
-        final String[][] TESTS = new String[][]{
+        final String[][] TESTS = {
                 new String[]{"<foo><bar><zoo>Hello</zoo></bar></foo>", "zoo", "bar"},
                 new String[]{"<foo><bar><zoo>Hello</zoo></bar></foo>", "zoo", "foo"},
                 new String[]{"<foo><bar>Hello</bar></foo>", "bar", "foo"}
@@ -449,6 +446,7 @@ public class XMLStepperTest {
             lenientHelper(xml, true, test[1], test[2]);
         }
     }
+
     private void lenientHelper(XMLStreamReader xml, boolean lenient, final String startTag, final String skipToEndTag)
             throws XMLStreamException {
         XMLStepper.iterateTags(xml, lenient, new XMLStepper.Callback() {
@@ -456,7 +454,7 @@ public class XMLStepperTest {
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
                 if (startTag.equals(current)) {
-                    XMLStepper.findTagEnd(xml, skipToEndTag);
+                    assertTrue(XMLStepper.findTagEnd(xml, skipToEndTag), "findTagEnd()");
                     return true;
                 }
                 return false;
@@ -511,10 +509,10 @@ public class XMLStepperTest {
 
     // Limits on specific field with specific tag
     @Test
-    public void testLimitPerformance() throws IOException, XMLStreamException {
+    public void testLimitPerformance() throws XMLStreamException {
         final String SAMPLE = getSample(9423);
         final int RUNS = 10;
-        final Map<Pattern, Integer> limits = new HashMap<Pattern, Integer>();
+        final Map<Pattern, Integer> limits = new HashMap<>();
         limits.put(Pattern.compile("/record/datafield#tag=Z30"), 10);
 
         Profiler profiler = new Profiler(RUNS);
@@ -533,7 +531,7 @@ public class XMLStepperTest {
 
     @Test
     public void testLimitException() throws XMLStreamException {
-        Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
+        Map<Pattern, Integer> lims = new HashMap<>();
         lims.put(Pattern.compile("/foo/bar"), 1);
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader("<foo><bar s=\"t\" /><<</foo>"));
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -548,10 +546,10 @@ public class XMLStepperTest {
 
     // Limits in all datafields, counting on unique datafield#tag=value
     @Test
-    public void testLimitPerformanceCountPatterns() throws IOException, XMLStreamException {
+    public void testLimitPerformanceCountPatterns() throws XMLStreamException {
         final String SAMPLE = getSample(9423);
         final int RUNS = 10;
-        final Map<Pattern, Integer> limits = new HashMap<Pattern, Integer>();
+        final Map<Pattern, Integer> limits = new HashMap<>();
         limits.put(Pattern.compile("/record/datafield#tag=.*"), 10);
 
         Profiler profiler = new Profiler(RUNS);
@@ -572,57 +570,63 @@ public class XMLStepperTest {
 
     private String getSample(int repeats) {
         StringBuilder sb = new StringBuilder(10*1024*1024);
-        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                  "<record xmlns=\"http://www.loc.gov/MARC21/slim\" " +
-                  "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-                  "  xmlns:null=\"http://www.loc.gov/MARC21/slim\" " +
-                  "  schemaLocation=\"http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd\">\n" +
-                  "  <leader>00000nap  1233400   6543</leader>\n" +
-                  "  <datafield tag=\"004\" ind1=\"0\" ind2=\"0\">\n" +
-                  "    <subfield code=\"r\">n</subfield>\n" +
-                  "    <subfield code=\"a\">e</subfield>\n" +
-                  "  </datafield>\n" +
-                  "  <datafield tag=\"001\" ind1=\" \" ind2=\" \">\n" +
-                  "    <subfield code=\"a\">4106186</subfield>\n" +
-                  "    <subfield code=\"f\">a</subfield>\n" +
-                  "  </datafield>\n");
+        sb.append("""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <record xmlns="http://www.loc.gov/MARC21/slim" \
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
+                  xmlns:null="http://www.loc.gov/MARC21/slim" \
+                  schemaLocation="http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd">
+                  <leader>00000nap  1233400   6543</leader>
+                  <datafield tag="004" ind1="0" ind2="0">
+                    <subfield code="r">n</subfield>
+                    <subfield code="a">e</subfield>
+                  </datafield>
+                  <datafield tag="001" ind1=" " ind2=" ">
+                    <subfield code="a">4106186</subfield>
+                    <subfield code="f">a</subfield>
+                  </datafield>
+                """);
         for (int i = 0 ; i < repeats ; i++) {
-            sb.append("<datafield tag=\"Z30\" ind1=\"-\" ind2=\"2\">\n" +
-                      "    <subfield code=\"l\">SOL02</subfield>\n" +
-                      "    <subfield code=\"8\">20100327</subfield>\n" +
-                      "    <subfield code=\"m\">ISSUE</subfield>\n" +
-                      "    <subfield code=\"1\">UASB</subfield>\n" +
-                      "    <subfield code=\"2\">UASBH</subfield>\n" +
-                      "    <subfield code=\"3\">Bom</subfield>\n" +
-                      "    <subfield code=\"5\">").append("12345-67").append(i).append(
-                    "</subfield>\n" +
-                    "    <subfield code=\"a\">2010</subfield>\n" +
-                    "    <subfield code=\"b\">1</subfield>\n" +
-                    "    <subfield code=\"c\">3456</subfield>\n" +
-                    "    <subfield code=\"f\">67</subfield>\n" +
-                    "    <subfield code=\"h\">2010 1  6543</subfield>\n" +
-                    "    <subfield code=\"i\">20100821</subfield>\n" +
-                    "    <subfield code=\"j\">20101025</subfield>\n" +
-                    "    <subfield code=\"k\">20100910</subfield>\n" +
-                    "  </datafield>\n");
+            sb.append("""
+                    <datafield tag="Z30" ind1="-" ind2="2">
+                        <subfield code="l">SOL02</subfield>
+                        <subfield code="8">20100327</subfield>
+                        <subfield code="m">ISSUE</subfield>
+                        <subfield code="1">UASB</subfield>
+                        <subfield code="2">UASBH</subfield>
+                        <subfield code="3">Bom</subfield>
+                        <subfield code="5">""").append("12345-67").append(i).append(
+                    """
+                            </subfield>
+                                <subfield code="a">2010</subfield>
+                                <subfield code="b">1</subfield>
+                                <subfield code="c">3456</subfield>
+                                <subfield code="f">67</subfield>
+                                <subfield code="h">2010 1  6543</subfield>
+                                <subfield code="i">20100821</subfield>
+                                <subfield code="j">20101025</subfield>
+                                <subfield code="k">20100910</subfield>
+                              </datafield>
+                            """);
         }
         sb.append(
-                "  <datafield tag=\"STS\" ind1=\" \" ind2=\" \">\n" +
-                "    <subfield code=\"a\">67</subfield>\n" +
-                "  </datafield>\n" +
-                "  <datafield tag=\"SBL\" ind1=\" \" ind2=\" \">\n" +
-                "    <subfield code=\"a\">FOOB</subfield>\n" +
-                "  </datafield>\n" +
-                "  <datafield tag=\"LOC\" ind1=\" \" ind2=\" \">\n" +
-                "    <subfield code=\"b\">FOOB</subfield>\n" +
-                "    <subfield code=\"c\">AUGHH</subfield>\n" +
-                "    <subfield code=\"h\">MPG</subfield>\n" +
-                "    <subfield code=\"o\">ISSUE</subfield>\n" +
-                "  </datafield>\n" +
-                "  <datafield tag=\"STS\" ind1=\" \" ind2=\" \">\n" +
-                "    <subfield code=\"a\">67</subfield>\n" +
-                "  </datafield>\n" +
-                "</record>");
+                """
+                          <datafield tag="STS" ind1=" " ind2=" ">
+                            <subfield code="a">67</subfield>
+                          </datafield>
+                          <datafield tag="SBL" ind1=" " ind2=" ">
+                            <subfield code="a">FOOB</subfield>
+                          </datafield>
+                          <datafield tag="LOC" ind1=" " ind2=" ">
+                            <subfield code="b">FOOB</subfield>
+                            <subfield code="c">AUGHH</subfield>
+                            <subfield code="h">MPG</subfield>
+                            <subfield code="o">ISSUE</subfield>
+                          </datafield>
+                          <datafield tag="STS" ind1=" " ind2=" ">
+                            <subfield code="a">67</subfield>
+                          </datafield>
+                        </record>""");
         return sb.toString();
     }
 
@@ -631,7 +635,7 @@ public class XMLStepperTest {
         if (!isCollapsing) {
             expected = expected.replaceAll("<([^> ]+)([^>]*) />", "<$1$2></$1>");
         }
-        expected = expected.replaceAll(" />", "/>"); // <foo bar="zoo" /> -> <foo bar="zoo"/>
+        expected = expected.replace(" />", "/>"); // <foo bar="zoo" /> -> <foo bar="zoo"/>
         Map<Pattern, Integer> lims = new HashMap<>();
         for (int i = 0 ; i < limits.length ; i+=2) {
             lims.put(Pattern.compile((String) limits[i]), (Integer) limits[i + 1]);
@@ -651,7 +655,7 @@ public class XMLStepperTest {
         if (!isCollapsing) {
             expected = expected.replaceAll("<([^> ]+)([^>]*) />", "<$1$2></$1>");
         }
-        Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
+        Map<Pattern, Integer> lims = new HashMap<>();
         for (int i = 0 ; i < limits.length ; i+=2) {
             lims.put(Pattern.compile((String) limits[i]), (Integer) limits[i + 1]);
         }
@@ -666,7 +670,7 @@ public class XMLStepperTest {
         if (!isCollapsing) {
             expected = expected.replaceAll("<([^> ]+)([^>]*) />", "<$1$2></$1>");
         }
-        Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
+        Map<Pattern, Integer> lims = new HashMap<>();
         for (int i = 0 ; i < limits.length ; i+=2) {
             lims.put(Pattern.compile((String) limits[i]), (Integer) limits[i + 1]);
         }
@@ -688,8 +692,7 @@ public class XMLStepperTest {
         final AtomicInteger count = new AtomicInteger(0);
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
-            public boolean elementStart(
-                    XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) {
                 count.incrementAndGet();
                 return false;
             }
@@ -701,7 +704,7 @@ public class XMLStepperTest {
     }
 
     private final boolean isCollapsing = writerIsCollapsing();
-    @SuppressWarnings("CallToPrintStackTrace")
+
     private synchronized boolean writerIsCollapsing() {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
@@ -795,8 +798,9 @@ public class XMLStepperTest {
         assertEquals(EXPECTED, XMLStepper.getSubXML(in, true));
     }
 
-    // Currently there is no namespace repair functionality
-    public void disabletestPipeNamespace() throws XMLStreamException {
+    @Test
+    @Disabled("Currently there is no namespace repair functionality")
+    public void testPipeNamespace() throws XMLStreamException {
         final String EXPECTED = "<bar xmlns=\"http://www.example.com/foo_ns/\">simple bar</bar>";
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(DERIVED_NAMESPACE));
         assertTrue(XMLStepper.findTagStart(in, "bar"),
@@ -810,4 +814,13 @@ public class XMLStepperTest {
         assertEquals(expected, result,
                                 "The piper should reproduce the desired sub section of the XML");
     }
+
+    @Test
+    void removesNothingIfTagIsNotInStack() {
+        List<String> originalStackContents = List.of("foo", "bar", "baz");
+        List<String> stack = new ArrayList<>(originalStackContents);
+        XMLStepper.reduceStack(stack, "not in stack");
+        assertEquals(originalStackContents, stack);
+    }
+
 }

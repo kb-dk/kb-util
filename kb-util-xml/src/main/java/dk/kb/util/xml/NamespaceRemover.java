@@ -26,26 +26,27 @@ import dk.kb.util.string.Strings;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URL;
 import java.nio.CharBuffer;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A Java 1.5 compatible Reader which removes namespace declaration from XML.
+ * <p>A Java 1.5 compatible Reader which removes namespace declaration from XML.
  * If you are looking for namespace agnostic XSLT transformations use the
- * static methods supplied on the on the {@link XSLT} class, eg.
- * {@link XSLT#transform(java.net.URL, String, boolean)}.
+ * static methods supplied in the {@link XSLT} class, e.g.,
+ * {@link XSLT#transform(URL, String, boolean)}.</p>
  *
- * The reader looks for the pattern "&lt;.*&gt;".
+ * <p>The reader looks for the pattern "&lt;.*&gt;".
  * For each match, all elements matching "xmlns:?[a-z]*=\".*\"" are removed.
  * If "&lt;![[CDATA.*]]&gt;" is encountered, it is copied verbatim.
- * if "&lt;!--.*--&gt;" is encountered, it is copied verbatim.
+ * if "&lt;!--.*--&gt;" is encountered, it is copied verbatim.</p>
  *
- * This reader reads ahead, so the parent Reader is not guaranteed to be
- * positioned at any deterministic position during processing.
+ * <p>This reader reads ahead, so the parent Reader is not guaranteed to be
+ * positioned at any deterministic position during processing.</p>
  *
- * The reader is not thread-safe.
+ * <p>The reader is not thread-safe.</p>
  */
 public class NamespaceRemover extends ReplaceReader {
 //    private static Log log = LogFactory.getLog(NamespaceRemover.class);
@@ -58,15 +59,15 @@ public class NamespaceRemover extends ReplaceReader {
 
     // <foo xmlns:bar="sdjslfjs">
     private final Matcher declarationMatcher =
-            Pattern.compile("xmlns(\\:[a-zA-Z_\\.\\-0-9]+)? *\\= *\"[^\"]*\"").matcher("");
+            Pattern.compile("xmlns(:[a-zA-Z_.\\-0-9]+)? *= *\"[^\"]*\"").matcher("");
 
     // <foo xmlns="sdjslfjs">
     private final Matcher defaultDeclarationMatcher =
-            Pattern.compile("xmlns *\\= *\"[^\"]*\"").matcher("");
+            Pattern.compile("xmlns *= *\"[^\"]*\"").matcher("");
 
     // Should be http://www.w3.org/TR/REC-xml/#NT-Name but we cheat
     private final Matcher prefixMatcher = Pattern.compile(
-            "[a-zA-Z_\\.\\-0-9]+\\:([a-zA-Z_\\.\\-0-9]+)").matcher("");
+            "[a-zA-Z_.\\-0-9]+:([a-zA-Z_.\\-0-9]+)").matcher("");
 
     public NamespaceRemover(Reader in) {
         super(in);
@@ -125,7 +126,7 @@ public class NamespaceRemover extends ReplaceReader {
     }
 
     @Override
-    public int read(char cbuf[], int off, int len) throws IOException {
+    public int read(char[] cbuf, int off, int len) throws IOException {
         ensureLength(len);
         return outBuf.read(cbuf, off, len);
     }
@@ -153,7 +154,7 @@ public class NamespaceRemover extends ReplaceReader {
     }
 
     @Override
-    public void mark(int readAheadLimit) throws IOException {
+    public void mark(int readAheadLimit) {
         throw new UnsupportedOperationException("No marking in NamespaceRemover");
     }
 
@@ -184,7 +185,6 @@ public class NamespaceRemover extends ReplaceReader {
         outBuf.clear();
     }
 
-    @SuppressWarnings({"CloneDoesntCallSuperClone", "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
     public Object clone() {
         return new NamespaceRemover(null);
@@ -203,7 +203,7 @@ public class NamespaceRemover extends ReplaceReader {
      * buffer. This might involve reading far ahead in the in buffer.
      *
      * @param length the number of characters that should ideally be in the out buffer after processing.
-     * @throws IOException if an I/O error occured in the parent Reader.
+     * @throws IOException if an I/O error occurred in the parent Reader.
      */
     private void ensureLength(int length) throws IOException {
         while (outBuf.size() < length) {
@@ -302,7 +302,7 @@ public class NamespaceRemover extends ReplaceReader {
      *
      * @param endStr the String that in should contain.
      * @return true if in contains endStr after an attempt has been made.
-     * @throws java.io.IOException if an I/O error occured in parent.
+     * @throws java.io.IOException if an I/O error occurred in parent.
      */
     private boolean ensureEnd(String endStr) throws IOException {
         int pos = 0;
@@ -341,7 +341,7 @@ public class NamespaceRemover extends ReplaceReader {
      * @param length the number of characters that should ideally be in the
      *               in buffer after processing.
      * @return the number of chars read or -1 if parent has reached EOF.
-     * @throws IOException if an I/O error occured in the parent Reader.
+     * @throws IOException if an I/O error occurred in the parent Reader.
      */
     private int ensureInLength(int length) throws IOException {
         int count = 0;

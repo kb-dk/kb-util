@@ -1,6 +1,7 @@
 package dk.kb.util;
 
 import java.io.IOException;
+import java.util.HexFormat;
 
 /**
  * Utillity class for working with bytes, bytearrays, and strings.
@@ -32,16 +33,12 @@ public class Bytes {
      *
      * @param ba the bytearray to be converted
      * @return ba the byte array to convert to a hex-string
+     *
+     * @deprecated Use {@code Hexformat.of().toHexDigits(ba)}.
      */
+    @Deprecated
     public static String toHex(final byte[] ba) {
-        StringBuilder sb = new StringBuilder(ba.length * 2);
-        try {
-            toHex(sb, ba);
-        } catch (IOException e) {
-            throw new RuntimeException("Unexpected IOException while appending to StringBuilder");
-        }
-
-        return sb.toString();
+        return HexFormat.of().formatHex(ba);
     }
 
     /**
@@ -51,17 +48,10 @@ public class Bytes {
      * @param buf the appendable to write to.
      * @param ba  the byte array to convert to a hex-string.
      * @return always returns {@code buf}.
-     * @throws IOException upon errors writing to {@code buf}.
+     *
+     * @deprecated Use {@code HexFormat.of().formatHex(buf, ba)}.
      */
-    @SuppressWarnings("ForLoopReplaceableByForEach")
-    public static Appendable toHex(Appendable buf, byte[] ba)
-            throws IOException {
-        final int baLen = ba.length;
-        for (int i = 0; i < baLen; i++) {
-            buf.append(HEX_DIGITS[(ba[i] >> BITS_IN_NIBBLE) & BITMASK_FOR_NIBBLE]);
-            buf.append(HEX_DIGITS[ba[i] & BITMASK_FOR_NIBBLE]);
-        }
-
-        return buf;
+    public static Appendable toHex(Appendable buf, byte[] ba) {
+        return HexFormat.of().formatHex(buf, ba);
     }
 }

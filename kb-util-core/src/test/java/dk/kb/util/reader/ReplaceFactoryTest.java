@@ -19,46 +19,49 @@
  */
 package dk.kb.util.reader;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 public class ReplaceFactoryTest {
+
+    @Test
     public void testThreeCases() {
         Map<String, String> rules =
                 ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 1, 1);
-        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharReplacer,
-                   "1=>1 should yield a CharReplacer");
-        assertTrue(new ReplaceFactory(rules).getReplacer() instanceof CharReplacer,
-                   "1=>1 should yield a CharReplacer with get");
+        assertInstanceOf(CharReplacer.class, ReplaceFactory.getReplacer(rules),
+                "1=>1 should yield a CharReplacer");
+        assertInstanceOf(CharReplacer.class, new ReplaceFactory(rules).getReplacer(),
+                "1=>1 should yield a CharReplacer with get");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 0, 1);
-        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharArrayReplacer,
-                   "1=>0-1 should yield a CharArrayReplacer");
-        assertTrue(new ReplaceFactory(rules).getReplacer() instanceof CharArrayReplacer,
-                   "1=>0-1 should yield a CharArrayReplacer with get");
+        assertInstanceOf(CharArrayReplacer.class, ReplaceFactory.getReplacer(rules),
+                "1=>0-1 should yield a CharArrayReplacer");
+        assertInstanceOf(CharArrayReplacer.class, new ReplaceFactory(rules).getReplacer(),
+                "1=>0-1 should yield a CharArrayReplacer with get");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 0, 5);
-        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharArrayReplacer,
-                   "1=>0-5 should yield a CharArrayReplacer");
-        assertTrue(new ReplaceFactory(rules).getReplacer() instanceof CharArrayReplacer,
-                   "1=>0-5 should yield a CharArrayReplacer with get");
+        assertInstanceOf(CharArrayReplacer.class, ReplaceFactory.getReplacer(rules),
+                "1=>0-5 should yield a CharArrayReplacer");
+        assertInstanceOf(CharArrayReplacer.class, new ReplaceFactory(rules).getReplacer(),
+                "1=>0-5 should yield a CharArrayReplacer with get");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 1, 1, 5);
-        assertTrue(ReplaceFactory.getReplacer(rules) instanceof CharArrayReplacer,
-                   "1=>1-5 should yield a CharArrayReplacer");
+        assertInstanceOf(CharArrayReplacer.class, ReplaceFactory.getReplacer(rules),
+                "1=>1-5 should yield a CharArrayReplacer");
 
         rules = ReplacePerformanceTest.getRangeReplacements(300, 1, 5, 0, 5);
-        assertTrue(ReplaceFactory.getReplacer(rules) instanceof StringReplacer,
-                   "1-5=>1-5 should yield a StringReplacer");
+        assertInstanceOf(StringReplacer.class, ReplaceFactory.getReplacer(rules),
+                "1-5=>1-5 should yield a StringReplacer");
     }
 
+    @Test
     public void testComplexFactory() throws Exception {
-        Map<String, String> rules = new HashMap<String, String>(10);
-        rules.put(StringReplacerTest.JAVASCRIPT, "");
+        Map<String, String> rules = Map.of(StringReplacerTest.JAVASCRIPT, "");
         ReplaceFactory factory = new ReplaceFactory(rules);
         ReplaceReader replacer = factory.getReplacer();
         String actual =
@@ -70,9 +73,9 @@ public class ReplaceFactoryTest {
     /* This used to fail due to a missing proper initialization of minBufferSize
        when using a factory together with stream bases replacing.
      */
+    @Test
     public void testComplexFactoryStream() throws Exception {
-        Map<String, String> rules = new HashMap<String, String>(10);
-        rules.put(StringReplacerTest.JAVASCRIPT, "");
+        Map<String, String> rules = Map.of(StringReplacerTest.JAVASCRIPT, "");
         ReplaceFactory factory = new ReplaceFactory(rules);
         StringReader ir =
                 new StringReader(StringReplacerTest.JAVASCRIPT + "foo");

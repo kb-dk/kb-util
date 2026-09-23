@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  *     <li>{@link #resolveLayeredConfigs(String...)} which treats multiple files as separate YAMLs, where the content
  *     of the YAMLs is merged and atomic values are overwritten with the latest file</li>
  *     <li>{@link #resolveMultiConfig(String...)} which treats multiple files as a single YAML allowing for
- *     cross referencing inside of the YAML parts</li>
+ *     cross-referencing inside the YAML parts</li>
  * </ul>
  * <p>
  * For standard use, the {@link #resolveLayeredConfigs(String...)} is recommended as it makes it simple to layer the
@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
  *     <li>myapp_environment.yaml (servers, usernames, passwords..., is controlled by Operations)</li>
  *     <li>myapp_local_overrides.yaml (local overrides, used for developing and testing)</li>
  * </ol>
- *
+ * <p>
  * System properties can be used in the YAML values with the syntax {@code ${environment.variable}}
  * if it has been activated with {@link #setExtrapolate(boolean)}. The default is to extrapolate.
  * <p>
@@ -81,7 +81,7 @@ import java.util.stream.Collectors;
  * involves fixed conversions: Integral numbers are treated as Integers, floating point numbers as Doubles.
  * <p>
  * Note: Besides system environment, it is possible to use other substitutions, such as environment variables using
- * the syntax {@code ${env:USERNAME}}. See the JavaDoc for {@link StringSubstitutor} for examples. Where possible,
+ * the syntax {@code ${env:USERNAME}}. See the Javadoc for {@link StringSubstitutor} for examples. Where possible,
  * use system environment as that is the least unstable across platforms.
  * <p>
  * Note 2: Nested fallbacks is somewhat possible, but works poorly with prefixed lookups. As {@code sys:} is implicit
@@ -133,6 +133,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Use {@link #resolveLayeredConfigs} for treating YAML files as overlays when loading.
      * <p>
      * Extrapolation of values is enabled with this constructor. Use {@link YAML(Boolean, String...)} to control this.
+     *
      * @param resourceNames globs for YAML files.
      * @throws IOException if the files could not be loaded or parsed.
      * @see #resolveLayeredConfigs(String...)
@@ -149,9 +150,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * key-value pair in the stated configurations. Sub-entries are not merged on key collisions.
      * Use {@link #resolveLayeredConfigs} for treating YAML files as overlays when loading.
      * <p>
+     *
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
-     * @param resourceNames globs for YAML files.
+     * @param resourceNames               globs for YAML files.
      * @throws IOException if the files could not be loaded or parsed.
      * @see #resolveLayeredConfigs(String...)
      * @see #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, String...)
@@ -167,6 +169,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * in this YAML.
      * <p>
      * Extrapolation of values is enabled with this constructor. Use {@link YAML(Map, Boolean)} to control this.
+     *
      * @param map a map presumable delivered by SnakeYAML.
      */
     public YAML(Map<String, Object> map) {
@@ -178,7 +181,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The content of {@code map} is shallow copied: Changes to values in the original {@code map} will be reflected
      * in this YAML.
      *
-     * @param map a map presumable delivered by SnakeYAML.
+     * @param map                         a map presumable delivered by SnakeYAML.
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
      */
@@ -192,10 +195,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The content of {@code map} is shallow copied: Changes to values in the original {@code map} will be reflected
      * in this YAML.
      *
-     * @param map a map presumable delivered by SnakeYAML.
+     * @param map                         a map presumable delivered by SnakeYAML.
      * @param extrapolateSystemProperties should system properties be extrapolated in values
      *                                    Note that extrapolation cannot be turned off once enabled.
-     * @param substitutors explicit specification of substitutors. Typically used for creating submaps.
+     * @param substitutors                explicit specification of substitutors. Typically used for creating submaps.
      */
     YAML(Map<String, Object> map, boolean extrapolateSystemProperties, List<StringSubstitutor> substitutors) {
         this(map, extrapolateSystemProperties, false, substitutors);
@@ -206,12 +209,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The content of {@code map} is shallow copied: Changes to values in the original {@code map} will be reflected
      * in this YAML.
      *
-     * @param map a map presumable delivered by SnakeYAML.
+     * @param map                         a map presumable delivered by SnakeYAML.
      * @param extrapolateSystemProperties should system properties be extrapolated in values
      *                                    Note that extrapolation cannot be turned off once enabled.
      * @param alreadyExtrapolated         if true, extrapolation has already been performed on values,
      *                                    so no extra traversal for extrapolation is needed.
-     * @param substitutors explicit specification of substitutors. Typically used for creating submaps.
+     * @param substitutors                explicit specification of substitutors. Typically used for creating submaps.
      */
     YAML(Map<String, Object> map, boolean extrapolateSystemProperties, boolean alreadyExtrapolated,
          List<StringSubstitutor> substitutors) {
@@ -232,6 +235,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
      * <p>
      * This method is equal to {@link #getSubMap(String)}. {@code getYAML} is preferred due to clearer semantics.
+     *
      * @param path path for the sub map.
      * @return the map at the path
      * @throws NotFoundException    if the path could not be found
@@ -310,9 +314,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Resolves the list at the given path in the YAML. See {@link #get(Object)} for path syntax.
      * Sample path: {@code foo.bar}
      * Note: Dots {@code .} in YAML keys can be escaped with quotes: {@code foo.'a.b.c' -> [foo, a.b.c]}.
+     *
      * @param path path for the list.
-     * @param <T> the type of elements in the list.
-     *           Valid types are atomics ({@code Integer}, {@code Boolean} etc), {@code String} and {@code YAML}.
+     * @param <T>  Parameter without any known effect.
+     *             (It had been supposed to be the type of elements in the list, but does not work like that
+     *             (think type erasure).
+     *             Valid types would have been wrappers of primitives ({@code Integer}, {@code Boolean}, etc.),
+     *             {@code String} and {@code YAML}).
      * @return the list at the path
      * @throws NotFoundException    if the path could not be found
      * @throws InvalidTypeException if the value cannot be parsed as a List
@@ -326,8 +334,8 @@ public class YAML extends LinkedHashMap<String, Object> {
             // It is ugly, but no better test for T == YAML is known. See e.g.
             // https://stackoverflow.com/questions/182636/how-to-determine-the-class-of-a-generic-type
             // https://stackoverflow.com/questions/73982858/java-generics-reflection-get-classt-from-generic-returns-typevariableimpl-ins
-            T test = (T)EMPTY;
-            return (List<T>)getYAMLList(path);
+            T test = (T) EMPTY;
+            return (List<T>) getYAMLList(path);
         } catch (ClassCastException | NullPointerException e) {
             // Do nothing as this just mean that T is not YAML or contains elements that are not directly YAML, such as null.
         }
@@ -347,7 +355,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
             return foundList.stream()
                     .map(value -> (T) Objects.requireNonNullElseGet(value, YAML::new))
-                    .collect(Collectors.toList());
+                    .toList();
 
         } catch (ClassCastException e) {
             throw new InvalidTypeException("Exception casting '" + found + "' to List<T>", path, e);
@@ -359,7 +367,11 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Sample path: foo.bar
      *
      * @param path        path for the list.
-     * @param <T> the type of elements in the list
+     * @param <T>         Parameter without any known effect.
+     *                    (It had been supposed to be the type of elements in the list, but does not work like that
+     *                    (think type erasure).
+     *                    Valid types would have been wrappers of primitives ({@code Integer}, {@code Boolean}, etc.),
+     *                    {@code String} and {@code YAML}).
      * @param defaultList if the path cannot be resolved, return this value.
      * @return the list at the path or defaultList if it could not be located.
      */
@@ -377,6 +389,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Note: If the result is assigned to a generified List, this is equivalent to
      * {@code List<YAML> yamls = superyaml.getList("foo")}.
+     *
      * @param path path for the list.
      * @return the list of sub YAMLs at the path
      * @throws NotFoundException    if the path could not be found
@@ -410,7 +423,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         //       This is needed for path substitution
         return hmList.stream()
                 .map(map -> new YAML(map, extrapolateSystemProperties, extrapolateSystemProperties, getSubstitutors()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -486,16 +499,16 @@ public class YAML extends LinkedHashMap<String, Object> {
         Object o;
         try {
             o = get(path);
-        } catch (NotFoundException | InvalidTypeException  e) {
+        } catch (NotFoundException | InvalidTypeException e) {
             log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
         try {
             return Integer.valueOf(o.toString());
         } catch (NumberFormatException e) {
-            log.debug("Unable to parse '" + o.toString() + "' as Integer", o);
+            log.debug("Unable to parse '{}' as Integer", o);
             return defaultValue;
-        } catch (NullPointerException e){
+        } catch (NullPointerException e) {
             log.debug("No value has been found for '{}', using the default: '{}' instead.", path, defaultValue);
             return defaultValue;
         }
@@ -687,14 +700,15 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Resolves all values related to a given key, from a part of a YAML structure. All values that are children of the
      * input {@code yamlPath} and are specified with the input {@code key} are returned as a list.
+     *
+     * @param yamlPath the specific part of a YAML file, that is to be queried for values.
+     * @param key      all values that are associated with this key are added to the returned list.
+     * @return a list of all scalar values that are associated with the input key.
      * @deprecated
      * This is no longer the best method to visit values. Use {@link #visit(String, YAML, YAMLVisitor)} instead.
-     * @param yamlPath the specific part of a YAML file, that is to be queried for values.
-     * @param key all values that are associated with this key are added to the returned list.
-     * @return a list of all scalar values that are associated with the input key.
      */
     @Deprecated
-    public List<Object> getMultipleFromSubYaml(String yamlPath, String key){
+    public List<Object> getMultipleFromSubYaml(String yamlPath, String key) {
         String combinedPath = yamlPath + "[*].*." + key;
 
         MultipleValuesVisitor visitor = new MultipleValuesVisitor();
@@ -724,6 +738,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Resolve the Object at the given path in this YAML.
+     *
      * @param yPath path for the entry. See the class Javadoc for {@code yPath} syntax.
      *              If {@code yPath} is empty, the full YAML is returned.
      * @return the Object. Will never return null, will rather throw exceptions.
@@ -755,6 +770,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Resolves Objects which match the given path in this YAML.
+     *
      * @param yPath path to the entries in this YAML. See the class Javadoc for {@code yPath} syntax.
      * @return a list of matching objects. If there are no matches, the empty list will be returned.
      * @see #get(Object yPath)
@@ -767,8 +783,9 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Resolves Objects which match the given path in the YAML.
+     *
      * @param yPath path to the entries in the {@code yaml}. See the class Javadoc for {@code yPath} syntax.
-     * @param yaml which is traversed for {@code yPath}.
+     * @param yaml  which is traversed for {@code yPath}.
      * @return a list of matching objects. If there are no matches, the empty list will be returned.
      * @see #get(Object yPath)
      * @see #getMultiple(String)
@@ -793,10 +810,11 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Follows the <a href="https://en.wikipedia.org/wiki/Visitor_pattern">Visitor Pattern</a>, performing a callback
      * with the node value to {@code visitor} for all nodes matching {@code yPath} in {@code yaml}.
-     * @param yPath path to the entries in the {@code yaml}. See the class Javadoc for {@code yPath} syntax.
-     * @param yaml which is traversed for {@code yPath}.
+     *
+     * @param yPath   path to the entries in the {@code yaml}. See the class Javadoc for {@code yPath} syntax.
+     * @param yaml    which is traversed for {@code yPath}.
      * @param visitor {@link YAMLVisitor#visit(Object element)} will be called for all elements in {@code yaml}
-     *        matching {@code yPath}
+     *                matching {@code yPath}
      * @see #getMultiple(String)
      * @see #visit(String, YAML, YAMLVisitor)
      */
@@ -810,7 +828,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         YPath yPathParsed = new YPath(path);
 
-        if (!yPathParsed.isEmpty()){
+        if (!yPathParsed.isEmpty()) {
             traverse(yPathParsed, yaml, visitor);
         }
 
@@ -819,8 +837,9 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Recursively traverse a YAML file for entries that match the keys from {@code yPath}.
-     * @param yPath path in YAML file. The path is split into a list for each level/part of the path.
-     * @param yaml a YAML object containing the full YAML which is to be traversed.
+     *
+     * @param yPath   path in YAML file. The path is split into a list for each level/part of the path.
+     * @param yaml    a YAML object containing the full YAML which is to be traversed.
      * @param visitor which visits entries that match the input path.
      */
     private void traverse(YPath yPath, Object yaml, YAMLVisitor visitor) {
@@ -843,9 +862,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
      * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
-     * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
-     * @param yaml the current place in the YAML file being traversed. This should be an instance of a List.
+     *
+     * @param yPath   a list of path elements. This list contains all parts of a specified path, which is most likely
+     *                delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
+     * @param yaml    the current place in the YAML file being traversed. This should be an instance of a List.
      * @param visitor used to visit values that match the given path.
      */
     @SuppressWarnings("unchecked")
@@ -860,7 +880,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             arrayElementIndex = null;
         }
 
-        if (arrayElementIndex != null){
+        if (arrayElementIndex != null) {
             switch (arrayElementIndex) {
                 case "*":
                 case "":
@@ -896,9 +916,10 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * The implementation supports conditional lookups as well. This means that a query for zoo.[foo=bar].baz returns
      * all values for baz, that are a child of zoo and has the sibling-key foo with the value bar.
-     * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
-     * @param yaml the current place in the YAML file being traversed. This should be an instance of a Map.
+     *
+     * @param yPath   a list of path elements. This list contains all parts of a specified path, which is most likely
+     *                delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
+     * @param yaml    the current place in the YAML file being traversed. This should be an instance of a Map.
      * @param visitor used to visit matching paths.
      */
     private void traverseMap(YPath yPath, Object yaml, YAMLVisitor visitor) {
@@ -914,21 +935,20 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         Matcher conditionalMatch = ARRAY_CONDITIONAL.matcher(cleanedYPath.getFirst());
 
-        if (cleanedYPath.firstEquals("**") && !cleanedYPath.isLast()){
+        if (cleanedYPath.firstEquals("**") && !cleanedYPath.isLast()) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 traverse(cleanedYPath, entry.getValue(), visitor);
                 traverse(shortenedPath, entry.getValue(), visitor);
             }
         } else if (cleanedYPath.firstEquals("**") && cleanedYPath.isLast()) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
-                if (entry.getValue() instanceof Map || entry.getValue() instanceof List){
+                if (entry.getValue() instanceof Map || entry.getValue() instanceof List) {
                     traverse(cleanedYPath, entry.getValue(), visitor);
                 } else {
                     visitor.visit(entry.getValue());
                 }
             }
-        }
-        else if (cleanedYPath.firstEquals("*")) {
+        } else if (cleanedYPath.firstEquals("*")) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (cleanedYPath.size() > 1) {
                     traverse(shortenedPath, entry.getValue(), visitor);
@@ -943,12 +963,12 @@ public class YAML extends LinkedHashMap<String, Object> {
                 String key = entry.getKey().toString();
                 Object value = entry.getValue();
 
-                if (cleanedYPath.size() == 1){
-                    if (key.equals(cleanedYPath.getFirst())){
+                if (cleanedYPath.size() == 1) {
+                    if (key.equals(cleanedYPath.getFirst())) {
                         visitor.visit(Objects.requireNonNullElseGet(value, YAML::new));
                     }
                 } else {
-                    if (key.equals(cleanedYPath.getFirst())){
+                    if (key.equals(cleanedYPath.getFirst())) {
                         traverse(shortenedPath, value, visitor);
                     }
                 }
@@ -962,20 +982,20 @@ public class YAML extends LinkedHashMap<String, Object> {
         String value = conditionalMatch.group(3);
 
         List<Object> matchingObjects = new ArrayList<>();
-        for (Map.Entry<?,?> entry : map.entrySet()) {
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
             matchingObjects.add(conditionalGet(entry.getValue(), key, value, mustMatch));
         }
 
         matchingObjects = matchingObjects.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
 
-        if (yPath.isLast()){
-            for (Object matchingEntry: matchingObjects) {
+        if (yPath.isLast()) {
+            for (Object matchingEntry : matchingObjects) {
                 visitor.visit(matchingEntry);
             }
         } else {
-            for (Object matchingEntry: matchingObjects) {
+            for (Object matchingEntry : matchingObjects) {
                 traverse(shortenedPath, matchingEntry, visitor);
             }
         }
@@ -985,10 +1005,11 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Convert a YAML list to a YAML map containing all elements, where the key is the index and continue the traversal
      * of the YAML structure through the {@link #traverse(YPath, Object, YAMLVisitor)}-method.
-     * @param yPath a list of path elements. This list contains all parts of a specified path, which is most likely
-     *              delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
+     *
+     * @param yPath   a list of path elements. This list contains all parts of a specified path, which is most likely
+     *                delivered through the {@link #visit(String, YAML, YAMLVisitor)}-method.
      * @param visitor used to visit values that match the given path.
-     * @param list the YAML list which is to be converted to a YAML map.
+     * @param list    the YAML list which is to be converted to a YAML map.
      */
     private void convertListToMapAndTraverse(YPath yPath, YAMLVisitor visitor, List<Object> list) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>(list.size());
@@ -1003,9 +1024,10 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Checks if the conditional is satisfied for the given element and if so returns it.
      * If the element is not a map, an exception will be thrown.
-     * @param map the map to use for lookup.
-     * @param key the key to look up.
-     * @param value the value to match.
+     *
+     * @param map       the map to use for lookup.
+     * @param key       the key to look up.
+     * @param value     the value to match.
      * @param mustMatch if true, the result of lookup for the key must match the value.
      *                  If false, the result of a lookup for the key must not match the value.
      * @return the element if the conditional is satisfied.
@@ -1018,7 +1040,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         }
         // Note: getSubstitutors() is used to ensure that substitutors are created for the full YAML.
         //       This is needed for path substitution
-        YAML subYAML = new YAML((Map<String, Object>)map, extrapolateSystemProperties, extrapolateSystemProperties,
+        YAML subYAML = new YAML((Map<String, Object>) map, extrapolateSystemProperties, extrapolateSystemProperties,
                 getSubstitutors());
 
         // Check at the outer level for flat map style
@@ -1031,9 +1053,9 @@ public class YAML extends LinkedHashMap<String, Object> {
 
         if (keyValue == null) {
             // Check at the inner level for nested map style (commonly used @ kb.dk)
-            keyValue = ((Map<String, Object>)map).values().stream().
+            keyValue = ((Map<String, Object>) map).values().stream().
                     filter(element -> element instanceof Map).
-                    map(element -> (Map<?, ?>)element).
+                    map(element -> (Map<?, ?>) element).
                     filter(elementMap -> evaluateConditional(value, elementMap.get(key), mustMatch)).
                     findFirst().
                     orElse(null);
@@ -1057,11 +1079,12 @@ public class YAML extends LinkedHashMap<String, Object> {
     /**
      * Attempts to guess the type of atomic elements: {@code 123} is int, {@code true} is boolean, {@code 1.2} is double
      * and String is the fallback.
+     *
      * @param sub an Object that is to be substituted.
      * @return the sub with environment variables substituted.
      */
     private Object extrapolateGuessType(Object sub) {
-        if (sub == null || !isExtrapolating()){
+        if (sub == null || !isExtrapolating()) {
             return sub;
         }
         if (sub instanceof String) {
@@ -1077,14 +1100,14 @@ public class YAML extends LinkedHashMap<String, Object> {
             }
             return any; // Fallback to String
         }
-        if (sub instanceof List<?>) {
-            List<?> objects = (List<?>) sub;
-            return objects.stream().map(this::extrapolateGuessType).collect(Collectors.toList());
+        if (sub instanceof List<?> objects) {
+            return objects.stream().map(this::extrapolateGuessType).toList();
         }
         return sub;
     }
+
     private final Pattern INTEGRAL_MATCHER = Pattern.compile("[0-9]+");
-    private final Pattern FLOAT_MATCHER = Pattern.compile("[0-9]*[.][0-9]+"); // Leading digit optional: .2 is ok
+    private final Pattern FLOAT_MATCHER = Pattern.compile("[0-9]*[.][0-9]+"); // Leading digit optional: .2 is OK
     private final Pattern BOOLEAN_MATCHER = Pattern.compile("true|false");
 
     /* **************************** Fetching YAML ************************************ */
@@ -1098,12 +1121,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param configName the name, path or glob for the configuration file.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException                    if the configuration could not be fetched.
-     * @throws FileNotFoundException  if the config name does not refer to a file
-     * @throws MalformedURLException if the resource location could not be converted to an URL.
-     * @throws InvalidPathException           if the configName is not valid as a path
-     * @throws NullPointerException           if the configName is null
-     * @throws IllegalArgumentException       if the config cannot be parsed as YAML
+     * @throws IOException              if the configuration could not be fetched.
+     * @throws FileNotFoundException    if the config name does not refer to a file
+     * @throws MalformedURLException    if the resource location could not be converted to an URL.
+     * @throws InvalidPathException     if the configName is not valid as a path
+     * @throws NullPointerException     if the configName is null
+     * @throws IllegalArgumentException if the config cannot be parsed as YAML
      * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
     @NotNull
@@ -1122,14 +1145,14 @@ public class YAML extends LinkedHashMap<String, Object> {
      * @param configName the path, name or glob of the configuration file.
      * @param confRoot   the root element in the configuration or null if the full configuration is to be returned.
      * @return the configuration parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException                    if the configuration could not be fetched.
-     * @throws FileNotFoundException  if the config name does not refer to a file
-     * @throws MalformedURLException if the resource location could not be converted to an URL.
-     * @throws InvalidPathException           if the configName is not valid as a path
-     * @throws NullPointerException           if the configName is null
-     * @throws IllegalArgumentException       if the config cannot be parsed as YAML
-     * @throws NotFoundException              if the confRoot is not null and is not found in the YAML document
-     * @throws InvalidTypeException           if the confRoot was not null and is invalid (i.e. if treated a value as a map)
+     * @throws IOException              if the configuration could not be fetched.
+     * @throws FileNotFoundException    if the config name does not refer to a file
+     * @throws MalformedURLException    if the resource location could not be converted to an URL.
+     * @throws InvalidPathException     if the configName is not valid as a path
+     * @throws NullPointerException     if the configName is null
+     * @throws IllegalArgumentException if the config cannot be parsed as YAML
+     * @throws NotFoundException        if the confRoot is not null and is not found in the YAML document
+     * @throws InvalidTypeException     if the confRoot was not null and is invalid (i.e. if treated a value as a map)
      * @deprecated use {@link #resolveLayeredConfigs(String...)} or {@link #resolveMultiConfig(String...)} instead.
      */
     @Deprecated
@@ -1155,6 +1178,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * replaces the full tree under the key. References are supported with this method.
      * <p>
      * Extrapolation of values is enabled with this method. Use {@link #parse(InputStream, boolean)} to control this.
+     *
      * @param yamlStream YAML.
      * @return a YAML based on the given stream.
      */
@@ -1168,7 +1192,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Note: This method merges the YAML config as-is: Any key-collisions are handled implicitly by keeping the latest
      * key-value pair. Sub-entries are not merged on key collisions, meaning that key-collisions at the root level
      * replaces the full tree under the key. References are supported with this method.
-     * @param yamlStream YAML.
+     *
+     * @param yamlStream                  YAML.
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
      * @return a YAML based on the given stream.
@@ -1178,10 +1203,10 @@ public class YAML extends LinkedHashMap<String, Object> {
         Object raw = new Yaml().load(yamlStream);
         if (raw instanceof Map) {
             @SuppressWarnings("unchecked")
-            Map<String,Object> map = (Map<String,Object>) raw;
-            // Get a classcast exception here, and not someplace later https://stackoverflow.com/a/509288
-            for (String s : map.keySet());
-            for (Object o : map.values());
+            Map<String, Object> map = (Map<String, Object>) raw;
+            // Get a class cast exception here, and not someplace later https://stackoverflow.com/a/509288
+            for (String s : map.keySet()) { }
+            for (Object o : map.values()) { }
 
             YAML rootMap = new YAML(map, false);
             log.trace("Parsed YAML config stream with extrapolateSystemProperties={}", extrapolateSystemProperties);
@@ -1203,7 +1228,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param yamlPaths paths to YAML Files.
      * @return a YAML based on the given paths.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if a yamlFile could not be located.
      * @throws AccessDeniedException if a resource at a yamlPath could not be read.
      */
@@ -1220,9 +1245,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
-     * @param yamlPaths paths to YAML Files.
+     * @param yamlPaths                   paths to YAML Files.
      * @return a YAML based on the given paths.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if a yamlFile could not be located.
      * @throws AccessDeniedException if a resource at a yamlPath could not be read.
      */
@@ -1232,7 +1257,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Parse the given Files as a single YAML, effectively concatenating all files.
-     * It is possible to use cross references between the individual files.
+     * It is possible to use cross-references between the individual files.
      * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
      * <p>
      * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
@@ -1241,7 +1266,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param yamlFiles path to YAML Files.
      * @return a YAML based on the given stream.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if a yamlFile could not be located.
      * @throws AccessDeniedException if a resource at a yamlFile could not be read.
      */
@@ -1251,22 +1276,22 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * Parse the given Files as a single YAML, effectively concatenating all files.
-     * It is possible to use cross references between the individual files.
+     * It is possible to use cross-references between the individual files.
      * Duplicate keys across files are handled by last-wins, with no merging of sub-entries.
      * <p>
      * Use {@link #resolveLayeredConfigs} for treating multiple YAML files as overlays.
      *
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
-     * @param yamlFiles path to YAML Files.
+     * @param yamlFiles                   path to YAML Files.
      * @return a YAML based on the given stream.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if a yamlFile could not be located.
      * @throws AccessDeniedException if a resource at a yamlFile could not be read.
      */
     public static YAML parse(boolean extrapolateSystemProperties, File... yamlFiles) throws IOException {
         // Check is files can be read
-        for (File yamlFile: yamlFiles) {
+        for (File yamlFile : yamlFiles) {
             if (!yamlFile.exists()) {
                 throw new FileNotFoundException("The file '" + yamlFile + "' could not be found");
             }
@@ -1280,7 +1305,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             // Convert to InputStreams
             configs = Arrays.stream(yamlFiles)
                     .map(YAML::openStream)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // Concatenate all InputStreams
             InputStream yamlStream = null;
@@ -1316,7 +1341,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveLayeredConfigs for alternative.
@@ -1339,9 +1364,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
-     * @param configResources the names, paths or globs of the configuration files.
+     * @param configResources             the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveLayeredConfigs for alternative.
@@ -1375,7 +1400,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param configResources the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveMultiConfig for alternative.
@@ -1402,9 +1427,9 @@ public class YAML extends LinkedHashMap<String, Object> {
      *
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
-     * @param configResources the names, paths or globs of the configuration files.
+     * @param configResources             the names, paths or globs of the configuration files.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveMultiConfig for alternative.
@@ -1430,12 +1455,12 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Use {@link #resolveLayeredConfigs(MERGE_ACTION, MERGE_ACTION, boolean, String...)} to control this.
      *
      * @param configResources the names, paths or globs of the configuration files.
+     * @param defaultMA       the general action to take when a key collision is encountered. Also used for maps (YAMLs).
+     *                        Typically this will be {@link MERGE_ACTION#union}.
+     * @param listMA          the action to take when a key collision for a list is encountered.
+     *                        Typically this will be {@link MERGE_ACTION#union}.
      * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs).
-     *                  Typically this will be {@link MERGE_ACTION#union}.
-     * @param listMA    the action to take when a key collision for a list is encountered.
-     *                  Typically this will be {@link MERGE_ACTION#union}.
-     * @throws IOException if a configuration could not be fetched.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveMultiConfig for alternative.
@@ -1456,15 +1481,15 @@ public class YAML extends LinkedHashMap<String, Object> {
      * in the {@code myapp} folder. When globbing is used, the matching files in each glob are parsed in alphanumerical
      * order for that glob. The overall order is the given array of configResources
      *
-     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
-     * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs).
-     *                  Typically this will be {@link MERGE_ACTION#union}.
-     * @param listMA    the action to take when a key collision for a list is encountered.
-     *                  Typically this will be {@link MERGE_ACTION#union}.
+     * @param defaultMA                   the general action to take when a key collision is encountered. Also used for maps (YAMLs).
+     *                                    Typically this will be {@link MERGE_ACTION#union}.
+     * @param listMA                      the action to take when a key collision for a list is encountered.
+     *                                    Typically this will be {@link MERGE_ACTION#union}.
      * @param extrapolateSystemProperties whether system properties should be extrapolated in values.
      *                                    Note that extrapolation cannot be turned off once enabled.
-     * @param configResources the names, paths or globs of the configuration files.
-     * @throws IOException if a configuration could not be fetched.
+     * @param configResources             the names, paths or globs of the configuration files.
+     * @return the configurations merged and parsed up as a tree represented as Map and wrapped as YAML.
+     * @throws IOException           if a configuration could not be fetched.
      * @throws FileNotFoundException if none of the given configResources could be resolved.
      * @throws AccessDeniedException if any of the resolved config files could not be read.
      * @see #resolveMultiConfig for alternative.
@@ -1474,12 +1499,12 @@ public class YAML extends LinkedHashMap<String, Object> {
             throws IOException {
         List<Path> configPaths = Arrays.stream(configResources)
                 .map(Resolver::resolveGlob).flatMap(Collection::stream)
-                .collect(Collectors.toList());
+                .toList();
         if (configPaths.isEmpty()) {
             throw new FileNotFoundException("No paths resolved from " + Arrays.toString(configResources));
         }
         YAML compound = new YAML();
-        for (Path configPath: configPaths) {
+        for (Path configPath : configPaths) {
             // Important to wait with extrapolation af paths might cross files
             compound = compound.merge(YAML.parse(false, configPath), defaultMA, listMA);
         }
@@ -1502,6 +1527,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * lists and atomic values are overwritten with the values from extra.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
+     *
      * @param extra the YAML that will be added to this.
      * @return this YAML, updated with the values from extra.
      */
@@ -1513,12 +1539,13 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Merges the extra YAML into this YAML. In case of key collisions, the stated merge actions are taken.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
-     * @param extra the YAML that will be added to this.
+     *
+     * @param extra     the YAML that will be added to this.
      * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
      *                  Typically this will be {@link MERGE_ACTION#union}.
      * @param listMA    the action to take when a key collision for a list is encountered.
      *                  Typically this will be {@link MERGE_ACTION#union}.
-     * @return this YAML, udpated with the values from extra.
+     * @return this YAML, updated with the values from extra.
      */
     public YAML merge(YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
         return merge(this, extra, defaultMA, listMA);
@@ -1530,7 +1557,8 @@ public class YAML extends LinkedHashMap<String, Object> {
      * overwritten with the values from extra.
      * <p>
      * Shallow copying is used when possible, so updates to extra after the merge is strongly discouraged.
-     * @param base the YAML that will be updated with the content from extra.
+     *
+     * @param base  the YAML that will be updated with the content from extra.
      * @param extra the YAML that will be added to base.
      * @return the updated base YAML.
      */
@@ -1546,11 +1574,11 @@ public class YAML extends LinkedHashMap<String, Object> {
      * The available MERGE_ACTIONs are<br>
      * union: Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry.<br>
      * keep_base: Duplicate maps, lists and atomics are ignored.<br>
-     * keep_extra: Duplicate maps, lists and atomics are overwrittes, so that the last encounterd key-value pair wins.<br>
+     * keep_extra: Duplicate maps, lists and atomics are overwrites, so that the last encountered key-value pair wins.<br>
      * fail: Duplicate maps, lists and atomics throws an exception.<br>
      *
-     * @param base the YAML that will be updated with the content from extra.
-     * @param extra the YAML that will be added to base.
+     * @param base      the YAML that will be updated with the content from extra.
+     * @param extra     the YAML that will be added to base.
      * @param defaultMA the general action to take when a key collision is encountered. Also used for maps (YAMLs)
      *                  Typically this will be {@link MERGE_ACTION#union}.
      * @param listMA    the action to take when a key collision for a list is encountered.
@@ -1559,7 +1587,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      */
     public static YAML merge(YAML base, YAML extra, MERGE_ACTION defaultMA, MERGE_ACTION listMA) {
         base.substitutors = null; // Clear existing substitutors. They will be re-created for the merged YAML
-        YAML merged = (YAML)mergeEntry("", base, extra, defaultMA, listMA);
+        YAML merged = (YAML) mergeEntry("", base, extra, defaultMA, listMA);
         return base.isExtrapolating() ? merged.extrapolateAll() : merged;
     }
 
@@ -1576,9 +1604,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
             LinkedHashMap<Object, Object> bYAML = (LinkedHashMap<Object, Object>) base;
             LinkedHashMap<Object, Object> eYAML = (LinkedHashMap<Object, Object>) extra;
-            eYAML.forEach((key, value) -> {
-                mergeValueToYAML(path, bYAML, key, value, defaultMA, listMA);
-            });
+            eYAML.forEach((key, value) -> mergeValueToYAML(path, bYAML, key, value, defaultMA, listMA));
             return base;
         }
 
@@ -1588,27 +1614,31 @@ public class YAML extends LinkedHashMap<String, Object> {
                         pre + ": Attempting to merge value type " + List.class + " to type " + base.getClass());
             }
             switch (listMA) {
-                case fail: throw new IllegalArgumentException(
-                        pre + ": Duplicate keys with list merge action " + MERGE_ACTION.fail);
-                case keep_base: return base;
-                case keep_extra: return extra;
+                case fail:
+                    throw new IllegalArgumentException(
+                            pre + ": Duplicate keys with list merge action " + MERGE_ACTION.fail);
+                case keep_base:
+                    return base;
+                case keep_extra:
+                    return extra;
                 case union:
-                    ((List<Object>)base).addAll((List<Object>)extra);
+                    ((List<Object>) base).addAll((List<Object>) extra);
                     break;
-                default: throw new UnsupportedOperationException("Unknown merge action for list '" + defaultMA + "'");
+                default:
+                    throw new UnsupportedOperationException("Unknown merge action for list '" + defaultMA + "'");
             }
             return base;
         }
 
         // When it's not a map or a list we don't care about type
-        switch (defaultMA) {
-            case fail: throw new IllegalArgumentException(
+        return switch (defaultMA) {
+            case fail -> throw new IllegalArgumentException(
                     pre + ": Duplicate keys with merge action " + MERGE_ACTION.fail);
-            case keep_base: return base;
-            case keep_extra: return extra;
-            case union: return extra; // TODO: Should we do something else here? Make a type-aware merger? Fail?
-            default: throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
-        }
+            case keep_base -> base;
+            case keep_extra -> extra;
+            case union -> extra; // TODO: Should we do something else here? Make a type-aware merger? Fail?
+            default -> throw new UnsupportedOperationException("Unknown merge action '" + defaultMA + "'");
+        };
     }
 
     private static void mergeValueToYAML(String path, LinkedHashMap<Object, Object> base, Object key, Object value,
@@ -1626,6 +1656,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * <p>
      * Once enabled, extrapolation cannot be undone: Setting this to {@code false} after it has been set to {@code true}
      * will throw an exception.
+     *
      * @return this YAML, not a copy.
      */
     public YAML extrapolate(boolean extrapolateSystemProperties) {
@@ -1647,6 +1678,7 @@ public class YAML extends LinkedHashMap<String, Object> {
      * This is a destructive process as it replaces the Strings.
      * <p>
      * See the {@link YAML} documentation for the effect of extrapolation.
+     *
      * @return this YAML, not a copy.
      */
     private YAML extrapolateAll() {
@@ -1667,21 +1699,22 @@ public class YAML extends LinkedHashMap<String, Object> {
      * Warning: This is a destructive process as it replaces the Strings that uses substitution.
      * <p>
      * See the {@link YAML} documentation for the effect of extrapolation.
+     *
      * @param yamlObject the starting point of the extrapolation.
-     * @return the extrapolated element.                   
+     * @return the extrapolated element.
      */
     @SuppressWarnings("unchecked")
     private Object extrapolateAll(Object yamlObject) {
         // This does not use the visit method as it needs to modify the structure underway
 
         if (yamlObject instanceof Map) {
-            Map<Object, Object> map = (Map<Object, Object>)yamlObject;
+            Map<Object, Object> map = (Map<Object, Object>) yamlObject;
             map.replaceAll((key, value) -> extrapolateAll(value));
             return map;
         }
 
         if (yamlObject instanceof List) {
-            List<Object> list = (List<Object>)yamlObject;
+            List<Object> list = (List<Object>) yamlObject;
             list.replaceAll(this::extrapolateAll);
             return list;
         }
@@ -1697,6 +1730,7 @@ public class YAML extends LinkedHashMap<String, Object> {
 
     /**
      * If the YAML extrapolates the current values of System.getProperties() in the values returned.
+     *
      * @return true if extrapolation is enabled.
      */
     public boolean isExtrapolating() {
@@ -1715,7 +1749,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setIndentWithIndicator(true);
         dumperOptions.setIndicatorIndent(2);
@@ -1723,6 +1757,7 @@ public class YAML extends LinkedHashMap<String, Object> {
         // dumperOptions.setPrettyFlow(true);
         return new Yaml(dumperOptions).dumpAs(this, null, DumperOptions.FlowStyle.BLOCK);
     }
+
     public enum MERGE_ACTION {
         /**
          * Duplicate maps are merged, lists are concatenated, atomics are overwritten by last entry
@@ -1733,16 +1768,18 @@ public class YAML extends LinkedHashMap<String, Object> {
          */
         keep_base,
         /**
-         * Duplicate maps, lists and atomics are overwrittes, so that the last encounterd key-value pair wins.
+         * Duplicate maps, lists and atomics are overwrites, so that the last encountered key-value pair wins.
          */
         keep_extra,
         /**
          * Duplicate maps, lists and atomics throws an exception.
          */
-        fail};
+        fail
+    }
 
     /**
      * Extrapolates the given string, using lazy created {@link StringSubstitutor}s.
+     *
      * @param s the String to substitute.
      * @return s substituted.
      */
@@ -1785,6 +1822,7 @@ public class YAML extends LinkedHashMap<String, Object> {
     static class PathSubstitutor {
         /**
          * Create a path based substitutor backed by the given YAML.
+         *
          * @param yaml the YAML used for resolving paths.
          * @return a path substitutor.
          */
@@ -1814,7 +1852,7 @@ public class YAML extends LinkedHashMap<String, Object> {
             key = key.substring(1);
             try {
                 return yaml.get(key).toString();
-            } catch (NotFoundException|NullPointerException e) {
+            } catch (NotFoundException | NullPointerException e) {
                 return null; // The framework will handle it if action needs to be taken
             }
         }

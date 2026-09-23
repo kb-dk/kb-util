@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
 import org.xmlunit.diff.ComparisonResult;
+import org.xmlunit.diff.ComparisonType;
 import org.xmlunit.diff.DefaultNodeMatcher;
 import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.DifferenceEvaluator;
@@ -43,16 +44,11 @@ import java.util.Objects;
 public class XMLUtil {
 
     private static final ThreadLocal<ReplaceReader> localEncoder =
-            new ThreadLocal<ReplaceReader>() {
-                @Override
-                protected ReplaceReader initialValue() {
-                    return ReplaceFactory.getReplacer("&", "&amp;",
-                                                      "\"", "&quot;",
-                                                      "<", "&lt;",
-                                                      ">", "&gt;",
-                                                      "'", "&apos;");
-                }
-            };
+            ThreadLocal.withInitial(() -> ReplaceFactory.getReplacer("&", "&amp;",
+                                              "\"", "&quot;",
+                                              "<", "&lt;",
+                                              ">", "&gt;",
+                                              "'", "&apos;"));
 
     private static final Logger logger = LoggerFactory.getLogger(XMLUtil.class);
 
@@ -76,34 +72,21 @@ public class XMLUtil {
      * @return the event as human redable String.
      */
     public static String eventID2String(int eventType) {
-        switch (eventType) {
-            case XMLEvent.START_ELEMENT:
-                return "START_ELEMENT";
-            case XMLEvent.END_ELEMENT:
-                return "END_ELEMENT";
-            case XMLEvent.PROCESSING_INSTRUCTION:
-                return "PROCESSING_INSTRUCTION";
-            case XMLEvent.CHARACTERS:
-                return "CHARACTERS";
-            case XMLEvent.COMMENT:
-                return "COMMENT";
-            case XMLEvent.START_DOCUMENT:
-                return "START_DOCUMENT";
-            case XMLEvent.END_DOCUMENT:
-                return "END_DOCUMENT";
-            case XMLEvent.ENTITY_REFERENCE:
-                return "ENTITY_REFERENCE";
-            case XMLEvent.ATTRIBUTE:
-                return "ATTRIBUTE";
-            case XMLEvent.DTD:
-                return "DTD";
-            case XMLEvent.CDATA:
-                return "CDATA";
-            case XMLEvent.SPACE:
-                return "SPACE";
-            default:
-                return "UNKNOWN_EVENT_TYPE " + "," + eventType;
-        }
+        return switch (eventType) {
+            case XMLEvent.START_ELEMENT -> "START_ELEMENT";
+            case XMLEvent.END_ELEMENT -> "END_ELEMENT";
+            case XMLEvent.PROCESSING_INSTRUCTION -> "PROCESSING_INSTRUCTION";
+            case XMLEvent.CHARACTERS -> "CHARACTERS";
+            case XMLEvent.COMMENT -> "COMMENT";
+            case XMLEvent.START_DOCUMENT -> "START_DOCUMENT";
+            case XMLEvent.END_DOCUMENT -> "END_DOCUMENT";
+            case XMLEvent.ENTITY_REFERENCE -> "ENTITY_REFERENCE";
+            case XMLEvent.ATTRIBUTE -> "ATTRIBUTE";
+            case XMLEvent.DTD -> "DTD";
+            case XMLEvent.CDATA -> "CDATA";
+            case XMLEvent.SPACE -> "SPACE";
+            default -> "UNKNOWN_EVENT_TYPE, " + eventType;
+        };
     }
 
 
@@ -117,10 +100,11 @@ public class XMLUtil {
                                 .withTest(Input.fromString(xml2))
                                 .ignoreComments()
                                 .ignoreElementContentWhitespace()
-                                .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText, ElementSelectors.byName))
+                                .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byNameAndText,
+                                        ElementSelectors.byName))
                                 .withDifferenceEvaluator(DifferenceEvaluators.chain(
-                                    ignoreNamespacePrefixDifferences(),
-                                    ignoreElementOrderDifferences()))
+                                        ignoreNamespacePrefixDifferences(),
+                                        ignoreElementOrderDifferences()))
                                 .build();
 
         if (!diffs.hasDifferences()) {
@@ -136,9 +120,8 @@ public class XMLUtil {
     private static DifferenceEvaluator ignoreNamespacePrefixDifferences() {
         return (comparison, outcome) -> {
             if (outcome != ComparisonResult.EQUAL) {
-                switch (Objects.requireNonNull(comparison.getType())) {
-                    case NAMESPACE_PREFIX:
-                        return ComparisonResult.EQUAL;
+                if (Objects.requireNonNull(comparison.getType()) == ComparisonType.NAMESPACE_PREFIX) {
+                    return ComparisonResult.EQUAL;
                 }
             }
             return outcome;
@@ -148,9 +131,8 @@ public class XMLUtil {
     private static DifferenceEvaluator ignoreElementOrderDifferences() {
         return (comparison, outcome) -> {
             if (outcome != ComparisonResult.EQUAL) {
-                switch (Objects.requireNonNull(comparison.getType())) {
-                    case CHILD_NODELIST_SEQUENCE:
-                        return ComparisonResult.EQUAL;
+                if (Objects.requireNonNull(comparison.getType()) == ComparisonType.CHILD_NODELIST_SEQUENCE) {
+                    return ComparisonResult.EQUAL;
                 }
             }
             return outcome;

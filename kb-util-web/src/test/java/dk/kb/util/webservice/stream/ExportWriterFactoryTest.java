@@ -100,7 +100,7 @@ class ExportWriterFactoryTest {
     @Test
     void testWrapWithErrors() throws IOException {
         // Using mockito setup from testWrapJSONLines test.
-        ErrorRecord error = new ErrorRecord("testID", "This specific test error occured");
+        ErrorRecord error = new ErrorRecord("testID", "This specific test error occurred");
         ErrorList errorList = new ErrorList();
         errorList.addErrorToList(error);
 
@@ -127,7 +127,7 @@ class ExportWriterFactoryTest {
                          {"id":"1","title":"book #1","pages":null},
                          {"id":"2","title":"book #2","pages":null}
                          ]
-                         ,"errors":{"amount":1,"records":[{"id":"testID","errorMessage":"This specific test error occured"}]}}""",
+                         ,"errors":{"amount":1,"records":[{"id":"testID","errorMessage":"This specific test error occurred"}]}}""",
                          out.toString(StandardCharsets.UTF_8));
         }
     }
