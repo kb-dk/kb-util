@@ -200,7 +200,7 @@
                 <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>33.5.0-jre</version>
+                <version>33.7.1-jre</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
